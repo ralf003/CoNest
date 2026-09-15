@@ -1,12 +1,12 @@
 # CoNest Connector for OpenClaw
 
-**当前开发版本：0.6.3 多平台候选版。** [Red Hat 8 系与 Windows 安装教程](docs/RedHat8与Windows安装演示教程.md)，[适配范围与验证](docs/多平台适配设计与验证.md)。0.6.2 代码、教程、运行包和验收已在修改前独立备份；现有 0.6.2 安装包保留。
+**Development version: 0.6.3, multiplatform candidate.** See the [RHEL 8 / Windows installation guide](docs/rhel8-windows-installation-demo-zh.md) and [platform scope and validation](docs/multiplatform-design-validation-zh.md), both in Chinese. The original 0.6.2 source, documentation and release artifacts remain preserved.
 
-2026-09-14 开发增量：[双 Loop 接入同一组件运行时](docs/双Loop组件运行时接入.md)。DSH Harness 通过宿主最终工具准入和生命周期 hooks 接通现有组件 worker；动态发现、调用及权限检查复用现有组件机制。后续[搜索服务组件化](docs/搜索服务组件化.md)已将 `dsh_grep`、`dsh_glob` 与 `knowledge_search` 统一到搜索组件；随后[只读文件服务组件化](docs/只读文件服务组件化.md)将 `dsh_read` 迁入独立读取组件，并保留读后写版本校验；本阶段[共享记忆服务组件化](docs/共享记忆服务组件化.md)继续将九个记忆工具与自动召回/捕获迁入独立记忆组件；写入、编辑、图片、Bash 及 Loop 仍在 Gateway。既有安装包未替换。
+The 2026-09-14 development changes connect [both loops to the component runtime](docs/dual-loop-component-runtime-zh.md) through finalized host tool admission and lifecycle hooks. The [search](docs/search-component-zh.md), [read](docs/read-component-zh.md) and [memory](docs/memory-component-zh.md) migrations move their tools into managed workers while preserving permissions, guarded-edit observations and shared memory. File writes, edits, images, Bash and the loops remain in Gateway. Existing release archives are unchanged.
 
-0.6.2 基线 Ubuntu 从零安装与演示：[详细教程](docs/Ubuntu本地安装与演示教程.md)。当前机制、部署边界与验收范围：[CoNest 当前设计说明](docs/CoNest当前设计说明.md)。
+For the 0.6.2 baseline, see the [Ubuntu installation and demo guide](docs/ubuntu-installation-demo-zh.md) and [architecture, deployment boundaries and validation scope](docs/conest-design-zh.md), both in Chinese.
 
-CoNest Connector 0.6.2 adds an opt-in **CoNest Studio** to the unmodified OpenClaw 2026.9.2 release: a shared OpenClaw + DSH Market catalog, selectable OpenClaw/DSH agent loops, tools from both ecosystems in either loop, persistent shared memory, and a visual execution timeline. A companion DSH Web plugin exposes the same Studio inside DSH. See [the Studio installation and demo guide](./STUDIO.md).
+CoNest Connector 0.6.2 adds an opt-in **CoNest Studio** to the unmodified OpenClaw 2026.9.2 release: a shared OpenClaw + DSH Market catalog, selectable OpenClaw/DSH agent loops, tools from both ecosystems in either loop, persistent shared memory, and a visual execution timeline. A companion DSH Web plugin exposes the same Studio inside DSH. See [the Studio installation and demo guide](./STUDIO-zh.md).
 
 The plugin ID remains `dsh-bridge`. Without `config.studio`, the component worker and its authorization/lifecycle behavior remain available; shared memory additionally requires a runtime `memoryFilePath`. Studio requires explicit configuration and model/tool admission. Market entries are discoverable metadata, not a claim that every upstream plugin is installed or runtime-compatible.
 
@@ -50,7 +50,7 @@ pnpm --dir bridge run build
 pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 ```
 
-No original `.runtime`, `.tooling` or `source/workspace` directory is required. See [dependency provenance and offline SDK use](../maintenance/DEPENDENCIES.md) and [the contribution guide](../CONTRIBUTING.md). Git ignores downloaded SDK content and installed dependencies.
+No original `.runtime`, `.tooling` or `source/workspace` directory is required. See [dependency provenance and offline SDK use](../maintenance/DEPENDENCIES-zh.md) and [the contribution guide](../CONTRIBUTING-zh.md). Git ignores downloaded SDK content and installed dependencies.
 
 The commands below run from the `bridge/` package directory.
 

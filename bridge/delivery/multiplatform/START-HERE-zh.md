@@ -5,13 +5,13 @@
 **当前验收状态：** Red Hat UBI 8.10/glibc 2.28 环境中的原生插件安装、完整双 Loop 与真实模型四段演示已通过。Windows 原生依赖在 Windows Node/Wine 下完成组件检查；原生 Windows 的完整安装、权限和界面仍待验证。
 
 1. 在目标机器解压整个 ZIP。
-2. 打开 [Red Hat 8 与 Windows 安装演示教程](docs/RedHat8与Windows安装演示教程.html)。
+2. 打开 [Red Hat 8 与 Windows 安装演示教程](docs/rhel8-windows-installation-demo-zh.html)。
 3. Red Hat 8 系先安装系统依赖，再运行 `bash install.sh`；Windows 在 PowerShell 中运行 `powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1`。
 4. 按教程自检，填写模型 Key，再启动服务。
 5. 在 `http://127.0.0.1:18791` 的 OpenClaw 侧栏进入 CoNest Studio，执行双 Loop、双方工具和共享记忆演示。
 
 本次不需要启动独立 DSH Web。市场条目可发现不代表已安装或任意插件都已兼容。
 
-[适配设计与验证说明](docs/多平台适配设计与验证.html) 列出具体改动和未完成的目标系统验收。`reports/multiplatform-0.6.3/` 保留实际日志与证据。
+[适配设计与验证说明](docs/multiplatform-design-validation-zh.html) 列出具体改动和未完成的目标系统验收。`reports/multiplatform-0.6.3/` 保留实际日志与证据。
 
 `src/`、`scripts/`、`test/`、`companions/` 提供本项目代码；开发依赖的 link 引用仍要求原冻结工作区。演示安装使用 `packages/<平台>/` 的 tgz，无需在目标电脑从源码构建。

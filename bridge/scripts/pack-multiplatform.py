@@ -44,7 +44,7 @@ with tempfile.TemporaryDirectory(prefix='conest-delivery-') as temporary:
         shutil.copy2(bridge / file, stage / file)
     # Keep the code's original reference documents available as Markdown.
     for file in bridge.glob('*.md'):
-        if file.name != '先看这里.md':
+        if file.name != 'START-HERE-zh.md':
             shutil.copy2(file, stage / file.name)
     shutil.copytree(bridge / 'docs', stage / 'docs')
     shutil.copytree(bridge / 'reports' / f'multiplatform-{version}',

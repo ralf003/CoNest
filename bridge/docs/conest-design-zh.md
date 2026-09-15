@@ -1,8 +1,8 @@
 # CoNest 当前设计说明
 
-版本：CoNest Connector 0.6.2。依据：2026-09-13 的交付代码、最终安装包及验收记录。配套操作教程：[Ubuntu 本地安装与演示教程](./Ubuntu本地安装与演示教程.md)。
+版本：CoNest Connector 0.6.2。依据：2026-09-13 的交付代码、最终安装包及验收记录。配套操作教程：[Ubuntu 本地安装与演示教程](./ubuntu-installation-demo-zh.md)。
 
-后续开发增量见 [2026-09-14 双 Loop 组件运行时接入](./双Loop组件运行时接入.md)。本文保留 0.6.2 交付基线；其中“四个 bridge 工具未进入 DSH harness”是该基线的限制，已由后续开发增量改进。继续见[搜索服务组件化](./搜索服务组件化.md)：`dsh_grep`、`dsh_glob` 已迁入搜索组件；随后[只读文件服务组件化](./只读文件服务组件化.md)迁入 `dsh_read` 并保留读后写校验；再由[共享记忆服务组件化](./共享记忆服务组件化.md)迁入记忆工具及自动记忆服务；写入、编辑、图片、Bash 和 Loop 仍在 Gateway。
+后续开发增量见 [2026-09-14 双 Loop 组件运行时接入](./dual-loop-component-runtime-zh.md)。本文保留 0.6.2 交付基线；其中“四个 bridge 工具未进入 DSH harness”是该基线的限制，已由后续开发增量改进。继续见[搜索服务组件化](./search-component-zh.md)：`dsh_grep`、`dsh_glob` 已迁入搜索组件；随后[只读文件服务组件化](./read-component-zh.md)迁入 `dsh_read` 并保留读后写校验；再由[共享记忆服务组件化](./memory-component-zh.md)迁入记忆工具及自动记忆服务；写入、编辑、图片、Bash 和 Loop 仍在 Gateway。
 
 ## 1. 当前设计要解决的问题
 

@@ -1,6 +1,6 @@
 # CoNest Studio 0.6.2 演示手册
 
-2026-09-14 开发增量：共享记忆已由 CoNest worker 的独立组件管理，保留 Studio 原 `memory.jsonl`。权限、隐私规则、停用恢复及验证见[共享记忆服务组件化](docs/共享记忆服务组件化.md)。下文安装与演示保留 0.6.2 交付基线。
+2026-09-14 开发增量：共享记忆已由 CoNest worker 的独立组件管理，保留 Studio 原 `memory.jsonl`。权限、隐私规则、停用恢复及验证见[共享记忆服务组件化](docs/memory-component-zh.md)。下文安装与演示保留 0.6.2 交付基线。
 
 CoNest 是 OpenClaw 插件。Studio 将 OpenClaw 插件/工具目录与 DSH Market 完整 feed 合并，DSH Web 通过配套插件显示同一页面与数据。两种 Loop 都在 OpenClaw 会话中执行；DSH Loop 获得当前会话经过授权的 OpenClaw 工具表，其中也包括 CoNest 注册的 DSH 工具。
 
@@ -20,7 +20,7 @@ openclaw plugins install --force --accept-capabilities ./local-conest-connector-
 
 ## 独立演示工作区
 
-启动脚本创建独立 Gateway 配置、共享记忆和样例文件，不覆盖现有 OpenClaw 配置。需安装匹配的 OpenClaw。0.6.2 启动器保留了 `/root/.local/state/...` 与 `/root/.config/...` 的开发默认路径；普通用户必须用 `CONEST_DEMO_STATE` 和 `CONEST_CREDENTIAL_FILE` 覆盖。端口默认 18791，完整的普通用户安装命令见 [Ubuntu 本地教程](docs/Ubuntu本地安装与演示教程.md)。
+启动脚本创建独立 Gateway 配置、共享记忆和样例文件，不覆盖现有 OpenClaw 配置。需安装匹配的 OpenClaw。0.6.2 启动器保留了 `/root/.local/state/...` 与 `/root/.config/...` 的开发默认路径；普通用户必须用 `CONEST_DEMO_STATE` 和 `CONEST_CREDENTIAL_FILE` 覆盖。端口默认 18791，完整的普通用户安装命令见 [Ubuntu 本地教程](docs/ubuntu-installation-demo-zh.md)。
 
 ```bash
 node /path/to/plugin/dist/demo-studio.mjs

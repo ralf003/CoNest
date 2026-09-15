@@ -1,6 +1,6 @@
 # 搜索服务组件化
 
-2026-09-14，CoNest 0.6.3 开发增量。接续[双 Loop 组件运行时接入](双Loop组件运行时接入.md)，本次将 Studio 的搜索服务迁入已有组件 worker。既有发行包与冻结上游源码不变。
+2026-09-14，CoNest 0.6.3 开发增量。接续[双 Loop 组件运行时接入](dual-loop-component-runtime-zh.md)，本次将 Studio 的搜索服务迁入已有组件 worker。既有发行包与冻结上游源码不变。
 
 ## 改动与执行边界
 
@@ -36,4 +36,4 @@ DSH 原生搜索需要工具所属工作区来生成可继续读取的相对路�
 
 验收命令与结果见[本次验证记录](../reports/search-migration/RESULT.md)。本次备份位于仓库 `backups/conest-before-search-migration-20260914/code.tar.gz`。使用更新后的开发构建需重启所选开发 Gateway；当前修改没有替换已发行安装包或部署到既有用户实例。
 
-后续[只读文件服务组件化](只读文件服务组件化.md)已迁入 `dsh_read`，并保留读后写保护。本文保留搜索阶段的设计与验收范围。
+后续[只读文件服务组件化](read-component-zh.md)已迁入 `dsh_read`，并保留读后写保护。本文保留搜索阶段的设计与验收范围。

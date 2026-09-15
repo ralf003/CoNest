@@ -1,6 +1,6 @@
 # CoNest 0.6.3 多平台适配设计与验证
 
-0.6.3 为多平台候选版，保留 OpenClaw 2026.9.2 与 DSH rc.5 的业务集成机制。本次改动面向 Red Hat 8 系 Linux x64 与 Windows x64 的交付、启动和运行依赖。操作步骤见 [安装演示教程](RedHat8与Windows安装演示教程.md)。
+0.6.3 为多平台候选版，保留 OpenClaw 2026.9.2 与 DSH rc.5 的业务集成机制。本次改动面向 Red Hat 8 系 Linux x64 与 Windows x64 的交付、启动和运行依赖。操作步骤见 [安装演示教程](rhel8-windows-installation-demo-zh.md)。
 
 ## 1. 0.6.2 基线备份
 

@@ -1,6 +1,6 @@
 # 现在演示
 
-本页地址与路径对应当前开发服务器。在你自己的 Ubuntu 电脑安装，请使用 [Ubuntu 本地安装与演示教程](docs/Ubuntu本地安装与演示教程.md)。
+本页地址与路径对应当前开发服务器。在你自己的 Ubuntu 电脑安装，请使用 [Ubuntu 本地安装与演示教程](docs/ubuntu-installation-demo-zh.md)。
 
 使用 **OpenClaw 2026.9.2 / CoNest 0.6.2 / DSH rc.5 / 真实 DeepSeek Flash**。
 
@@ -28,4 +28,4 @@
 openclaw plugins install --force --accept-capabilities ./local-conest-connector-0.6.2.tgz
 ```
 
-这两个参数分别确认信任本地包与接受声明的插件能力。完整现有 Gateway 配置、独立工作区启动方式见 [STUDIO.md](./STUDIO.md)。运行结果与截图见 [reports/studio-0.6.2](./reports/studio-0.6.2)。
+这两个参数分别确认信任本地包与接受声明的插件能力。完整现有 Gateway 配置、独立工作区启动方式见 [STUDIO-zh.md](./STUDIO-zh.md)。运行结果与截图见 [reports/studio-0.6.2](./reports/studio-0.6.2)。

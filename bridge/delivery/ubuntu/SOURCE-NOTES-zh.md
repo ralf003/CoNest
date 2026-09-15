@@ -1,10 +1,10 @@
 # 随包源码说明
 
-本文记录原 0.6.2 交付 ZIP 的内容。GitHub 维护分支现已支持通过 `maintenance/bootstrap.mjs` 恢复固定 SDK 并构建；新的协作流程见仓库根目录 CONTRIBUTING.md，以下旧 ZIP 说明不作为当前克隆的安装步骤。
+本文记录原 0.6.2 交付 ZIP 的内容。GitHub 维护分支现已支持通过 `maintenance/bootstrap.mjs` 恢复固定 SDK 并构建；新的协作流程见仓库根目录 CONTRIBUTING-zh.md，以下旧 ZIP 说明不作为当前克隆的安装步骤。
 
 本包提供 CoNest 插件当前源码，包括 `src/`、`scripts/`、`test/`、`examples/`、`companions/dsh-ui/`、插件 manifest、package.json 和锁文件。已构建的 JavaScript、运行依赖及许可证在 `releases/delivery/local-conest-connector-0.6.2.tgz` 内。DSH 演示包包含独立运行所需的冻结代码和运行依赖，其来源说明位于 `releases/ubuntu-demo/dsh-runtime-provenance.json`。
 
-**现场安装使用已验证的 tgz，不需要从源码编译。** 按 [Ubuntu 教程](docs/Ubuntu本地安装与演示教程.html) 执行 OpenClaw 原生插件安装命令即可。
+**现场安装使用已验证的 tgz，不需要从源码编译。** 按 [Ubuntu 教程](docs/ubuntu-installation-demo-zh.html) 执行 OpenClaw 原生插件安装命令即可。
 
 源码的 package.json 和锁文件保留开发工作区的 `link:` 引用，部分构建与测试脚本引用原项目的 `.runtime`、`source/workspace`。外层 ZIP 没有复制整个原开发工作区，也不是可直接 `pnpm install && pnpm build` 的完整开发环境。修改重建时需要恢复这些对应的冻结依赖；不要为了演示现场重建。已验证的运行包不依赖原开发服务器路径，普通用户所需环境覆盖见教程。
 

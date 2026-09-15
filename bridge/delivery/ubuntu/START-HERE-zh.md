@@ -11,7 +11,7 @@
 bash prepare.sh
 ```
 
-3. 看到“校验通过”，双击打开 [Ubuntu 本地安装与演示教程](docs/Ubuntu本地安装与演示教程.html)，**从第 3 节开始**依次执行。准备脚本已完成第 2 节的文件复制。若浏览器未自动打开 HTML，右键选择 Firefox 或 Chrome。
+3. 看到“校验通过”，双击打开 [Ubuntu 本地安装与演示教程](docs/ubuntu-installation-demo-zh.html)，**从第 3 节开始**依次执行。准备脚本已完成第 2 节的文件复制。若浏览器未自动打开 HTML，右键选择 Firefox 或 Chrome。
 4. 教程第 3–6 节依次完成 Node、OpenClaw、CoNest 插件、自检和 DeepSeek API Key 配置。第 7 节为可选的 DSH 侧展示入口安装；仅演示 OpenClaw 内的 DSH 能力时可跳过。命令按块复制到终端执行；系统安装步骤可能要求输入 Ubuntu 登录密码。
 5. 按第 8 节操作统一清单、双 Loop、双方工具和共享记忆；第 9 节可自动验证四段基础流程。
 
@@ -45,7 +45,7 @@ bash start-dsh.sh
 | 4 | DSH 写入偏好，再用 OpenClaw 召回 | 记忆页出现记录，另一个 Loop 使用该记录 |
 | 5（可选） | DSH 入口切换全屏，展示轨迹与记忆 | 两个宿主共享相同插件服务和数据 |
 
-具体提示词、预期结果和故障排查见详细教程。当前任务验证基础集成链路；任意 DSH 市场插件的通用安装、执行和复杂业务任务尚未完成验收。完整设计、执行边界和已有验收范围见 [CoNest 当前设计说明](docs/CoNest当前设计说明.html)。
+具体提示词、预期结果和故障排查见详细教程。当前任务验证基础集成链路；任意 DSH 市场插件的通用安装、执行和复杂业务任务尚未完成验收。完整设计、执行边界和已有验收范围见 [CoNest 当前设计说明](docs/conest-design-zh.html)。
 
 ## 交付内容
 
@@ -59,4 +59,4 @@ bash start-dsh.sh
 | `reports/ubuntu-tutorial/` | DSH 迁移到新目录、普通用户运行和浏览器验证记录 |
 | `SHA256SUMS` | 外层包内所有文件的完整性清单 |
 
-[源码说明](源码说明.html) 解释代码位置及开发依赖。根目录其他英文说明保留项目历史背景；**本次从零安装只跟随 `docs/Ubuntu本地安装与演示教程.html`**。
+[源码说明](SOURCE-NOTES-zh.html) 解释代码位置及开发依赖。根目录其他英文说明保留项目历史背景；**本次从零安装只跟随 `docs/ubuntu-installation-demo-zh.html`**。

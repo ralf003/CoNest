@@ -171,6 +171,6 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "$HOME\conest-demo-0.6.3\sta
 | 市场显示缓存 | 检查联网，重新点击同步；目录缓存不能作为最新同步成功的依据 |
 | dsh_bash 无法执行 | 本次默认演示不开放该工具。Linux 的沙箱命令执行还需要可用的 bwrap/Landlock；Windows 还涉及 Bash 和 ACL 沙箱能力，不能将缺失沙箱悄悄改为无隔离执行 |
 
-包内已保留 DSH 的 Bash、图片等组件，但本次跨平台验收重点是 Loop、读取/搜索和共享记忆，不代表所有系统相关工具都完成目标系统验收。详见 [多平台适配设计与验证](多平台适配设计与验证.md)。
+包内已保留 DSH 的 Bash、图片等组件，但本次跨平台验收重点是 Loop、读取/搜索和共享记忆，不代表所有系统相关工具都完成目标系统验收。详见 [多平台适配设计与验证](multiplatform-design-validation-zh.md)。
 
 Node 平台基线依据 [Node 24.15.0 官方构建说明](https://github.com/nodejs/node/blob/v24.15.0/BUILDING.md)。
