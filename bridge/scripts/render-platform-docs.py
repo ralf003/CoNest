@@ -7,5 +7,5 @@ import sys
 root=Path(sys.argv[1]) if len(sys.argv)>1 else bridge
 if root==bridge:
  (bridge/'先看这里.md').write_text((bridge/'delivery/multiplatform/先看这里.md').read_text())
-node=bridge.parent/'.tooling/node_modules/.bin/node';marked=bridge.parent/'source/workspace/deepseek-harness/node_modules/.pnpm/marked@16.4.2/node_modules/marked/lib/marked.esm.js'
+node='node';marked=bridge/'node_modules/marked/lib/marked.esm.js'
 subprocess.run([str(node),'--input-type=module','-e',renderer,str(root),str(marked)],check=True)

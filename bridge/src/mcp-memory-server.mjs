@@ -10,4 +10,4 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
   })
 }
 
-await import('../node_modules/@modelcontextprotocol/server-memory/dist/index.js')
+await import('@modelcontextprotocol/server-memory/dist/index.js')

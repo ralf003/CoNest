@@ -1,0 +1,260 @@
+{
+  "format": 1,
+  "release": "dev-sdk-20260915",
+  "url": "https://github.com/zyw02/CoNest/releases/download/dev-sdk-20260915/conest-dsh-sdk-20260915.tar.gz",
+  "sha256": "cd662c3cd5677c5649c735538f62a811e5be8a93aa073c1b9fd85137e64493e6",
+  "maxBytes": 10000000,
+  "upstream": "https://github.com/deepseek-ai/deepseek-harness",
+  "upstreamVersion": "0.1.0-rc.5",
+  "packages": {
+    "@deepseek-ai/dsh-session-checkpoint-policy": {
+      "directory": "packages/session/session-checkpoint-policy",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/cordis": {
+      "directory": "vendor/cordis",
+      "version": "4.0.1"
+    },
+    "@deepseek-ai/cordis-plugin-loader": {
+      "directory": "vendor/loader",
+      "version": "1.0.2"
+    },
+    "@deepseek-ai/cosmokit": {
+      "directory": "vendor/cosmokit",
+      "version": "1.8.2"
+    },
+    "@deepseek-ai/cordis-plugin-include": {
+      "directory": "vendor/include",
+      "version": "1.0.6"
+    },
+    "@deepseek-ai/dsh-tools": {
+      "directory": "packages/core/tools",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-user-approval": {
+      "directory": "packages/interaction/user-approval",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-system-prompt": {
+      "directory": "packages/core/system-prompt",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-scope": {
+      "directory": "packages/core/scope",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-invariants": {
+      "directory": "packages/runtime-diagnostics/invariants",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/schemastery": {
+      "directory": "vendor/schemastery",
+      "version": "3.18.1"
+    },
+    "@deepseek-ai/dsh-llm": {
+      "directory": "packages/llm/llm",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-timeout": {
+      "directory": "packages/util/timeout",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-brand": {
+      "directory": "packages/util/brand",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-attachment": {
+      "directory": "packages/attachment/attachment",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-session": {
+      "directory": "packages/core/session",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-typert-protocol": {
+      "directory": "packages/typert/protocol",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-agent": {
+      "directory": "packages/core/agent",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-code-runtime": {
+      "directory": "packages/code-runtime/code-runtime",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-session-persistence": {
+      "directory": "packages/session/session-persistence",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-todo": {
+      "directory": "packages/todo/tool-todo",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-session-projection": {
+      "directory": "packages/session/session-projection",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-skill": {
+      "directory": "packages/skill/skill",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-shell-env": {
+      "directory": "packages/shell/shell-env",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-home-paths": {
+      "directory": "packages/util/home-paths",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-shell": {
+      "directory": "packages/shell/shell",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-settings": {
+      "directory": "packages/settings/settings",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-sandbox": {
+      "directory": "packages/sandbox/sandbox",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-subprocess": {
+      "directory": "packages/subprocess/subprocess",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-attachment-local": {
+      "directory": "packages/attachment/attachment-local",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-sandbox-policy": {
+      "directory": "packages/sandbox/sandbox-policy",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-fs-local": {
+      "directory": "packages/fs/fs-local",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-fs": {
+      "directory": "packages/fs/fs",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-web": {
+      "directory": "packages/web/tool-web",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-web": {
+      "directory": "packages/web/web",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-llm-pi-ai": {
+      "directory": "packages/llm/llm-pi-ai",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-launch-environment": {
+      "directory": "packages/util/launch-environment",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-credentials": {
+      "directory": "packages/credentials/credentials",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-fs-sandbox": {
+      "directory": "packages/fs/fs-sandbox",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-sandbox-local": {
+      "directory": "packages/sandbox/sandbox-local",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-sandbox-windows-acl": {
+      "directory": "packages/sandbox/sandbox-windows-acl",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-bash-sandbox": {
+      "directory": "packages/shell/bash-sandbox",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-bash-local": {
+      "directory": "packages/shell/bash-local",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-bash": {
+      "directory": "packages/shell/tool-bash",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-jobs": {
+      "directory": "packages/jobs/jobs",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-skill-filesystem": {
+      "directory": "packages/skill/skill-filesystem",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-skill": {
+      "directory": "packages/skill/tool-skill",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-agent-loop": {
+      "directory": "packages/core/agent-loop",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-fs-search": {
+      "directory": "packages/fs/tool-fs-search",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-spill": {
+      "directory": "packages/spill/spill",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-output-retention": {
+      "directory": "packages/util/output-retention",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-llm-deepseek": {
+      "directory": "packages/llm/llm-deepseek",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-anonymous-user-id": {
+      "directory": "packages/identity/anonymous-user-id",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-tool-fs": {
+      "directory": "packages/fs/tool-fs",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-plan-mode": {
+      "directory": "packages/plan/plan-mode",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-user-questions": {
+      "directory": "packages/interaction/user-questions",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-commands": {
+      "directory": "packages/interaction/commands",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-session-persistence-jsonl": {
+      "directory": "packages/session/session-persistence-jsonl",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-web-fetch-http": {
+      "directory": "packages/web/web-fetch-http",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-subprocess-local": {
+      "directory": "packages/subprocess/subprocess-local",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-fs-observation-policy": {
+      "directory": "packages/fs/fs-observation-policy",
+      "version": "0.1.0-rc.5"
+    },
+    "@deepseek-ai/dsh-mcp-client": {
+      "directory": "packages/mcp/mcp-client",
+      "version": "0.1.0-rc.5"
+    }
+  },
+  "manifestSha256": "d9709d07e29db0acb1c5e11b82dc19fcc6ad59faab2b410a11476cb2b55c1b1c"
+}

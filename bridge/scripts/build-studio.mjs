@@ -3,14 +3,14 @@ import { realpath, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const root=fileURLToPath(new URL('..',import.meta.url));
-const require=createRequire(path.join(await realpath(path.join(root,'node_modules/tsx')),'package.json'));
+const require=createRequire(import.meta.url);
 const {build}=require('esbuild');
-const dsh=path.resolve(root,'../source/workspace/deepseek-harness');
+
 const options={bundle:true,platform:'node',format:'esm',target:'node24',sourcemap:false,
  plugins:[{name:'freeze-package-attribution',setup(b){b.onLoad({filter:/\.(ts|js)$/},async args=>{let contents=await readFile(args.path,'utf8');const pattern=/createRequire\(import\.meta\.url\)\(["']\.\.\/package\.json["']\)/g;if(!pattern.test(contents))return;let directory=path.dirname(args.path);let manifest;for(let i=0;i<8;i++){try{manifest=JSON.parse(await readFile(path.join(directory,'package.json'),'utf8'));break;}catch{directory=path.dirname(directory);}}if(!manifest)throw Error('Package identity not found: '+args.path);contents=contents.replaceAll(pattern,JSON.stringify({version:manifest.version}));return {contents,loader:args.path.endsWith('.ts')?'ts':'js'};});}}],
  banner:{js:"import { createRequire as __bundleCreateRequire } from 'node:module'; const require = __bundleCreateRequire(import.meta.url);"},
  external:['openclaw','openclaw/*','sharp','koffi','node-pty','@vscode/ripgrep'],
- alias:{'@deepseek-ai/dsh-tools':path.join(dsh,'packages/core/tools/lib/index.js')},metafile:true};
+ alias:{'@deepseek-ai/dsh-tools':require.resolve('@deepseek-ai/dsh-tools')},metafile:true};
 for (const [entry,out] of [['src/studio/index.ts','dist/studio/index.js'],['src/mcp-memory-server.mjs','dist/mcp-memory-server.mjs'],['src/studio/runtime-probe.ts','dist/studio/runtime-probe.mjs']]) {
  const result=await build({...options,entryPoints:[path.join(root,entry)],outfile:path.join(root,out)});
  await writeFile(path.join(root,out+'.meta.json'),JSON.stringify(result.metafile));
@@ -35,7 +35,7 @@ for(const [dir,manifest] of seen) {
  const id=(manifest.name+'-'+manifest.version).replaceAll('/','__');const target=path.join(licenses,id);await mkdir(target,{recursive:true});
  let files=(await readdir(dir)).filter(f=>/^(license|licence|notice|copying)([.-]|$)/i.test(f));
  for(const f of files)await cp(path.join(dir,f),path.join(target,f),{recursive:true});
- if(!files.length&&dir.startsWith(dsh)&&manifest.name.startsWith('@deepseek-ai/')) {await cp(path.join(dsh,'LICENSE'),path.join(target,'LICENSE'));files=['LICENSE'];}
+ if(!files.length && manifest.name.startsWith('@deepseek-ai/')) throw Error('Missing SDK license: '+manifest.name);
  notices.push({name:manifest.name,version:manifest.version,license:manifest.license,notices:files.map(f=>id+'/'+f)});
 }
 await writeFile(path.join(licenses,'index.json'),JSON.stringify(notices,null,2));

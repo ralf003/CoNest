@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+<title id="title">CoNest — Two loops. One workspace.</title><desc id="desc">CoNest connects OpenClaw and DSH with shared tools, memory and a component runtime.</desc>
+<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101b32"/><stop offset="1" stop-color="#163e48"/></linearGradient><linearGradient id="accent"><stop stop-color="#5de4c7"/><stop offset="1" stop-color="#99c9ff"/></linearGradient></defs>
+<rect width="1200" height="300" rx="22" fill="url(#bg)"/>
+<g fill="none" stroke="#79cece" stroke-opacity=".12"><circle cx="1110" cy="40" r="120"/><circle cx="1110" cy="40" r="170"/><circle cx="1110" cy="40" r="220"/></g>
+<g transform="translate(73 84)" fill="none" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"><path d="M77 9C25-14-7 29 12 69c15 31 58 35 81 10"/><path d="M27 117c52 23 84-20 65-60C77 26 34 22 11 47"/></g>
+<text x="230" y="139" fill="#f2f7fb" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="72" font-weight="700" letter-spacing="-2">CoNest</text>
+<text x="234" y="190" fill="#9cddd8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="25" font-weight="500">Two loops. One workspace.</text>
+<text x="235" y="228" fill="#b9c9dc" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" letter-spacing="2">OPENCLAW  /  DSH  /  CORDIS</text>
+<g transform="translate(844 195)" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" text-anchor="middle"><rect width="112" height="34" rx="17" fill="#173e46" stroke="#477b82"/><text x="56" y="22" fill="#b6efe4">Shared tools</text><rect x="125" width="134" height="34" rx="17" fill="#18364b" stroke="#477084"/><text x="192" y="22" fill="#c3e1fa">Shared memory</text></g>
+</svg>

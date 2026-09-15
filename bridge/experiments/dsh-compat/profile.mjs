@@ -1,4 +1,4 @@
-// Developer qualification only. Real, unmodified DSH modules from the pinned checkout.
+// Developer qualification only. Real DSH modules from the verified development SDK.
 import path from 'node:path';
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
 import ToolRuntime from '@deepseek-ai/dsh-tools';
@@ -13,8 +13,10 @@ export const packagePaths = {
   todo: 'todo/tool-todo', plan: 'plan/plan-mode', web: 'web/web-fetch-http', webTool: 'web/tool-web',
   tools: 'core/tools', prompt: 'core/system-prompt', subprocess: 'subprocess/subprocess-local',
 };
-export const sourceRoot = new URL('../../../source/workspace/deepseek-harness/', import.meta.url);
-const native = async key => import(new URL(`packages/${packagePaths[key]}/lib/index.js`, sourceRoot).href);
+export const sourceRoot = new URL('../../../.vendor/dsh/', import.meta.url);
+const nativePackages = { local: 'dsh-fs-local', skills: 'dsh-skill', skillFiles: 'dsh-skill-filesystem',
+  read: 'dsh-tool-fs', skillTool: 'dsh-tool-skill', todo: 'dsh-tool-todo', plan: 'dsh-plan-mode' };
+const native = key => import(`@deepseek-ai/${nativePackages[key]}`);
 const [Local, Skills, SkillFiles, Read, SkillTool, Todo, Plan] = await Promise.all(
   ['local', 'skills', 'skillFiles', 'read', 'skillTool', 'todo', 'plan'].map(native));
 // Observability only: tests retain actual service references to verify native teardown.
