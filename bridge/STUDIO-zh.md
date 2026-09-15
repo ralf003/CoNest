@@ -18,7 +18,7 @@ openclaw plugins install --force --accept-capabilities ./local-conest-connector-
 
 ## 独立演示工作区
 
-启动脚本创建独立 Gateway 配置、共享记忆和样例文件，不覆盖现有 OpenClaw 配置。需安装匹配的 OpenClaw。0.6.2 启动器保留了 `/root/.local/state/...` 与 `/root/.config/...` 的开发默认路径；普通用户必须用 `CONEST_DEMO_STATE` 和 `CONEST_CREDENTIAL_FILE` 覆盖。端口默认 18791，完整的普通用户安装命令见 [Ubuntu 本地教程](docs/Ubuntu本地安装与演示教程.md)。
+启动脚本创建独立 Gateway 配置、共享记忆和样例文件，不覆盖现有 OpenClaw 配置。需安装匹配的 OpenClaw。0.6.2 启动器保留了 `/root/.local/state/...` 与 `/root/.config/...` 的开发默认路径；普通用户必须用 `CONEST_DEMO_STATE` 和 `CONEST_CREDENTIAL_FILE` 覆盖。端口默认 18791，完整的普通用户安装命令见 [Ubuntu 本地教程](docs/ubuntu-installation-demo-zh.md)。
 
 ```bash
 node /path/to/plugin/dist/demo-studio.mjs

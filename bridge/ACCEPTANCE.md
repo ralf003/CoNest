@@ -13,7 +13,7 @@ Baseline: unmodified official OpenClaw 2026.9.2, Node.js 24.15.0, pnpm 11.7.0, L
 
 ## Outcome and scope
 
-The six first-stage gates in the preserved [DESIGN.md](../DESIGN.md) pass for the local, trusted-component, read-only reference scenario. This is an integration acceptance result, not a production, multi-tenant, hostile-code, real-model-quality, or live-channel certification.
+The six first-stage gates in the preserved [DESIGN-zh.md](../DESIGN-zh.md) pass for the local, trusted-component, read-only reference scenario. This is an integration acceptance result, not a production, multi-tenant, hostile-code, real-model-quality, or live-channel certification.
 
 The earlier 0.2.0 prototype checks did not establish arbitrary component installation or a complete host main-Loop task. Historical migration/source tests are not counted as evidence for this release. Version 0.3 established the first-stage reference flow; 0.4 adds capability-level authorization and reruns that baseline.
 

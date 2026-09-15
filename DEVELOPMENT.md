@@ -12,7 +12,7 @@ The `bridge/` directory and migration archives retain their historical names. Th
 
 The new architecture uses the official OpenClaw **2026.9.2** release as its development, API compatibility, and acceptance baseline. Dependencies and test environments pin the complete version instead of a moving `latest` tag.
 
-DESIGN.md remains the architecture direction. Performance and user experience are part of implementation and acceptance. Numerical targets discussed before measurement are working hypotheses rather than acceptance thresholds.
+DESIGN-zh.md remains the architecture direction. Performance and user experience are part of implementation and acceptance. Numerical targets discussed before measurement are working hypotheses rather than acceptance thresholds.
 
 ## Migration snapshot and new baseline
 

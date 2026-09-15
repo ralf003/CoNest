@@ -72,7 +72,7 @@ try {
   const rootManifest = await readJson(path.join(source, 'package.json'));
   await collect(source, { name: rootManifest.name, dependencies: rootManifest.dependencies });
   await mkdir(stage);
-  const topFiles = ['dist', 'examples', 'STUDIO.md', 'README.md', 'ACCEPTANCE.md', 'AUTHORIZATION.md',
+  const topFiles = ['dist', 'examples', 'STUDIO-zh.md', 'README.md', 'ACCEPTANCE.md', 'AUTHORIZATION.md',
     'INSTALLATION.md', 'NAMING.md', 'RUNTIME-ACCEPTANCE.md', 'HOST-ADAPTER.md', 'CONTEXT-PROVIDERS.md', 'HOST-ENHANCEMENT-ACCEPTANCE.md',
     'conest.config.example.json', 'bridge.config.example.json', 'openclaw.plugin.json'];
   for (const file of topFiles) await cp(path.join(source, file), path.join(stage, file), { recursive: true, dereference: false });

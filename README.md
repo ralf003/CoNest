@@ -1,8 +1,10 @@
 <div align="center">
 
+**English** · [简体中文](README-zh.md)
+
 <img src="docs/assets/conest-banner.svg" alt="CoNest — Two loops. One workspace." width="100%" />
 
-**两种 Agent Loop · 共享工具与记忆 · 一个组件运行时**
+**Two agent loops · Shared tools and memory · One component runtime**
 
 [![Build](https://github.com/zyw02/CoNest/actions/workflows/repository.yml/badge.svg?branch=main)](https://github.com/zyw02/CoNest/actions/workflows/repository.yml)
 [![OpenClaw](https://img.shields.io/badge/OpenClaw-2026.9.2-4388cc?style=flat-square)](https://www.npmjs.com/package/openclaw/v/2026.9.2)
@@ -10,97 +12,97 @@
 ![pnpm](https://img.shields.io/badge/pnpm-11.7-f1ac38?style=flat-square)
 [![Contributions](https://img.shields.io/badge/PRs-welcome-56bba0?style=flat-square)](CONTRIBUTING.md)
 
-[快速开始](#快速开始) · [分支与能力](#分支与能力) · [参与共建](CONTRIBUTING.md) · [Studio](bridge/STUDIO.md) · [讨论与问题](https://github.com/zyw02/CoNest/issues)
+[Quick start](#quick-start) · [Branches](#branches) · [Contribute](CONTRIBUTING.md) · [Studio guide (中文)](bridge/STUDIO-zh.md) · [Issues](https://github.com/zyw02/CoNest/issues)
 
 </div>
 
 ---
 
-CoNest 是连接 **OpenClaw** 与 **DeepSeek Harness（DSH）** 的插件。你可以在同一工作台选择 Agent Loop、调用双方工具，并在不同 Loop 的任务间共享记忆。底层 Cordis 组件由 CoNest Runtime 管理，Studio 提供统一入口和执行记录。
+CoNest connects **OpenClaw** with **DeepSeek Harness (DSH)**. Choose an agent loop, use tools from both ecosystems, and share memory between tasks in one workspace. CoNest Runtime manages the underlying Cordis components; Studio provides the interface and execution history.
 
 <table>
 <tr><td width="50%">
 
-### ↔ 选择任务如何执行
+### ↔ Choose your execution loop
 
-在 OpenClaw 原生 Loop 与 DSH Loop 之间选择。Studio 展示实际执行结果，方便观察两种 Loop 的行为。
+Switch between the native OpenClaw loop and DSH. Follow actual task results in Studio.
 
 </td><td width="50%">
 
-### ◈ 让能力成为组件
+### ◈ Build with components
 
-独立 worker 管理组件的发现、调用、生命周期和权限。通过配置管理能力，而不是将全部实现堆进 Gateway。
+A dedicated worker manages component discovery, invocation, lifecycle and permissions. Configure capabilities through the runtime.
 
 </td></tr>
 <tr><td>
 
-### ◎ 让上下文延续
+### ◎ Keep context across tasks
 
-共享知识图谱、自动记忆捕获与召回，让任务能使用已经记录的项目约定和偏好。
+Share a knowledge graph with automatic memory capture and recall, so tasks can use recorded project decisions and preferences.
 
 </td><td>
 
-### ⌘ 在一个界面工作
+### ⌘ Work in one interface
 
-Studio 汇集工具与生态目录、Loop 切换和活动时间线；DSH Web 配套插件可显示同一界面。
+Explore tool and ecosystem catalogs, switch loops, and follow the activity timeline. The companion DSH Web plugin displays the same Studio.
 
 </td></tr>
 </table>
 
-## 快速开始
+## Quick start
 
-开发验证环境：**Linux x64、Node.js 24.15.0、pnpm 11.7.0**。系统需要 Git、tar；原生依赖从源码构建时需要 Python 3、make 和 C++ 编译器。Windows / Red Hat 8 的运行包验证范围见开发分支说明，不能将本地开发构建当作跨平台发行包。
+Validated development environment: **Linux x64, Node.js 24.15.0 and pnpm 11.7.0**. Install Git and tar; native builds also require Python 3, make and a C++ compiler. Windows and RHEL 8 release packages have separate platform requirements and validation.
 
 ```bash
-# 使用开发主线参与共建；稳定基线可以把 develop 换成 main。
+# Use develop to contribute; use main for the stable baseline.
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
 
-# 下载并验证固定的 DSH SDK；无需原开发服务器。
+# Download and verify the pinned DSH SDK.
 node maintenance/bootstrap.mjs
 
-# 安装锁定依赖、构建并运行测试。
+# Install locked dependencies, build and test.
 pnpm --dir bridge install --frozen-lockfile
 pnpm --dir bridge run build
 pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 ```
 
-> **SDK ≠ 本地运行环境。** 下载的是所需 DSH 源码、JavaScript 运行库和许可证，约 2.3 MB；不包含 Ubuntu 依赖、`node_modules`、会话或凭据。普通依赖来自 npm，SDK 和锁文件均固定版本。见 [依赖来源](maintenance/DEPENDENCIES.md)。
+The SDK contains the required DSH source, JavaScript runtime, types and licenses, approximately 2.3 MB compressed. Ordinary dependencies come from npm. Both the SDK and package lockfile are pinned. See [dependency provenance (中文)](maintenance/DEPENDENCIES-zh.md).
 
-完成构建后，用隔离状态目录运行四段 Studio 验收：
+After building, run the four Studio acceptance scenarios with a disposable state directory:
 
 ```bash
 CONEST_DEMO_STATE=/absolute/disposable/conest-studio \
   pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
 ```
 
-默认采用**本地模型 fixture**：Gateway、DSH Loop、工具和持久化实际执行，不调用付费模型。真实模型接入和插件安装见 [Studio 手册](bridge/STUDIO.md) 与 [插件说明](bridge/README.md)。
+The default uses a **local model fixture**: Gateway, loops, tools and persistence execute normally without paid model calls. See the [Studio guide (中文)](bridge/STUDIO-zh.md) and [plugin README](bridge/README.md) for installation and model configuration.
 
-## 分支与能力
+## Branches
 
-| | `main` · 0.6.2 稳定基线 | `develop` · 0.6.3 开发线 |
+| Capability | `main` · 0.6.2 stable baseline | `develop` · 0.6.3 development |
 |---|---|---|
-| OpenClaw / DSH 双 Loop、Studio | ✓ | ✓ |
-| 共享记忆 | Gateway 内提供 | 独立 `dsh-memory` 组件 |
-| 组件化工作区搜索 | `knowledge_search` / 验证能力 | 进一步接入 `dsh_grep`、`dsh_glob` |
-| 文本读取 | Gateway 内提供 | 独立 `dsh-read`，保留读后写校验 |
-| DSH Loop 动态组件入口 | 尚未接入 | 接入宿主最终工具准入与组件 worker |
-| 干净克隆后的依赖恢复与构建 | ✓ | ✓ |
+| OpenClaw / DSH loops and Studio | ✓ | ✓ |
+| Shared memory | Runs in Gateway | Dedicated `dsh-memory` component |
+| Component workspace search | `knowledge_search` and verification | Also serves `dsh_grep` and `dsh_glob` |
+| Text reads | Run in Gateway | Dedicated `dsh-read`, with guarded-edit observations |
+| Dynamic component access from DSH loop | Pending | Host tool admission and component worker connected |
+| Clean-clone dependency recovery and builds | ✓ | ✓ |
 
-当前浏览的是 **main**。`v0.6.2` 标签保留最初备份的原始代码，分支上的依赖与协作流程会继续维护；它不等于重新发布了一个安装包。
+You are viewing **main**. The original `v0.6.2` tag preserves the initial backup; branch maintenance continues independently of packaged releases.
 
-## 从这里继续
+## Explore
 
-| 目标 | 入口 |
+| Goal | Start here |
 |---|---|
-| 修改代码、运行完整检查、提 PR | [贡献指南](CONTRIBUTING.md) |
-| 了解 SDK 校验、补丁和第三方许可证 | [依赖来源与复现](maintenance/DEPENDENCIES.md) |
-| 配置插件、管理组件 | [插件 README](bridge/README.md) |
-| 体验双 Loop 与共享记忆 | [Studio 手册](bridge/STUDIO.md) |
-| 理解权限与调用边界 | [授权模型](bridge/AUTHORIZATION.md) |
-| 查看当前分支的导入依据 | [源码来源](maintenance/IMPORT.md) |
+| Change code, run checks and submit a PR | [Contributing](CONTRIBUTING.md) |
+| Understand SDK verification and third-party licenses | [Dependencies (中文)](maintenance/DEPENDENCIES-zh.md) |
+| Configure the plugin and components | [Plugin README](bridge/README.md) |
+| Try both loops and shared memory | [Studio (中文)](bridge/STUDIO-zh.md) |
+| Understand permissions and invocation boundaries | [Authorization](bridge/AUTHORIZATION.md) |
+| Inspect the original source import | [Import provenance (中文)](maintenance/IMPORT-zh.md) |
 
-Git 中维护源码、测试、文档和构建配置。历史交付包、原始验收报告和个人运行数据不在仓库内；旧教程中的本地 `releases/`、`reports/` 链接需要对应交付资料。
+Git contains source, tests, documentation and build configuration. Historical release packages, private acceptance reports and personal runtime data are distributed or retained separately. Old links into `releases/` and `reports/` require the corresponding delivery materials.
 
 ---
 
@@ -108,6 +110,6 @@ Git 中维护源码、测试、文档和构建配置。历史交付包、原始�
 
 **Build together, one capability at a time.**
 
-新功能从 `develop` 出发 · 通过验证后合入 `main` · 用版本标签固定交付
+Start on `develop` · Validate before merging into `main` · Tag releases
 
 </div>

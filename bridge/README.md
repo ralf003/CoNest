@@ -1,8 +1,8 @@
 # CoNest Connector for OpenClaw
 
-本机 Ubuntu 从零安装与演示：[详细教程](docs/Ubuntu本地安装与演示教程.md)。当前机制、部署边界与验收范围：[CoNest 当前设计说明](docs/CoNest当前设计说明.md)。
+For the 0.6.2 baseline, see the [Ubuntu installation and demo guide](docs/ubuntu-installation-demo-zh.md) and [architecture, deployment boundaries and validation scope](docs/conest-design-zh.md), both in Chinese.
 
-CoNest Connector 0.6.2 adds an opt-in **CoNest Studio** to the unmodified OpenClaw 2026.9.2 release: a shared OpenClaw + DSH Market catalog, selectable OpenClaw/DSH agent loops, tools from both ecosystems in either loop, persistent shared memory, and a visual execution timeline. A companion DSH Web plugin exposes the same Studio inside DSH. See [the Studio installation and demo guide](./STUDIO.md).
+CoNest Connector 0.6.2 adds an opt-in **CoNest Studio** to the unmodified OpenClaw 2026.9.2 release: a shared OpenClaw + DSH Market catalog, selectable OpenClaw/DSH agent loops, tools from both ecosystems in either loop, persistent shared memory, and a visual execution timeline. A companion DSH Web plugin exposes the same Studio inside DSH. See [the Studio installation and demo guide](./STUDIO-zh.md).
 
 The plugin ID remains `dsh-bridge`. Without `config.studio`, the existing component worker, four bridge tools, authorization and lifecycle behavior remain available. Studio requires explicit configuration and model/tool admission. Market entries are discoverable metadata, not a claim that every upstream plugin is installed or runtime-compatible.
 
@@ -42,7 +42,7 @@ pnpm --dir bridge run build
 pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 ```
 
-No original `.runtime`, `.tooling` or `source/workspace` directory is required. See [dependency provenance and offline SDK use](../maintenance/DEPENDENCIES.md) and [the contribution guide](../CONTRIBUTING.md). Git ignores downloaded SDK content and installed dependencies.
+No original `.runtime`, `.tooling` or `source/workspace` directory is required. See [dependency provenance and offline SDK use](../maintenance/DEPENDENCIES-zh.md) and [the contribution guide](../CONTRIBUTING-zh.md). Git ignores downloaded SDK content and installed dependencies.
 
 The commands below run from the `bridge/` package directory.
 

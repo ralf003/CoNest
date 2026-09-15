@@ -1,6 +1,6 @@
 # CoNest 当前设计说明
 
-版本：CoNest Connector 0.6.2。依据：2026-09-13 的交付代码、最终安装包及验收记录。配套操作教程：[Ubuntu 本地安装与演示教程](./Ubuntu本地安装与演示教程.md)。
+版本：CoNest Connector 0.6.2。依据：2026-09-13 的交付代码、最终安装包及验收记录。配套操作教程：[Ubuntu 本地安装与演示教程](./ubuntu-installation-demo-zh.md)。
 
 ## 1. 当前设计要解决的问题
 

@@ -24,5 +24,5 @@ for conest_file in "${conest_payloads[@]}"; do
   if [[ ! -e "$conest_target" ]]; then cp -- "$conest_file" "$conest_target"; fi
 done
 printf '\n校验通过，四个安装文件已准备到：%s\n' "$conest_downloads"
-echo '请打开 docs/Ubuntu本地安装与演示教程.html，从第 3 节开始安装。'
+echo '请打开 docs/ubuntu-installation-demo-zh.html，从第 3 节开始安装。'
 echo '此脚本只准备文件；首次安装 Node/OpenClaw、获取市场清单和真实模型调用需要联网。'

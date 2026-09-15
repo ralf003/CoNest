@@ -17,6 +17,8 @@ secret_patterns = [
 ]
 for name in files:
     path = Path(name)
+    if not name.isascii():
+        errors.append(f'File names must use English/ASCII characters: {name}')
     if blocked.intersection(path.parts) or name.startswith(('bridge/releases/', 'bridge/reports/', 'maintenance/local/')) or path.name.startswith('.env') and path.name != '.env.example' or path.suffix in {'.log', '.jsonl', '.pem', '.key', '.tgz', '.zip', '.bundle'}:
         errors.append(f'Excluded state, dependency or artifact path: {name}')
     if path.as_posix().endswith('.tar.gz'):
@@ -36,7 +38,7 @@ if pkg['version'] != manifest['version']:
     errors.append('Package and plugin manifest versions disagree')
 if manifest['id'] != 'dsh-bridge':
     errors.append('The existing plugin identity must be retained')
-required = ['bridge/src/index.ts', 'bridge/src/runtime.ts', 'bridge/scripts/build.mjs', 'bridge/pnpm-lock.yaml', 'README.md', 'CONTRIBUTING.md']
+required = ['bridge/src/index.ts', 'bridge/src/runtime.ts', 'bridge/scripts/build.mjs', 'bridge/pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md', 'CONTRIBUTING-zh.md']
 for name in required:
     if name not in files:
         errors.append(f'Missing tracked project file: {name}')
