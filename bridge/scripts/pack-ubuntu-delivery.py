@@ -64,6 +64,8 @@ for (const name of names) {
 
 
 def main():
+    if json.loads((BRIDGE / 'package.json').read_text())['version'] != '0.6.2':
+        raise RuntimeError('The Ubuntu 0.6.2 builder must run from the frozen baseline; use pack-multiplatform.py for the current release')
     for relative, expected in PAYLOADS.items():
         if digest(BRIDGE / relative) != expected:
             raise RuntimeError(f'Qualified artifact changed: {relative}')

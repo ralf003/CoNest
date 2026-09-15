@@ -1,0 +1,192 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Red Hat 8 系与 Windows 安装演示教程</title><style>:root{font-family:Inter,"Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;color:#203149;background:#edf3f9;line-height:1.8}*{box-sizing:border-box}body{margin:0}header{background:#102944;color:#fff;padding:32px max(24px,calc((100vw - 1040px)/2))}header strong{font-size:25px;letter-spacing:2px}header p{margin:3px 0;color:#b9d9ed}nav{margin-top:16px;display:flex;flex-wrap:wrap;gap:20px}nav a{color:#9ddcec}main{max-width:1100px;margin:28px auto 60px;background:white;padding:35px 44px;border-radius:18px;box-shadow:0 8px 35px #1636510b}h1{font-size:30px;line-height:1.4}h2{margin-top:42px;padding-bottom:8px;border-bottom:2px solid #e5eff5;color:#174b72}h3{margin-top:28px}a{color:#08799d;text-underline-offset:3px}pre{background:#152d42;color:#e6f3fa;padding:20px;border-radius:10px;overflow-x:auto;line-height:1.65}code{font-family:"DejaVu Sans Mono",Consolas,monospace;font-size:.89em}p code,li code,td code{background:#edf4f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;display:block;overflow:auto;margin:20px 0;font-size:14px}th{background:#e5f2f7;color:#174b72}th,td{padding:12px 14px;border:1px solid #d9e4ed;text-align:left;vertical-align:top}tr:nth-child(even){background:#f8fafc}blockquote{border-left:4px solid #56bbaa;margin:20px 0;padding:8px 20px;background:#edf8f4}img{max-width:100%;border-radius:10px}li{margin:8px 0}footer{font-size:13px;color:#65798b;margin-top:36px;border-top:1px solid #e0e8ee;padding-top:16px}@media(max-width:700px){main{margin:12px;padding:20px}h1{font-size:25px}header{padding:22px}pre{padding:14px}}@media print{header,nav{display:none}body{background:white}main{box-shadow:none;margin:0;padding:0}pre{white-space:pre-wrap;background:#f1f4f7;color:black}a{color:inherit}}</style><header><strong>CoNest</strong><p>多平台候选交付 · Connector 0.6.3</p><nav><a href="../先看这里.html">开始使用</a><a href="../docs/RedHat8与Windows安装演示教程.html">安装与演示教程</a><a href="../docs/多平台适配设计与验证.html">当前设计</a><a href="../docs/多平台适配设计与验证.html">验证说明</a></nav></header><main><h1>Red Hat 8 系与 Windows 安装演示教程</h1>
+<p>交付版本：CoNest Connector 0.6.3 多平台候选版。宿主固定 OpenClaw 2026.9.2，Node 固定 24.15.0。本教程用于 OpenClaw 内的 CoNest 演示。</p>
+<h2>1. 安装目标与范围</h2>
+<table>
+<thead>
+<tr>
+<th>项目</th>
+<th>Red Hat 8 系</th>
+<th>Windows</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>CPU</td>
+<td>x86_64</td>
+<td>x64</td>
+</tr>
+<tr>
+<td>系统基线</td>
+<td>glibc ≥ 2.28，内核 ≥ 4.18</td>
+<td>Windows 10/11 x64</td>
+</tr>
+<tr>
+<td>安装入口</td>
+<td><code>bash install.sh</code></td>
+<td><code>install.ps1</code></td>
+</tr>
+<tr>
+<td>默认安装目录</td>
+<td><code>~/conest-demo-0.6.3</code></td>
+<td>用户主目录下的 <code>conest-demo-0.6.3</code></td>
+</tr>
+<tr>
+<td>执行方式</td>
+<td>本机 Linux 进程</td>
+<td>本机 Windows 进程，无需 WSL</td>
+</tr>
+<tr>
+<td>核心能力</td>
+<td>统一清单、DSH/OpenClaw Loop、双方读取/搜索工具、共享记忆</td>
+<td>相同的核心演示能力；原生系统验收状态见下文</td>
+</tr>
+</tbody></table>
+<p>0.6.2 基线已独立备份。本版使用新的默认目录，保留既有 0.6.2 安装与记忆。启动本版前，停止占用 18791 端口的旧演示服务。</p>
+<p>独立 DSH Web 仅用于第二个界面对照，不是 OpenClaw 内 DSH Loop 的运行前提。本次多平台交付包不包含独立 DSH Web 运行包。0.6.2 的 Ubuntu DSH 运行包不能作为 Windows 安装包使用。DSH 侧的 CoNest 界面插件源码保留在 <code>companions/dsh-ui</code>。</p>
+<p><strong>验证状态：</strong> Red Hat 官方 UBI 8.10 用户空间（glibc 2.28）与 Windows 版 Node/Wine 环境已验证 DSH 运行组件的实际读取、搜索、Loop 和重启后记忆。UBI 使用当前 Linux 主机内核；Wine 检查不能代替原生 Windows 的完整 OpenClaw 安装与界面验收。最终结果以随包的多平台验证说明和本机自检为准。</p>
+<h2>2. Red Hat 8 系安装</h2>
+<p>在终端检查系统：</p>
+<pre><code class="language-bash">cat /etc/os-release
+uname -m
+getconf GNU_LIBC_VERSION
+</code></pre>
+<p>架构应为 <code>x86_64</code>，glibc 应为 2.28 或更高。公司定制发行版还需确认其 Node 运行条件与文件系统策略。</p>
+<p>安装下载工具和运行库：</p>
+<pre><code class="language-bash">sudo dnf install -y ca-certificates curl tar xz git libstdc++
+</code></pre>
+<p>如果系统只提供 <code>yum</code>，将命令中的 <code>dnf</code> 换为 <code>yum</code>。无需在演示电脑上编译插件原生模块；包内已提供按 glibc 2.28 基线构建的 Linux 依赖。</p>
+<p>解压完整交付 ZIP，在解压目录打开终端，执行：</p>
+<pre><code class="language-bash">bash install.sh
+</code></pre>
+<p>脚本依次下载并校验 Node 24.15.0，安装 OpenClaw 2026.9.2、pnpm 11.7.0，再通过 OpenClaw 原生命令安装对应平台的 CoNest 包。系统依赖安装之外，使用普通用户运行脚本。</p>
+<p>成功输出包含 <code>Installed plugin: dsh-bridge</code>。然后自检：</p>
+<pre><code class="language-bash">bash &quot;$HOME/conest-demo-0.6.3/start.sh&quot; --verify
+</code></pre>
+<p>预期结果为 <code>Studio acceptance passed</code>。检查包含两个 Loop 的双方工具调用、记忆写入与跨 Loop 召回。自检使用确定性的模型决策，工具与磁盘记忆实际执行，不消耗模型 API 额度；市场同步仍需联网。</p>
+<p>配置模型 Key：</p>
+<pre><code class="language-bash">mkdir -p &quot;$HOME/conest-demo-0.6.3/credentials&quot;
+chmod 700 &quot;$HOME/conest-demo-0.6.3/credentials&quot;
+read -rsp &#39;DeepSeek API Key: &#39; conest_api_key
+printf &#39;\n&#39;
+(umask 077; printf &#39;DEEPSEEK_API_KEY=%s\n&#39; &quot;$conest_api_key&quot; &gt; &quot;$HOME/conest-demo-0.6.3/credentials/deepseek.env&quot;)
+unset conest_api_key
+</code></pre>
+<p>输入不会回显。Key 需要能够调用本演示固定的 <code>deepseek-v4-flash</code>，两种 Loop 共用这份 Key。启动：</p>
+<pre><code class="language-bash">bash &quot;$HOME/conest-demo-0.6.3/start.sh&quot;
+</code></pre>
+<p>保持终端打开。在另一个终端读取连接信息：</p>
+<pre><code class="language-bash">bash &quot;$HOME/conest-demo-0.6.3/start.sh&quot; --connection
+</code></pre>
+<h2>3. Windows 原生安装</h2>
+<p>使用普通用户打开 Windows PowerShell，在解压后的交付目录执行：</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+</code></pre>
+<p><code>Bypass</code> 只作用于这次 PowerShell 进程，不修改系统全局执行策略。脚本下载 Windows x64 版 Node 并校验 SHA256，然后安装 Windows 依赖包及 CoNest。默认路径可包含空格。</p>
+<p>自检：</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$HOME\conest-demo-0.6.3\start.ps1&quot; -Verify
+</code></pre>
+<p>预期为 <code>Studio acceptance passed</code>。若出现宿主生命周期锁、原生模块或权限错误，保留日志并对照第 6 节处理；Windows 原生验收不能用 Wine 的组件检查结果代替。</p>
+<p>配置模型 Key：</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$HOME\conest-demo-0.6.3\configure-key.ps1&quot;
+</code></pre>
+<p>脚本用隐藏输入读取 Key，并通过 Windows ACL 保护凭据目录。无需执行 Linux 的 <code>chmod</code>，也无需在 OpenClaw 设置页面重复填写 Key。</p>
+<p>启动服务，保持窗口打开：</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$HOME\conest-demo-0.6.3\start.ps1&quot;
+</code></pre>
+<p>另开 PowerShell 读取连接信息：</p>
+<pre><code class="language-powershell">powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$HOME\conest-demo-0.6.3\start.ps1&quot; -Connection
+</code></pre>
+<h2>4. 打开界面与演示</h2>
+<p>两种系统均在本机浏览器打开 <code>http://127.0.0.1:18791</code>，连接后点击左侧 <strong>CoNest Studio</strong>。如果宿主要求连接地址，填写 <code>ws://127.0.0.1:18791</code>；宿主和插件连接框均使用启动后读取的 Gateway token。Gateway token 与模型 Key 不同。</p>
+<p>按以下顺序操作，每项等待任务完成后继续：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>预期结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>统一生态 → 同步市场 → 筛选 DSH、工具、市场</td>
+<td>查看条目来源、注册状态和市场摘要；市场条目不代表已安装</td>
+</tr>
+<tr>
+<td>2</td>
+<td>工作台选择 DSH Loop，执行下方混合工具任务</td>
+<td>实际 Loop 为 dsh，OpenClaw read 和 DSH dsh_grep 均完成</td>
+</tr>
+<tr>
+<td>3</td>
+<td>切换 OpenClaw Loop，执行同一任务</td>
+<td>实际 Loop 为 openclaw，双方工具再次完成</td>
+</tr>
+<tr>
+<td>4</td>
+<td>DSH Loop 写入偏好，打开共享记忆页</td>
+<td>出现持久记忆记录</td>
+</tr>
+<tr>
+<td>5</td>
+<td>切换 OpenClaw Loop，召回偏好</td>
+<td>新会话出现记忆召回事件，并回答对应内容</td>
+</tr>
+</tbody></table>
+<p>混合工具任务：</p>
+<pre><code class="language-text">使用 OpenClaw 的 read 读取 evidence.txt，再用 DSH 的 dsh_grep 搜索 CoNest，汇总两次工具返回的真实内容。请用中文回答。
+</code></pre>
+<p>记忆写入：</p>
+<pre><code class="language-text">请记住：CoNest 演示的项目代号是青竹，汇报偏好为先结论、后证据。请确认记忆。
+</code></pre>
+<p>跨 Loop 召回：</p>
+<pre><code class="language-text">刚才记住的 CoNest 项目代号和汇报偏好是什么？请根据共享记忆回答。
+</code></pre>
+<p>以工具事件、实际 Loop、磁盘记忆与召回事件判断结果。模型在自动记忆 hook 写入之前生成确认文字，可能无法准确描述随后完成的持久化；请核对共享记忆页。</p>
+<p>当前任务验证基础集成链路，未扩展为复杂业务任务验收。Market 全量目录接入也不等于任意第三方市场插件都可安装、运行。</p>
+<h2>5. 停止与再次启动</h2>
+<p>在服务终端按 Ctrl+C。下次直接执行对应系统的 <code>start.sh</code> 或 <code>start.ps1</code>，无需重装。每次重启会生成新的 Gateway token，记忆保留在该版本的 <code>demo-state/studio/memory.jsonl</code>。</p>
+<p>每次启动最多允许 12 次真实模型 API 请求；一项任务可能包含多次请求。额度达到上限后停止并重新启动演示服务，再读取新 token。</p>
+<h2>6. 排查与平台能力</h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>处理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Red Hat 提示 curl / tar / xz 缺失</td>
+<td>先完成第 2 节系统依赖安装</td>
+</tr>
+<tr>
+<td>平台或 glibc 不匹配</td>
+<td>核对 x64 与 glibc ≥ 2.28；不要使用 0.6.2 的旧 Linux 原生包替代本版</td>
+</tr>
+<tr>
+<td>Windows ACL 配置失败</td>
+<td>检查 PowerShell 可用、目录属于当前用户；保留报错，不跳过凭据权限检查</td>
+</tr>
+<tr>
+<td>Windows 安装失败</td>
+<td>区分 Node 下载、OpenClaw 安装、CoNest 插件安装三步；保留原生系统报错</td>
+</tr>
+<tr>
+<td>端口被占用</td>
+<td>停止原来的 0.6.2 或另一份演示进程，再启动本版</td>
+</tr>
+<tr>
+<td>公司网络无法访问 npm</td>
+<td>按公司网络要求配置代理；可通过 <code>CONEST_NPM_REGISTRY</code> 环境变量指定可用的 npm registry</td>
+</tr>
+<tr>
+<td>市场显示缓存</td>
+<td>检查联网，重新点击同步；目录缓存不能作为最新同步成功的依据</td>
+</tr>
+<tr>
+<td>dsh_bash 无法执行</td>
+<td>本次默认演示不开放该工具。Linux 的沙箱命令执行还需要可用的 bwrap/Landlock；Windows 还涉及 Bash 和 ACL 沙箱能力，不能将缺失沙箱悄悄改为无隔离执行</td>
+</tr>
+</tbody></table>
+<p>包内已保留 DSH 的 Bash、图片等组件，但本次跨平台验收重点是 Loop、读取/搜索和共享记忆，不代表所有系统相关工具都完成目标系统验收。详见 <a href="%E5%A4%9A%E5%B9%B3%E5%8F%B0%E9%80%82%E9%85%8D%E8%AE%BE%E8%AE%A1%E4%B8%8E%E9%AA%8C%E8%AF%81.html">多平台适配设计与验证</a>。</p>
+<p>Node 平台基线依据 <a href="https://github.com/nodejs/node/blob/v24.15.0/BUILDING.md">Node 24.15.0 官方构建说明</a>。</p>
+<footer>固定版本：OpenClaw 2026.9.2 · DSH 0.1.0-rc.5 · Node 24.15.0 · Red Hat 8 系 / Windows x64（验证状态见说明）。文档可离线阅读。</footer></main></html>

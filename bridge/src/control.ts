@@ -5,13 +5,17 @@ import net, { type Socket } from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
 import { readFrames } from './framing.js';
+import { protectDirectory, assertPrivateFile } from './platform-support.mjs';
 import { BridgeError, errorData, type RuntimeStatus } from './types.js';
 import { isWireResponse } from './protocol.js';
 
-export function controlAddress(configFile: string): string {
+function controlLocation(configFile: string): { address: string; directory: string; lockFile: string } {
   const identity = createHash('sha256').update(realpathSync(configFile)).digest('hex').slice(0, 24);
-  return path.join(os.tmpdir(), `dsh-bridge-${process.getuid?.() ?? 'local'}`, `${identity}.sock`);
+  const directory = path.join(os.tmpdir(), `dsh-bridge-${process.getuid?.() ?? 'local'}`);
+  const socket = path.join(directory, `${identity}.sock`);
+  return { directory, lockFile: socket + '.lock', address: process.platform === 'win32' ? `\\\\.\\pipe\\conest-${identity}` : socket };
 }
+export function controlAddress(configFile: string): string { return controlLocation(configFile).address; }
 
 export type ControlMethod = 'status' | 'catalog' | 'reload' | 'manage' | 'call';
 
@@ -20,13 +24,11 @@ export async function serveControl(
   configFile: string,
   handle: (method: ControlMethod, params: unknown, signal: AbortSignal) => Promise<unknown>,
 ): Promise<() => Promise<void>> {
-  const address = controlAddress(configFile);
-  const directory = path.dirname(address);
-  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const { address, directory, lockFile } = controlLocation(configFile);
+  await protectDirectory(directory);
   const directoryStat = await lstat(directory);
-  if (!directoryStat.isDirectory() || (directoryStat.mode & 0o077) !== 0
-    || (process.getuid && directoryStat.uid !== process.getuid())) throw new BridgeError('CONTROL_DIRECTORY_UNSAFE', 'The control directory must be owned by the current user with mode 0700');
-  const lockFile = `${address}.lock`;
+  if (!directoryStat.isDirectory() || (process.platform !== 'win32' && ((directoryStat.mode & 0o077) !== 0
+    || (process.getuid && directoryStat.uid !== process.getuid())))) throw new BridgeError('CONTROL_DIRECTORY_UNSAFE', 'The control directory must be owned by the current user with mode 0700');
   const nonce = randomUUID();
   await acquireLock(lockFile, nonce);
   const sockets = new Set<Socket>();
@@ -42,9 +44,10 @@ export async function serveControl(
       void (async () => {
         let id = 'invalid';
         try {
-          const request = JSON.parse(line) as { id?: unknown; method?: unknown; params?: unknown };
+          const request = JSON.parse(line) as { id?: unknown; method?: unknown; params?: unknown; nonce?: unknown };
           if (typeof request.id !== 'string') throw new BridgeError('INVALID_REQUEST', 'A control request id is required');
           id = request.id;
+          if (process.platform === 'win32' && request.nonce !== nonce) throw new BridgeError('CONTROL_AUTH_REQUIRED', 'Control pipe authentication failed');
           if (request.method !== 'status' && request.method !== 'catalog' && request.method !== 'reload' && request.method !== 'manage' && request.method !== 'call') {
             throw new BridgeError('METHOD_DENIED', 'The operator socket accepts only status, reload, component management, and scoped calls');
           }
@@ -56,15 +59,17 @@ export async function serveControl(
   });
   try {
     try {
+      if (process.platform !== 'win32') {
       const socketStat = await lstat(address);
       if (!socketStat.isSocket()) throw new BridgeError('CONTROL_ADDRESS_UNSAFE', 'The control address already exists and is not a socket');
       await rm(address);
+      }
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
     await new Promise<void>((resolve, reject) => {
       server.once('error', reject);
       server.listen(address, () => { server.off('error', reject); resolve(); });
     });
-    await chmod(address, 0o600);
+    if (process.platform !== 'win32') await chmod(address, 0o600);
   } catch (error) {
     server.close();
     await releaseLock(lockFile, nonce);
@@ -79,13 +84,19 @@ export async function serveControl(
 
 /** Returns undefined only when there is no reachable owner of this configuration. */
 export async function controlRequest<T = RuntimeStatus>(configFile: string, method: ControlMethod, params?: unknown): Promise<T | undefined> {
-  const address = controlAddress(configFile);
+  const { address, lockFile } = controlLocation(configFile);
+  let nonce: string | undefined;
+  if (process.platform === 'win32') {
+    try { await assertPrivateFile(lockFile); nonce = JSON.parse(await readFile(lockFile, 'utf8')).nonce; }
+    catch(error) { if((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined; throw error; }
+    if (!nonce) throw new BridgeError('CONTROL_LOCK_INVALID', 'Control pipe credential is missing');
+  }
   return await new Promise((resolve, reject) => {
     const socket = net.connect(address);
     const id = randomUUID();
     const timer = setTimeout(() => { socket.destroy(); reject(new BridgeError('CONTROL_TIMEOUT', 'The worker control operation timed out')); }, 120_000);
     let responded = false;
-    socket.once('connect', () => socket.write(`${JSON.stringify({ id, method, params })}\n`));
+    socket.once('connect', () => socket.write(`${JSON.stringify({ id, method, params, ...(nonce ? { nonce } : {}) })}\n`));
     socket.once('error', error => {
       clearTimeout(timer);
       if (['ENOENT', 'ECONNREFUSED'].includes((error as NodeJS.ErrnoException).code ?? '')) resolve(undefined);
@@ -109,7 +120,7 @@ export async function controlRequest<T = RuntimeStatus>(configFile: string, meth
   });
 }
 
-async function acquireLock(file: string, nonce: string): Promise<void> {
+export async function acquireLock(file: string, nonce: string): Promise<void> {
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const handle = await open(file, 'wx', 0o600);
@@ -130,7 +141,7 @@ async function acquireLock(file: string, nonce: string): Promise<void> {
   throw new BridgeError('WORKER_ALREADY_RUNNING', 'Another worker acquired this configuration');
 }
 
-async function releaseLock(file: string, nonce: string): Promise<void> {
+export async function releaseLock(file: string, nonce: string): Promise<void> {
   try {
     const current = JSON.parse(await readFile(file, 'utf8')) as { nonce?: string };
     if (current.nonce === nonce) await rm(file);

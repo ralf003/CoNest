@@ -7,7 +7,7 @@ import { BridgeClient } from './client.js';
 import { controlRequest, type ControlMethod } from './control.js';
 import { parseOperation, type ComponentOperation } from './management.js';
 import { readConfig, resolveConfig } from './config.js';
-import { errorData, type JsonObject, type RuntimeStatus } from './types.js';
+import { ALL_PERMISSIONS, errorData, type JsonObject, type RuntimeStatus } from './types.js';
 import { formatStatus, renderToolResult } from './ui.js';
 
 const usage = 'Usage: conest init|status|catalog|reload|policy [show|set JSON_FILE]|components ACTION|invoke CAPABILITY JSON|search QUERY|verify QUERY QUOTE [--config FILE] [--workspace DIR] [--json]';
@@ -59,12 +59,12 @@ try {
       }
       const owner = await connect();
       if (method === 'status') return await owner.status() as T;
-      if (method === 'catalog') return await owner.catalog({ principal: { kind: 'operator' }, permissions: ['workspace:read'] }) as T;
+      if (method === 'catalog') return await owner.catalog({ principal: { kind: 'operator' }, permissions: [...ALL_PERMISSIONS] }) as T;
       if (method === 'reload') return await owner.reload() as T;
       if (method === 'manage') return await owner.manage(params as ComponentOperation) as T;
       const call = params as { capability: string; args: JsonObject; expectedGeneration?: string };
       return await owner.invoke({
-        ...call, workspaceRoot, permissions: ['workspace:read'], subject: 'bridge-cli',
+        ...call, workspaceRoot, permissions: [...ALL_PERMISSIONS], subject: 'bridge-cli',
         principal: { kind: 'operator' },
         taskId: randomUUID(), callId: randomUUID(),
         onProgress: event => process.stderr.write(`[${event.state}] ${event.message}\n`),

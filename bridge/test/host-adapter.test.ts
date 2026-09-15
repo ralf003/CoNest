@@ -127,3 +127,19 @@ test('session-scoped runtime cleanup cannot be treated as plugin unload or cance
     assert.equal(cleanupHostScope({}, f.scopes), false, 'Global plugin cleanup still releases ownership');
   } finally { f.scopes.close(); }
 });
+
+
+test('finalized search-tool denials also bind generic invocation and retain per-call lifetime', () => {
+  const f = fixture();
+  try {
+    const context = { runId: 'run', sessionKey: 'session', agentId: 'main', toolCallId: 'grep-call' };
+    f.fire('before_prompt_build', {}, { ...context, toolAuthority: authority(['dsh_grep', 'dsh_glob']) });
+    assert.deepEqual(f.scopes.runDenials('run').sort(), ['dsh_glob', 'dsh_grep']);
+    f.fire('before_tool_call', { toolName: 'dsh_grep' }, context);
+    const binding = f.scopes.claim(scopedCallId(context, 'grep-call'));
+    assert.equal(binding.runId, 'run');
+    assert.deepEqual(binding.principal, { kind: 'agent', agentId: 'main' });
+    f.fire('after_tool_call', { toolName: 'dsh_grep' }, context);
+    assert.equal(binding.signal.aborted, true);
+  } finally { f.scopes.close(); }
+});

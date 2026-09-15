@@ -1,3 +1,4 @@
+import { resolveAutomaticMemorySubject } from './studio/automatic-memory.js';
 import { realpathSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { BridgeConfig, Invocation, JsonObject, Permission, Progress, RuntimeStatus } from './types.js';
@@ -228,6 +229,7 @@ export class BridgeRuntime {
           callId: request.callId,
           taskId: request.taskId,
           subject: request.subject,
+          memorySubject: resolveAutomaticMemorySubject(request.principal.kind === 'operator' ? { agentId: 'main' } : { agentId: request.principal.agentId, ...request.principal.requester }, 'conest')?.entityName,
           workspaceRoot: requestedWorkspace,
           permissions: request.permissions.filter(permission => generation.config.permissions.includes(permission)),
           capabilityPath: [],
@@ -282,6 +284,7 @@ export class BridgeRuntime {
     if (config.workspaceRoot !== this.current.config.workspaceRoot) {
       throw new BridgeError('WORKSPACE_RESTART_REQUIRED', 'Changing workspaceRoot requires an OpenClaw plugin service restart');
     }
+    if (config.memoryFilePath !== this.current.config.memoryFilePath) throw new BridgeError('MEMORY_RESTART_REQUIRED', 'Changing memoryFilePath requires a worker restart');
     await this.disposeRetired();
     if (this.retired.length >= config.maxRetiredGenerations) {
       throw new BridgeError('RELOAD_BUSY', 'Too many previous generations still have active tasks');

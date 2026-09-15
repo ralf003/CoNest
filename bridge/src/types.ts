@@ -1,11 +1,12 @@
 import type { Context } from '@deepseek-ai/cordis';
 
 export const HOST_VERSION = '2026.9.2';
-export const BRIDGE_VERSION = '0.6.2';
+export const BRIDGE_VERSION = '0.6.3';
 export const PROTOCOL_VERSION = 3;
 
 export type JsonObject = Record<string, unknown>;
-export type Permission = 'workspace:read';
+export const ALL_PERMISSIONS = ['workspace:read', 'memory:read', 'memory:write'] as const;
+export type Permission = typeof ALL_PERMISSIONS[number];
 export type CapabilityRule = { allow?: string[]; deny?: string[] };
 export type Requester = { channel: string; accountId: string; senderId: string };
 export type Principal = { kind: 'operator' } | { kind: 'agent'; agentId: string; requester?: Requester };
@@ -56,6 +57,7 @@ export interface ComponentSpec {
 }
 export interface BridgeConfig {
   workspaceRoot: string;
+  memoryFilePath?: string;
   components: ComponentSpec[];
   permissions: Permission[];
   maxConcurrent: number;
@@ -70,6 +72,8 @@ export interface BridgeConfig {
   abortGraceMs: number;
 }
 export interface Invocation {
+  /** Derived by the worker from its validated principal, never from capability arguments. */
+  memorySubject?: string;
   callId: string;
   taskId: string;
   subject: string;

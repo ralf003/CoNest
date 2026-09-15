@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,7 +59,8 @@ try {
   assert.equal(inspection.plugin.name, 'CoNest Connector for OpenClaw');
   assert.equal(inspection.plugin.status, 'loaded', `OpenClaw diagnostics: ${JSON.stringify(inspection.diagnostics)}`);
   assert.equal(inspection.plugin.activated, true);
-  const expectedTools = ['bridge_capabilities', 'bridge_invoke', 'knowledge_search', 'knowledge_verify'];
+  const memoryTools = JSON.parse(await readFile(path.join(pluginRoot, 'openclaw.plugin.json'), 'utf8')).contracts.tools.filter(name => name.startsWith('dsh_mcp__reference_memory__'));
+  const expectedTools = [...memoryTools, 'bridge_capabilities', 'bridge_invoke', 'dsh_glob', 'dsh_grep', 'dsh_read', 'knowledge_search', 'knowledge_verify'].sort();
   assert.deepEqual(tools, expectedTools);
   assert.ok(inspection.services.includes('dsh-bridge-worker'));
   assert.ok(inspection.commands.includes('conest'));

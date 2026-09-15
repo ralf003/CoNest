@@ -1,21 +1,23 @@
+import type { MemoryAccess } from '../memory-adapter.js';
 import { callGatewayFromCli } from 'openclaw/plugin-sdk/gateway-runtime';
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
 import { isIncognitoSessionKey } from 'openclaw/plugin-sdk/routing';
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
+import type { ReadObservation } from '../read-contract.js';
 import { CordisBridgeHost } from './cordis-bridge-host.js';
 import { createDshAgentHarness } from './dsh-agent-harness.js';
 import { generatedComposition } from './generated/composition.generated.js';
-import { extractLatestUserText, formatAutomaticMemoryContext, resolveAutomaticMemorySubject, selectAutomaticMemory } from './automatic-memory.js';
+import { extractLatestUserText, formatAutomaticMemoryContext, selectAutomaticMemory } from './automatic-memory.js';
 import { StudioActivity } from './activity.js';
 import { MarketCatalog, type CatalogItem } from './catalog.js';
 
 const sharedKey = Symbol.for('conest.studio.v1');
-type StudioState = { host: CordisBridgeHost; activity: StudioActivity; market: MarketCatalog; owners: number; pending: Map<string, string>; loops: Map<string, string> };
+type StudioState = { host: CordisBridgeHost; activity: StudioActivity; market: MarketCatalog; owners: number; pending: Map<string, string>; loops: Map<string, string>; memoryLifetime: AbortController };
 const shared = ((globalThis as Record<symbol, unknown>)[sharedKey] ??= new Map<string, StudioState>()) as Map<string, StudioState>;
 const PREFIX = '/plugins/conest-studio';
 
-export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): void {
+export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, runtime: { endRun(runId: string): void }, memoryAccess: MemoryAccess): { observeRead(receipt: ReadObservation, sessionKey: string, signal: AbortSignal): Promise<void> } | undefined {
   const config = api.pluginConfig?.studio as { stateDir?: string } | undefined;
   if (!config) return;
   if (!config.stateDir || !path.isAbsolute(config.stateDir)) throw new Error('CoNest Studio requires an absolute stateDir');
@@ -23,7 +25,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
   const stateDir = realpathSync(config.stateDir);
   let state = shared.get(stateDir);
   if (!state) {
-    state = { host: new CordisBridgeHost(), activity: new StudioActivity(stateDir), market: new MarketCatalog(stateDir), owners: 0, pending: new Map(), loops: new Map() };
+    state = { host: new CordisBridgeHost(), activity: new StudioActivity(stateDir), market: new MarketCatalog(stateDir), owners: 0, pending: new Map(), loops: new Map(), memoryLifetime: new AbortController() };
     shared.set(stateDir, state);
   }
   const { host, activity, market } = state;
@@ -32,23 +34,32 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
   api.registerService({
     id: 'conest-studio-runtime',
     async start() {
-      await host.start({ workspaceRoot, memoryFilePath: path.join(stateDir, 'memory.jsonl'), sessionPersistenceRoot: path.join(stateDir, 'sessions') });
+      if (state!.memoryLifetime.signal.aborted) state!.memoryLifetime = new AbortController();
+      await host.start({ workspaceRoot, sessionPersistenceRoot: path.join(stateDir, 'sessions') });
       if (!serviceOwned) { serviceOwned = true; state!.owners++; }
       void market.get(true).catch(error => api.logger.warn(`CoNest market: ${String(error)}`));
     },
     async stop() {
       if (!serviceOwned) return;
       serviceOwned = false;
-      if (--state!.owners === 0) await host.stop();
+      if (--state!.owners === 0) { state!.memoryLifetime.abort(); pending.clear(); loops.clear(); await host.stop(); }
     },
   });
   api.registerAgentHarness(createDshAgentHarness({ host, timeoutMs: 120_000,
+    onRunEnded: runId => runtime.endRun(runId),
     onRunStarted: (runId, sessionKey) => { loops.set(runId, 'dsh'); loops.set(sessionKey, 'dsh'); },
     onSupportEvaluated: message => api.logger.info('CoNest DSH: ' + message),
     onRunCompleted(result) {
+      if (isIncognitoSessionKey(result.sessionId)) return;
       activity.record({ kind: 'loop.complete', loop: 'dsh', sessionKey: result.sessionId, state: 'completed', text: result.finalText });
     },
   }));
+  api.on('session_end', async (event, context) => {
+    // The official reset may reuse the ID and deliver this hook asynchronously.
+    // The next attempt retires only older revisions; a late hook cannot dispose it.
+    if (event.nextSessionId === event.sessionId) return;
+    await host.endHarnessSession({ sessionId: event.sessionId, agentId: context.agentId });
+  });
 
   for (const descriptor of generatedComposition.tools) api.registerTool(context => {
     if (context.sandboxed) return null;
@@ -78,13 +89,13 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
     const candidate = selectAutomaticMemory(event.prompt, 500) ?? selectAutomaticMemory(extractLatestUserText(event.messages) ?? '', 500);
     if (key && candidate) pending.set(key, candidate);
     api.logger.debug?.(`CoNest memory stage prompt=${event.prompt.length} latest=${extractLatestUserText(event.messages)?.length ?? 0} candidate=${!!candidate} key=${key}`);
-    const subject = resolveAutomaticMemorySubject(context, 'conest');
-    if (!subject) return;
-    const memory = await host.recallAutomaticMemory(subject.entityName);
-    activity.record({ kind: 'memory.recall', loop, runId: context.runId, sessionKey: context.sessionKey,
-      state: 'completed', text: `${memory.observations.length} 条共享记忆` });
-    const text = formatAutomaticMemoryContext(memory.observations, { maxItems: 20, maxChars: 4000 });
-    if (text) return { prependContext: text };
+    try {
+      const memory = await memoryAccess('memory_recall', {}, context, state!.memoryLifetime.signal);
+      activity.record({ kind: 'memory.recall', loop, runId: context.runId, sessionKey: context.sessionKey,
+        state: 'completed', text: `${memory.observations?.length ?? 0} 条共享记忆` });
+      const text = formatAutomaticMemoryContext(memory.observations ?? [], { maxItems: 20, maxChars: 4000 });
+      if (text) return { prependContext: text };
+    } catch { recordMemoryFailure('memory.recall', loop, context); }
   }, { timeoutMs: 10_000 });
   api.on('agent_end', async (event, context) => {
     const key = context.runId ?? context.sessionKey;
@@ -98,18 +109,29 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
         state: event.success ? 'completed' : 'failed', text: last?.content?.map(c => c.text ?? '').join('') || event.error });
     }
     if (!event.success || isIncognitoSessionKey(context.sessionKey)) return;
-    const subject = resolveAutomaticMemorySubject(context, 'conest');
-    if (candidate && subject) {
-      await host.storeAutomaticMemory(subject.entityName, candidate);
-      activity.record({ kind: 'memory.write', loop, runId: context.runId, sessionKey: context.sessionKey,
-        state: 'completed', text: candidate });
+    if (candidate) {
+      try {
+        await memoryAccess('memory_remember', { observation: candidate }, context, state!.memoryLifetime.signal);
+        activity.record({ kind: 'memory.write', loop, runId: context.runId, sessionKey: context.sessionKey,
+          state: 'completed', text: candidate });
+      } catch { recordMemoryFailure('memory.write', loop, context); }
     }
   }, { timeoutMs: 10_000 });
+  function recordMemoryFailure(kind: string, loop: string | undefined, context: { runId?: string; sessionKey?: string }) {
+    try { activity.record({ kind, loop, runId: context.runId, sessionKey: context.sessionKey, state: 'unavailable', text: '共享记忆暂不可用，主任务继续' }); } catch { /* Optional activity must not fail the task. */ }
+    api.logger.warn('CoNest shared memory unavailable; main task continues');
+  }
+  const operatorMemory = async () => {
+    try { return await memoryAccess('memory_recall', {}, undefined, state!.memoryLifetime.signal); }
+    catch { return { observations: [], unavailable: true }; }
+  };
   api.on('before_tool_call', (event, context) => {
+    if (isIncognitoSessionKey(context.sessionKey)) return;
     activity.record({ kind: 'tool.start', tool: event.toolName, runId: context.runId,
       sessionKey: context.sessionKey, source: event.toolName.startsWith('dsh_') ? 'dsh' : 'openclaw', state: 'running' });
   });
   api.on('after_tool_call', (event, context) => {
+    if (isIncognitoSessionKey(context.sessionKey)) return;
     activity.record({ kind: 'tool.end', tool: event.toolName, runId: context.runId,
       sessionKey: context.sessionKey, source: event.toolName.startsWith('dsh_') ? 'dsh' : 'openclaw',
       state: event.error ? 'failed' : 'completed', text: event.error, durationMs: event.durationMs });
@@ -145,9 +167,8 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
         // Validate the caller before reading any private state, including opaque sandbox frames.
         try {await gatewayRequest('health',{});}catch{res.statusCode=401;res.end(JSON.stringify({error:'Gateway token invalid'}));return true;}
         if (req.method === 'GET' && url.pathname === `${PREFIX}/api/activity`) {
-          const subject = resolveAutomaticMemorySubject({ agentId: 'main' }, 'conest')!;
-          const memory = host.status() === 'ready' ? await host.recallAutomaticMemory(subject.entityName) : { observations: [] };
-          res.end(JSON.stringify({ activity: activity.read(), memory: memory.observations }));
+          const memory = await operatorMemory();
+          res.end(JSON.stringify({ activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory }));
         } else if (req.method === 'GET' && url.pathname === `${PREFIX}/api/state`) {
           const results = await Promise.allSettled([
             gatewayRequest<Record<string, unknown>>('plugins.list', {}),
@@ -165,10 +186,9 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
               kind: 'tool', description: t.description, status: 'registered' })),
             ...remote?.items ?? [],
           ];
-          const memorySubject = resolveAutomaticMemorySubject({ agentId: 'main' }, 'conest')!;
-          const memory = host.status() === 'ready' ? await host.recallAutomaticMemory(memorySubject.entityName) : { observations: [] };
-          res.end(JSON.stringify({ version: '0.6.2', status: host.status(), items,
-            market: remote ? { ...remote, items: undefined } : undefined, activity: activity.read(), memory: memory.observations,
+          const memory = await operatorMemory();
+          res.end(JSON.stringify({ version: '0.6.3', status: host.status(), items,
+            market: remote ? { ...remote, items: undefined } : undefined, activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory,
             errors: results.flatMap(r => r.status === 'rejected' ? [String(r.reason)] : []) }));
         } else if (req.method === 'POST' && url.pathname === `${PREFIX}/api/run`) {
           const origin = req.headers.origin;
@@ -191,4 +211,5 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string): v
   });
   api.session.controls.registerControlUiDescriptor({ surface: 'tab', id: 'conest-studio', label: 'CoNest Studio',
     description: '统一生态 · 双 Loop · 共享记忆', path: PREFIX, icon: 'sparkles', group: 'agent', order: 5, requiredScopes: ['operator.read'] });
+  return { observeRead: (receipt, sessionKey, signal) => host.observeRead(receipt, sessionKey, signal) };
 }

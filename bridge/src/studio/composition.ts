@@ -9,7 +9,6 @@ import LocalSandboxProvider from "@deepseek-ai/dsh-sandbox-local";
 import SandboxPolicyService from "@deepseek-ai/dsh-sandbox-policy";
 import LlmRuntime from "@deepseek-ai/dsh-llm";
 import * as LlmPiAi from "@deepseek-ai/dsh-llm-pi-ai";
-import * as McpClient from "@deepseek-ai/dsh-mcp-client";
 import SessionStore from "@deepseek-ai/dsh-session";
 import * as SessionCheckpointPolicy from "@deepseek-ai/dsh-session-checkpoint-policy";
 import JsonlSessionPersistence from "@deepseek-ai/dsh-session-persistence-jsonl";
@@ -17,11 +16,9 @@ import * as ShellEnv from "@deepseek-ai/dsh-shell-env";
 import LocalSubprocessRuntime from "@deepseek-ai/dsh-subprocess-local";
 import SystemPrompt from "@deepseek-ai/dsh-system-prompt";
 import * as ToolBash from "@deepseek-ai/dsh-tool-bash";
-import * as ToolFs from "@deepseek-ai/dsh-tool-fs";
-import * as ToolFsSearch from "@deepseek-ai/dsh-tool-fs-search";
+import { selectFsTools } from "../fs-tool-subset.js";
 import ToolRuntime from "@deepseek-ai/dsh-tools";
 import ApprovalService from "@deepseek-ai/dsh-user-approval";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { registerBridgeProofAdapter } from "./proof-llm-adapter.js";
 
@@ -32,16 +29,11 @@ export type RunningComposition = {
 
 export type CompositionOptions = {
   workspaceRoot: string;
-  memoryFilePath?: string;
   sessionPersistenceRoot?: string;
   enableBridgeProofAdapter?: boolean;
 };
 
-const memoryServerEntry = fileURLToPath(
-  new URL("../mcp-memory-server.mjs", import.meta.url),
-);
-
-/** Boot real DSH filesystem, search, and sandboxed Bash plugins in Cordis. */
+/** Boot the Gateway-owned DSH loop, filesystem and sandboxed Bash. */
 export async function startComposition(options: CompositionOptions): Promise<RunningComposition> {
   const context = new Context();
   const fibers: Fiber[] = [];
@@ -102,29 +94,6 @@ export async function startComposition(options: CompositionOptions): Promise<Run
       }),
     );
 
-    fibers.push(
-      await context.plugin(McpClient, {
-        transport: "stdio",
-        serverName: "reference_memory",
-        command: process.execPath,
-        args: [memoryServerEntry],
-        cwd: workspaceRoot,
-        env: {
-          MEMORY_FILE_PATH: path.resolve(
-            options.memoryFilePath ?? path.join(workspaceRoot, ".cordis-memory.jsonl"),
-          ),
-        },
-        toolCallTimeoutMs: 30_000,
-        failOnStartupError: true,
-        reconnect: {
-          enabled: true,
-          initialDelayMs: 250,
-          maxDelayMs: 5_000,
-          maxAttempts: 3,
-        },
-      }),
-    );
-
     // One policy controls both the in-process filesystem fence and kernel-backed Bash sandbox.
     fibers.push(
       await context.plugin(SandboxPolicyService, {
@@ -136,15 +105,10 @@ export async function startComposition(options: CompositionOptions): Promise<Run
     // Real DSH filesystem stack: provider + read-before-edit policy + model tools.
     fibers.push(await context.plugin(SandboxedFileSystem, { cwd: workspaceRoot }));
     fibers.push(await context.plugin(FsObservationPolicy));
-    fibers.push(await context.plugin(ToolFs, {}));
+    fibers.push(await context.plugin(selectFsTools("gateway"), {}));
 
-    // Real DSH packaged-ripgrep stack.
+    // Subprocess infrastructure remains required by Bash. Search is owned by the worker.
     fibers.push(await context.plugin(LocalSubprocessRuntime));
-    fibers.push(
-      await context.plugin(ToolFsSearch, {
-        sampleOverCapGlobResults: false,
-      }),
-    );
 
     // Real DSH shell stack. Background mode is disabled because this focused
     // composition intentionally does not mount the DSH jobs subsystem.

@@ -1,6 +1,6 @@
 {
   "name": "@local/conest-connector",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "CoNest Connector for OpenClaw, with the CoNest Runtime for DSH/Cordis components.",
   "private": true,
   "type": "module",
@@ -49,7 +49,13 @@
     "@deepseek-ai/node-addon-landlock-run-linux-x64": "link:../source/workspace/deepseek-harness/native/landlock-run/packages/linux-x64",
     "node-pty": "link:../source/workspace/deepseek-harness/packages/subprocess/subprocess-local/node_modules/node-pty",
     "@openclaw/deepseek-provider": "2026.9.2",
-    "@vscode/ripgrep": "link:../source/workspace/deepseek-harness/packages/fs/tool-fs-search/node_modules/@vscode/ripgrep"
+    "@vscode/ripgrep": "link:../source/workspace/deepseek-harness/packages/fs/tool-fs-search/node_modules/@vscode/ripgrep",
+    "@deepseek-ai/dsh-sandbox-windows-acl": "link:../source/workspace/deepseek-harness/packages/sandbox/sandbox-windows-acl",
+    "@deepseek-ai/dsh-session": "link:../source/workspace/deepseek-harness/packages/core/session",
+    "@deepseek-ai/dsh-tool-fs": "link:../source/workspace/deepseek-harness/packages/fs/tool-fs",
+    "@deepseek-ai/dsh-fs": "link:../source/workspace/deepseek-harness/packages/fs/fs",
+    "@deepseek-ai/dsh-fs-local": "link:../source/workspace/deepseek-harness/packages/fs/fs-local",
+    "@deepseek-ai/dsh-mcp-client": "link:../source/workspace/deepseek-harness/packages/mcp/mcp-client"
   },
   "devDependencies": {
     "@types/node": "22.20.0",
@@ -67,15 +73,12 @@
     "@deepseek-ai/dsh-fs-sandbox": "link:../source/workspace/deepseek-harness/packages/fs/fs-sandbox",
     "@deepseek-ai/dsh-llm-deepseek": "link:../source/workspace/deepseek-harness/packages/llm/llm-deepseek",
     "@deepseek-ai/dsh-llm-pi-ai": "link:../source/workspace/deepseek-harness/packages/llm/llm-pi-ai",
-    "@deepseek-ai/dsh-mcp-client": "link:../source/workspace/deepseek-harness/packages/mcp/mcp-client",
     "@deepseek-ai/dsh-sandbox-local": "link:../source/workspace/deepseek-harness/packages/sandbox/sandbox-local",
     "@deepseek-ai/dsh-sandbox-policy": "link:../source/workspace/deepseek-harness/packages/sandbox/sandbox-policy",
-    "@deepseek-ai/dsh-session": "link:../source/workspace/deepseek-harness/packages/core/session",
     "@deepseek-ai/dsh-session-checkpoint-policy": "link:../source/workspace/deepseek-harness/packages/session/session-checkpoint-policy",
     "@deepseek-ai/dsh-session-persistence-jsonl": "link:../source/workspace/deepseek-harness/packages/session/session-persistence-jsonl",
     "@deepseek-ai/dsh-shell-env": "link:../source/workspace/deepseek-harness/packages/shell/shell-env",
     "@deepseek-ai/dsh-tool-bash": "link:../source/workspace/deepseek-harness/packages/shell/tool-bash",
-    "@deepseek-ai/dsh-tool-fs": "link:../source/workspace/deepseek-harness/packages/fs/tool-fs",
     "@deepseek-ai/dsh-user-approval": "link:../source/workspace/deepseek-harness/packages/interaction/user-approval",
     "@modelcontextprotocol/server-memory": "link:../source/workspace/openclaw-cordis-bridge-demo/node_modules/.pnpm/@modelcontextprotocol+server-memory@2026.7.4_zod@4.5.4/node_modules/@modelcontextprotocol/server-memory"
   },

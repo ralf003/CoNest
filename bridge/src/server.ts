@@ -1,6 +1,6 @@
 import type { BridgeConfig, JsonObject, Permission, RuntimeStatus } from './types.js';
 import { randomUUID } from 'node:crypto';
-import { BridgeError, errorData } from './types.js';
+import { ALL_PERMISSIONS, BridgeError, errorData } from './types.js';
 import type { WireEvent, WireRequest, WireResponse } from './protocol.js';
 import { BridgeRuntime, type InvokeRequest } from './runtime.js';
 import type { AuthorizationRequest, CallScope } from './authorization.js';
@@ -12,6 +12,7 @@ import { parsePrincipal, parseCeiling } from './policy.js';
 export type ServerOptions = {
   config: BridgeConfig;
   configFile?: string;
+  memoryFileOverride?: string;
   loadConfig(): BridgeConfig;
 };
 
@@ -45,7 +46,7 @@ export async function serve(options: ServerOptions): Promise<void> {
     if (options.configFile) closeControl = await serveControl(options.configFile, async (method, params, signal) => {
       if (method === 'catalog') {
         await ready.promise;
-        return runtime.catalog({ principal: { kind: 'operator' }, permissions: ['workspace:read'] });
+        return runtime.catalog({ principal: { kind: 'operator' }, permissions: [...ALL_PERMISSIONS] });
       }
       if (method !== 'call') return await manage(method, params);
       await ready.promise;
@@ -53,7 +54,7 @@ export async function serve(options: ServerOptions): Promise<void> {
       if (Object.keys(input).some(key => !['capability', 'args', 'expectedGeneration'].includes(key))) throw new BridgeError('INVALID_REQUEST', 'Operator calls cannot supply identity or policy fields');
       const scope = {
         capability: requiredString(input, 'capability'), taskId: randomUUID(), callId: randomUUID(),
-        subject: 'local-operator', workspaceRoot: options.config.workspaceRoot, permissions: ['workspace:read'] as Permission[],
+        subject: 'local-operator', workspaceRoot: options.config.workspaceRoot, permissions: [...ALL_PERMISSIONS] as Permission[],
         principal: { kind: 'operator' as const },
       };
       signal.throwIfAborted();
@@ -67,7 +68,7 @@ export async function serve(options: ServerOptions): Promise<void> {
       process.stderr.write(`Task ${taskId} ignored cancellation beyond the grace period; terminating the extension process\n`);
       process.exit(70);
     });
-    if (options.configFile) manager = new ComponentManager(runtime, options.configFile);
+    if (options.configFile) manager = new ComponentManager(runtime, options.configFile, options.memoryFileOverride);
     ready.resolve();
   } catch (error) {
     ready.reject(error);
@@ -174,7 +175,7 @@ function parseScope(params: JsonObject): CallScope {
 }
 
 function parsePermissions(value: unknown): Permission[] {
-  if (!Array.isArray(value) || value.length > 1 || value.some(item => item !== 'workspace:read')) throw new BridgeError('INVALID_REQUEST', 'The call contains invalid permissions');
+  if (!Array.isArray(value) || value.length > 3 || value.some(item => !ALL_PERMISSIONS.includes(item))) throw new BridgeError('INVALID_REQUEST', 'The call contains invalid permissions');
   return value as Permission[];
 }
 

@@ -1,12 +1,11 @@
 import assert from 'node:assert/strict';
 import { lstat, readFile } from 'node:fs/promises';
 import { parseEnv } from 'node:util';
+import { assertPrivateFile } from './platform-support.mjs';
 
 // This transport observes real model decisions; it never executes or synthesizes tools.
 export async function createLiveDeepSeek(credentialFile, fetchResponse = fetch) {
-  const metadata = await lstat(credentialFile);
-  assert.ok(metadata.isFile() && (metadata.mode & 0o077) === 0,
-    'The credential file must be a regular owner-only file (mode 600 or 400)');
+  await assertPrivateFile(credentialFile);
   const key = parseEnv(await readFile(credentialFile, 'utf8')).DEEPSEEK_API_KEY?.trim();
   assert.ok(key && key !== 'YOUR_API_KEY_HERE', 'DEEPSEEK_API_KEY is missing or a placeholder');
   const maxRequests = 12;

@@ -1,4 +1,5 @@
 import { BridgeError, type CapabilityRule, type Principal } from './types.js';
+import { DIRECT_CAPABILITY_NAMES } from './managed-tools.js';
 import { matchesCapability } from './policy.js';
 
 type IdentityContext = { agentId?: string; messageChannel?: string; agentAccountId?: string; requesterSenderId?: string };
@@ -33,7 +34,7 @@ export function configuredHostCeiling(config: unknown, agentId: string, model?: 
       else if (/^[a-z0-9_*]+$/i.test(pattern) && !['bridge_capabilities', 'bridge_invoke'].includes(pattern)) deny.add(pattern.toLowerCase());
     }
     const allow = strings(policy.allow);
-    if (allow.length > 0) for (const name of ['knowledge_search', 'knowledge_verify']) {
+    if (allow.length > 0) for (const name of DIRECT_CAPABILITY_NAMES) {
       if (![...allow, ...strings(policy.alsoAllow)].some(pattern => ['dsh-bridge', 'group:plugins'].includes(pattern) || matchesCapability(pattern, name))) deny.add(name);
     }
   }

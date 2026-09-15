@@ -9,7 +9,7 @@ test('configuration pins the builtin dependency flow and rejects unknown fields'
   const workspace = await mkdtemp(path.join(os.tmpdir(), 'dsh-bridge-config-'));
   context.after(() => rm(workspace, { recursive: true, force: true }));
   const config = resolveConfig({ workspaceRoot: workspace });
-  assert.deepEqual(config.components.map(component => component.manifest.id), ['dsh-search', 'result-verifier']);
+  assert.deepEqual(config.components.map(component => component.manifest.id), ['dsh-memory', 'dsh-read', 'dsh-search', 'result-verifier']);
   assert.equal(config.maxConcurrent, 4);
   assert.throws(() => resolveConfig({ workspaceRoot: workspace, surprise: true }), /Unknown configuration field/);
 });

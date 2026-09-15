@@ -7,15 +7,26 @@ import semver from 'semver';
 import { BRIDGE_VERSION, BridgeError, type BridgeConfig, type ComponentManifest, type ComponentSpec, type JsonObject } from './types.js';
 import { packageIntegrity } from './package-content.js';
 import { parsePolicy } from './policy.js';
+import { memoryCapabilities } from './memory-contract.js';
+import { ALL_PERMISSIONS, type Permission } from './types.js';
+import { managedReadTools } from './read-contract.js';
+import { managedSearchTools } from './search-contract.js';
 
 const ajv = new Ajv({ allErrors: true, strict: true });
 const singleLine = '^[^\\r\\n]+$';
 const objectSchema = { type: 'object', additionalProperties: false, properties: { query: { type: 'string', minLength: 1, maxLength: 500, pattern: singleLine } }, required: ['query'] };
 const builtins: ComponentManifest[] = [
+  { id: 'dsh-memory', version: '0.1.0', description: 'Shared DSH memory service', entry: 'builtin:dsh-memory', requires: {}, capabilities: memoryCapabilities, configSchema: { type: 'object', properties: {}, additionalProperties: false } },
   {
-    id: 'dsh-search', version: '0.2.0', description: 'DSH workspace search service',
+    id: 'dsh-read', version: '0.1.0', description: 'DSH workspace text reader', entry: 'builtin:dsh-read', requires: {},
+    capabilities: managedReadTools.map(tool => ({ name: tool.openClawName, description: tool.description, inputSchema: tool.parameters, permissions: ['workspace:read'] })),
+  },
+  {
+    id: 'dsh-search', version: '0.2.1', description: 'DSH workspace search service',
     entry: 'builtin:dsh-search', requires: {},
-    capabilities: [{ name: 'knowledge_search', description: 'Search literal text in this workspace using DSH. Returns source paths, line numbers and excerpts; no model call.', inputSchema: objectSchema, permissions: ['workspace:read'] }],
+    capabilities: [{ name: 'knowledge_search', description: 'Search literal text in this workspace using DSH. Returns source paths, line numbers and excerpts; no model call.', inputSchema: objectSchema, permissions: ['workspace:read'] },
+      ...managedSearchTools.map(tool => ({ name: tool.openClawName, description: tool.description, inputSchema: tool.parameters, permissions: ['workspace:read'] as const })).map(tool => ({ ...tool, permissions: [...tool.permissions] })),
+    ],
   },
   {
     id: 'result-verifier', version: '0.2.0', description: 'Quoted-source verification component',
@@ -59,7 +70,7 @@ const validateManifestShape = ajv.compile({
         contextProvider: { const: 'workspace-v1' },
         inputSchema: { type: 'object' },
         outputSchema: { type: 'object' },
-        permissions: { type: 'array', uniqueItems: true, maxItems: 1, items: { enum: ['workspace:read'] } },
+        permissions: { type: 'array', uniqueItems: true, maxItems: 3, items: { enum: [...ALL_PERMISSIONS] } },
       },
     } },
   },
@@ -87,13 +98,16 @@ export function validateManifest(value: unknown): asserts value is ComponentMani
   }
 }
 
-const configKeys = new Set(['workspaceRoot', 'components', 'builtins', 'permissions', 'capabilityPolicy', 'maxConcurrent', 'maxQueued', 'maxTasks', 'taskTtlMs', 'startupTimeoutMs', 'shutdownTimeoutMs', 'maxPayloadBytes', 'maxRetiredGenerations', 'abortGraceMs']);
-export function resolveConfig(input: JsonObject = {}, base = process.cwd()): BridgeConfig {
+const configKeys = new Set(['memoryFilePath', 'workspaceRoot', 'components', 'builtins', 'permissions', 'capabilityPolicy', 'maxConcurrent', 'maxQueued', 'maxTasks', 'taskTtlMs', 'startupTimeoutMs', 'shutdownTimeoutMs', 'maxPayloadBytes', 'maxRetiredGenerations', 'abortGraceMs']);
+export function resolveConfig(input: JsonObject = {}, base = process.cwd(), memoryFileOverride?: string): BridgeConfig {
   for (const key of Object.keys(input)) if (!configKeys.has(key)) throw new BridgeError('INVALID_CONFIG', `Unknown configuration field: ${key}`);
   const workspace = input.workspaceRoot ?? base;
   if (typeof workspace !== 'string') throw new BridgeError('INVALID_CONFIG', 'workspaceRoot must be a path string');
   const workspaceRoot = realpathSync(path.resolve(base, workspace));
   if (!statSync(workspaceRoot).isDirectory()) throw new BridgeError('INVALID_CONFIG', 'workspaceRoot must be a directory');
+  const memoryPath = input.memoryFilePath ?? memoryFileOverride;
+  if (memoryPath !== undefined && (typeof memoryPath !== 'string' || !memoryPath.trim())) throw new BridgeError('INVALID_CONFIG', 'memoryFilePath must be a non-empty path');
+  const memoryFilePath = typeof memoryPath === 'string' ? path.resolve(base, memoryPath) : undefined;
   const rawComponents = input.components ?? [];
   if (!Array.isArray(rawComponents) || rawComponents.length > 64) throw new BridgeError('INVALID_CONFIG', 'components must be an array of at most 64 entries');
   const components: ComponentSpec[] = [
@@ -110,6 +124,9 @@ export function resolveConfig(input: JsonObject = {}, base = process.cwd()): Bri
       return component;
     }),
   ];
+  const memory = components.find(c => c.manifest.id === 'dsh-memory')!;
+  memory.enabled &&= !!memoryFilePath;
+  memory.config = memoryFilePath ? { file: memoryFilePath } : {};
   const names = new Set<string>();
   const ids = new Set<string>();
   for (const { manifest } of components) {
@@ -120,10 +137,10 @@ export function resolveConfig(input: JsonObject = {}, base = process.cwd()): Bri
       names.add(capability.name);
     }
   }
-  const permissions = input.permissions ?? ['workspace:read'];
-  if (!Array.isArray(permissions) || permissions.some(p => p !== 'workspace:read')) throw new BridgeError('INVALID_CONFIG', 'The first milestone supports only the workspace:read permission');
+  const permissions = input.permissions ?? (memoryFilePath ? [...ALL_PERMISSIONS] : ['workspace:read']);
+  if (!Array.isArray(permissions) || permissions.some(p => !ALL_PERMISSIONS.includes(p))) throw new BridgeError('INVALID_CONFIG', 'Unknown permission; supported permissions are workspace:read, memory:read, memory:write');
   return {
-    workspaceRoot, components, permissions: [...new Set(permissions)] as ['workspace:read'],
+    workspaceRoot, ...(memoryFilePath ? { memoryFilePath } : {}), components, permissions: [...new Set(permissions)] as Permission[],
     capabilityPolicy: parsePolicy(input.capabilityPolicy),
     maxConcurrent: integer(input, 'maxConcurrent', 4, 1, 64),
     maxQueued: integer(input, 'maxQueued', 32, 0, 1024),
@@ -182,7 +199,7 @@ export function inside(root: string, target: string): boolean {
 export function revision(config: BridgeConfig): string {
   return createHash('sha256').update(JSON.stringify(config)).digest('hex').slice(0, 24);
 }
-export function readConfig(file: string): BridgeConfig {
-  return resolveConfig(JSON.parse(readFileSync(file, 'utf8')), path.dirname(path.resolve(file)));
+export function readConfig(file: string, memoryFileOverride?: string): BridgeConfig {
+  return resolveConfig(JSON.parse(readFileSync(file, 'utf8')), path.dirname(path.resolve(file)), memoryFileOverride);
 }
 export function bundledRoot(): string { return path.dirname(fileURLToPath(import.meta.url)); }

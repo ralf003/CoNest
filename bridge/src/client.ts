@@ -21,6 +21,7 @@ export type ClientOptions = {
   workerFile: string;
   configFile?: string;
   workspaceRoot?: string;
+  memoryFilePath?: string;
   startupTimeoutMs: number;
   shutdownTimeoutMs: number;
   maxPayloadBytes?: number;
@@ -72,6 +73,7 @@ export class BridgeClient {
     const args = [this.options.workerFile, 'serve'];
     if (this.options.configFile) args.push('--config', this.options.configFile);
     else if (this.options.workspaceRoot) args.push('--workspace', this.options.workspaceRoot);
+    if (this.options.memoryFilePath) args.push('--memory-file', this.options.memoryFilePath);
     const child = spawn(process.execPath, args, {
       cwd: this.options.workspaceRoot ?? process.cwd(),
       env: executionEnvironment(),

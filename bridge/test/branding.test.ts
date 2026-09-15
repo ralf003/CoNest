@@ -1,3 +1,4 @@
+import { managedDshTools } from '../src/managed-tools.js';
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
@@ -28,7 +29,7 @@ test('CoNest product names, package, manifest, and runtime version agree without
   assert.equal(manifest.id, PLUGIN_ID);
   assert.equal(PLUGIN_ID, 'dsh-bridge');
   assert.deepEqual(manifest.commandAliases.map((alias: { name: string }) => alias.name), [...COMMAND_NAMES]);
-  assert.deepEqual([...manifest.contracts.tools].sort(), ['bridge_capabilities', 'bridge_invoke', 'knowledge_search', 'knowledge_verify', ...generatedComposition.tools.map(t => t.openClawName)].sort());
+  assert.deepEqual([...manifest.contracts.tools].sort(), ['bridge_capabilities', 'bridge_invoke', 'knowledge_search', 'knowledge_verify', ...[...managedDshTools, ...generatedComposition.tools].map(t => t.openClawName)].sort());
   assert.deepEqual([...STATUS_PATHS], ['/plugins/conest-connector', '/plugins/dsh-bridge']);
 });
 

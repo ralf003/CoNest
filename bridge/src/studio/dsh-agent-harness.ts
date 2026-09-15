@@ -1,4 +1,7 @@
 import type { AgentHarnessV2 } from "openclaw/plugin-sdk/agent-harness";
+import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
+import { HOST_TOOL_NAMES } from "../host-adapter.js";
+import { getSessionEntry } from "openclaw/plugin-sdk/session-store-runtime";
 import type {
   AgentHarnessAttemptResult,
   AgentMessage,
@@ -29,6 +32,7 @@ export type DshAgentHarnessOptions = {
   timeoutMs: number;
   onRunStarted?: (runId: string, sessionKey: string) => void;
   onRunCompleted?: (result: AgentRunResult) => void;
+  onRunEnded?: (runId: string) => void;
   onSupportEvaluated?: (message: string) => void;
 };
 
@@ -48,7 +52,7 @@ export function createDshAgentHarness(options: DshAgentHarnessOptions): AgentHar
     label: "DeepSeek Harness (DSH) Agent Runtime",
     autoSelection: { providerIds: [] },
     conversationToolPolicySupport: "exact",
-    conversationToolPolicySafeDenyTools: ["exec", "read", "write", "edit"],
+    conversationToolPolicySafeDenyTools: ["exec", "read", "write", "edit", ...HOST_TOOL_NAMES],
     supports(context) {
       const reject = (reason: string, fallbackRuntime?: "openclaw") => {
         options.onSupportEvaluated?.(
@@ -109,6 +113,12 @@ async function runDshAttempt(
   // internal transcript array. Hooks can still correlate capture/recall by the
   // canonical session key and the exact pre-injection prompt below.
   const inputMessages: AgentMessage[] = [];
+  const lifetime = new AbortController();
+  const assertActive = () => {
+    lifetime.signal.throwIfAborted();
+    params.abortSignal?.throwIfAborted();
+    params.hostCapabilities.assertActive();
+  };
   try {
     const sandbox = await resolveSandboxContext({ config: params.config, agentId: params.agentId,
       sessionKey: params.sessionKey, workspaceDir: params.workspaceDir });
@@ -117,13 +127,17 @@ async function runDshAttempt(
       provider: params.provider,
       modelId: params.modelId,
     });
-    const promptBuild = await resolveAgentHarnessBeforePromptBuildResult({
-      prompt: params.prompt,
-      developerInstructions: "",
-      messages: inputMessages,
-      ctx: hookContext,
-      bootstrapContextRunKind: params.bootstrapContextRunKind,
-    });
+    assertActive();
+    const sessionTarget = params.sessionTarget;
+    const sessionEntry = sessionTarget?.storePath && sessionTarget.sessionKey
+      ? getSessionEntry({ storePath: sessionTarget.storePath, sessionKey: sessionTarget.sessionKey,
+        agentId: sessionTarget.agentId ?? params.agentId, readConsistency: 'latest' })
+      : undefined;
+    if (sessionEntry && sessionEntry.sessionId !== params.sessionId) throw new Error('The owning OpenClaw session changed');
+    // The official host can reset a session while retaining its sessionId.
+    // Read the public lifecycle revision; without one, do not reuse history.
+    const hostLifecycleRevision = sessionEntry?.lifecycleRevision ?? `attempt:${params.runId}`;
+    assertActive();
     const eventBridge = createDshEventBridge(params);
     if (!params.hostCapabilities.createToolSurface) throw new Error("OpenClaw did not provide a bound tool surface");
     const surface = params.hostCapabilities.createToolSurface({
@@ -135,14 +149,39 @@ async function runDshAttempt(
       abortSignal: params.abortSignal, includeCoreTools: true,
       senderIsOwner: params.senderIsOwner,
     }, { cwd: params.workspaceDir });
-    const hostTools = applyEmbeddedAttemptToolsAllow(surface, promptBuild.toolsAllow ?? params.toolsAllow)
-      .filter(tool => !["cordis_agent_run", "bridge_capabilities", "bridge_invoke", "knowledge_search", "knowledge_verify"].includes(tool.name))
-      .filter(tool => !params.pluginHarnessToolPolicySafeDeniedTools?.includes(tool.name));
+    let hostTools: AnyAgentTool[] = [];
+    const promptBuild = await resolveAgentHarnessBeforePromptBuildResult({
+      prompt: params.prompt,
+      // The public SDK calls this builder after ordinary hooks and before the
+      // authorized pass. Publish only the final intersection, never a guessed
+      // or pre-hook tool list. Do not run memory/prompt hooks a second time.
+      developerInstructions: { build({ toolsAllow }) {
+        assertActive();
+        hostTools = params.disableTools ? [] : applyEmbeddedAttemptToolsAllow(
+          applyEmbeddedAttemptToolsAllow(surface, params.toolsAllow), toolsAllow,
+        ).filter(tool => tool.name !== "cordis_agent_run")
+          .filter(tool => !params.pluginHarnessToolPolicySafeDeniedTools?.includes(tool.name));
+        return "";
+      } },
+      messages: inputMessages,
+      ctx: hookContext,
+      bootstrapContextRunKind: params.bootstrapContextRunKind,
+      toolAuthority: {
+        fingerprint: params.toolAuthorityFingerprint,
+        activeToolNames: () => hostTools.map(tool => tool.name),
+        assertActive,
+      },
+    });
     const boundTools = hostTools.map(tool => ({ ...tool, async execute(callId: string, args: unknown, signal?: AbortSignal) {
       const startedAt = Date.now();
       try {
-        params.hostCapabilities.assertActive();
-        const result = await tool.execute(callId, args, signal);
+        assertActive();
+        const callSignal = AbortSignal.any([lifetime.signal, ...params.abortSignal ? [params.abortSignal] : [], ...signal ? [signal] : []]);
+        callSignal.throwIfAborted();
+        // createToolSurface already wraps the real before-tool hook, including
+        // run/requester binding. Forward completion once through the public SDK.
+        const result = await tool.execute(callId, args, callSignal);
+        assertActive();
         await runAgentHarnessAfterToolCallHook({ ...hookContext, toolName: tool.name, toolCallId: callId,
           startArgs: args as Record<string, unknown>, result, startedAt });
         return result;
@@ -156,6 +195,9 @@ async function runDshAttempt(
       hostTools: params.disableTools ? [] : boundTools,
       task: promptBuild.prompt,
       sessionKey: params.sessionKey ?? params.sessionId,
+      hostSessionId: params.sessionId,
+      hostAgentId: params.agentId,
+      hostLifecycleRevision,
       provider: route.provider,
       model: route.model,
       timeoutMs: Math.min(params.timeoutMs, options.timeoutMs),
@@ -314,6 +356,9 @@ async function runDshAttempt(
       currentAttemptReplayMetadata: { hadPotentialSideEffects: true, replaySafe: false },
       itemLifecycle: { startedCount: 0, completedCount: 0, activeCount: 0 },
     };
+  } finally {
+    lifetime.abort(new Error("DSH harness attempt ended"));
+    options.onRunEnded?.(params.runId);
   }
 }
 

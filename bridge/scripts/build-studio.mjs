@@ -11,7 +11,7 @@ const options={bundle:true,platform:'node',format:'esm',target:'node24',sourcema
  banner:{js:"import { createRequire as __bundleCreateRequire } from 'node:module'; const require = __bundleCreateRequire(import.meta.url);"},
  external:['openclaw','openclaw/*','sharp','koffi','node-pty','@vscode/ripgrep'],
  alias:{'@deepseek-ai/dsh-tools':path.join(dsh,'packages/core/tools/lib/index.js')},metafile:true};
-for (const [entry,out] of [['src/studio/index.ts','dist/studio/index.js'],['src/mcp-memory-server.mjs','dist/mcp-memory-server.mjs']]) {
+for (const [entry,out] of [['src/studio/index.ts','dist/studio/index.js'],['src/mcp-memory-server.mjs','dist/mcp-memory-server.mjs'],['src/studio/runtime-probe.ts','dist/studio/runtime-probe.mjs']]) {
  const result=await build({...options,entryPoints:[path.join(root,entry)],outfile:path.join(root,out)});
  await writeFile(path.join(root,out+'.meta.json'),JSON.stringify(result.metafile));
 }
@@ -19,7 +19,7 @@ for (const [entry,out] of [['src/studio/index.ts','dist/studio/index.js'],['src/
 const {mkdir, readdir, cp} = await import('node:fs/promises');
 const licenses=path.join(root,'dist/studio-licenses');await mkdir(licenses,{recursive:true});
 const seen=new Map();
-for(const out of ['dist/studio/index.js','dist/mcp-memory-server.mjs']) {
+for(const out of ['dist/studio/index.js','dist/mcp-memory-server.mjs','dist/studio/runtime-probe.mjs']) {
  const meta=JSON.parse(await readFile(path.join(root,out+'.meta.json'),'utf8'));
  for(const member of Object.keys(meta.inputs)) {
   let dir=path.dirname(path.resolve(member));

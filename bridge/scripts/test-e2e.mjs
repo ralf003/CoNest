@@ -1,20 +1,34 @@
+import { memoryProbeDecision, qualifyManagedMemory } from './qualify-memory.mjs';
 import assert from 'node:assert/strict';
 import { createHash, randomUUID } from 'node:crypto';
 import { execFile, spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { createRequire } from 'node:module';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 import { createLiveDeepSeek } from './live-deepseek.mjs';
 import { packageVersion, reportDirectory, reportPath } from './report-path.mjs';
+import { readProbeDecision, qualifyManagedRead } from './qualify-read.mjs';
+import { searchProbeDecision, qualifyManagedSearch } from './qualify-search.mjs';
+import { componentProbeDecision, qualifyDualLoopComponents } from './qualify-dual-loop-components.mjs';
 
 // The fixture supplies model decisions only. All tools run inside the official Gateway.
 const liveMode = process.argv.includes('--live-deepseek');
 const capabilityGuidance = process.argv.includes('--capability-guidance');
 const dynamicContext = process.argv.includes('--context-provider');
+const dshLoop = process.argv.includes('--dsh-loop');
+const memoryMigration = process.argv.includes('--memory-migration');
+if (memoryMigration && !dshLoop) throw new Error('Memory qualification requires --dsh-loop');
+const readMigration = process.argv.includes('--read-migration');
+if (readMigration && !dshLoop) throw new Error('Read qualification requires --dsh-loop');
+const searchMigration = process.argv.includes('--search-migration');
+if (searchMigration && !dshLoop) throw new Error('Search qualification requires --dsh-loop');
+const componentLifecycle = process.argv.includes('--component-lifecycle');
+if (componentLifecycle && !dshLoop) throw new Error('Dual-loop lifecycle qualification requires --dsh-loop');
+if (dshLoop && (liveMode || !process.env.CONEST_REPORT_PROFILE)) throw new Error('DSH component qualification requires a separate report profile and the local model fixture');
 if ((capabilityGuidance || dynamicContext) && !process.env.CONEST_REPORT_PROFILE) throw new Error('Use CONEST_REPORT_PROFILE for unreleased host-adapter evidence');
 if (dynamicContext && liveMode) throw new Error('Dynamic context qualification uses only the offline fixture');
 const pluginRoot = path.resolve(process.env.CONEST_TEST_PLUGIN_ROOT ?? fileURLToPath(new URL('..', import.meta.url)));
@@ -45,8 +59,16 @@ const env = { ...process.env, NO_COLOR: '1', OPENCLAW_CONFIG_PATH: configPath,
   OPENCLAW_STATE_DIR: path.join(root, 'state'), OPENCLAW_GATEWAY_TOKEN: token,
   OPENCLAW_SKIP_CHANNELS: '1', OPENCLAW_SKIP_BROWSER_CONTROL_SERVER: '1' };
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-const textContent = message => typeof message?.content === 'string' ? message.content
-  : (message?.content ?? []).map(block => block.text ?? '').join('\n');
+const textContent = message => {
+  let text = typeof message?.content === 'string' ? message.content : (message?.content ?? []).map(block => block.text ?? '').join('\n');
+  // DSH serializes the host tool result envelope; the native loop uses its text.
+  if (message?.role === 'tool') for (let i = 0; i < 4; i++) {
+    let value; try { value = JSON.parse(text); } catch { break; }
+    if (!Array.isArray(value?.content)) break;
+    text = value.content.map(block => block.text ?? '').join('\n');
+  }
+  return text;
+};
 const hash = async file => createHash('sha256').update(await readFile(file)).digest('hex');
 
 const model = createServer(async (request, response) => {
@@ -57,6 +79,7 @@ const model = createServer(async (request, response) => {
     const input = JSON.parse(body);
     const results = input.messages.filter(message => message.role === 'tool');
     const offered = input.tools.map(tool => tool.function.name);
+    const componentProbe = memoryProbeDecision(input, textContent) ?? readProbeDecision(input, textContent) ?? searchProbeDecision(input, textContent) ?? componentProbeDecision(input, textContent);
     const policyProbe = input.messages.some(message => message.role === 'user' && textContent(message).includes('POLICY_PROBE'));
     const contextProbe = input.messages.some(message => message.role === 'user' && textContent(message).includes('CONTEXT_PROBE'));
     const hasGuidance = input.messages.some(message => message.role === 'user' && textContent(message).includes(CAPABILITY_GUIDANCE));
@@ -64,7 +87,7 @@ const model = createServer(async (request, response) => {
     assert.ok(!input.messages.some(message => message.role === 'system' && textContent(message).includes(CAPABILITY_GUIDANCE)), 'Authorized guidance must not modify the system prompt');
     const contribution = input.messages.filter(message => message.role === 'user').map(textContent).find(text => text.includes(CONTEXT_PREFIX));
     const contributionCount = input.messages.filter(message => message.role === 'user').reduce((count, message) => count + textContent(message).split(CONTEXT_PREFIX).length - 1, 0);
-    assert.ok(contributionCount <= 1, 'Registry changes cannot duplicate the configured context contribution');
+    assert.ok(contributionCount <= 1, `Registry changes cannot duplicate the configured context contribution: ${JSON.stringify(input.messages.map(message => ({ role: message.role, length: textContent(message).length, contributions: textContent(message).split(CONTEXT_PREFIX).length - 1 })))}`);
     assert.equal(!!contribution, dynamicContext && !policyProbe && (contextExpected ?? true), `Dynamic context must reflect the current provider and host policy; message metadata: ${JSON.stringify(input.messages.map(message => ({ role: message.role, length: textContent(message).length, markerIndex: textContent(message).indexOf(marker) })))}`);
     assert.ok(!input.messages.some(message => message.role === 'system' && textContent(message).includes(CONTEXT_PREFIX)));
     if (contribution) assert.ok(contribution.includes(quote), 'Real DSH evidence must arrive before any model tool call');
@@ -95,7 +118,10 @@ const model = createServer(async (request, response) => {
     let name;
     let args;
     let final;
-    if (contextProbe) {
+    if (componentProbe) {
+      ({ name, args, final } = componentProbe);
+      if (name) assert.ok(offered.includes(name), `Component probe tool missing: ${name}`);
+    } else if (contextProbe) {
       assert.equal(results.length, 0, 'Context-only probes must not need a tool call');
       final = 'CONTEXT_PROBE_OK';
     } else if (policyProbe) {
@@ -181,8 +207,8 @@ try {
     logging: { file: path.join(root, 'gateway.log') },
     gateway: { mode: 'local', bind: 'loopback', port, auth: { mode: 'token', token }, controlUi: { enabled: false } },
     agents: { ownership: 'explicit', defaults: { workspace, skipBootstrap: true, model: { primary: live ? 'bridge-live/deepseek-v4-flash' : 'bridge-fixture/deterministic' } },
-      entries: { main: { workspace }, restricted: { workspace, tools: { deny: ['bridge_invoke'] } }, nosearch: { workspace, tools: { deny: ['knowledge_search'] } }, limited: { workspace } } },
-    tools: { allow: ['read', 'session_status', 'knowledge_search', 'bridge_capabilities', 'bridge_invoke'], codeMode: { enabled: false } },
+      entries: { main: { workspace }, ...(memoryMigration ? { nomemorytool: { workspace, tools: { deny: ['dsh_mcp__reference_memory__search_nodes'] } } } : {}), ...(readMigration ? { noreadtool: { workspace, tools: { deny: ['dsh_read'] } } } : {}), ...(searchMigration ? { nosearchtools: { workspace, tools: { deny: ['dsh_grep', 'dsh_glob'] } } } : {}), restricted: { workspace, tools: { deny: ['bridge_invoke'] } }, nosearch: { workspace, tools: { deny: ['knowledge_search'] } }, limited: { workspace } } },
+    tools: { allow: ['read', 'session_status', 'knowledge_search', 'bridge_capabilities', 'bridge_invoke', ...memoryMigration ? ['dsh_mcp__reference_memory__create_entities', 'dsh_mcp__reference_memory__search_nodes', 'dsh_mcp__reference_memory__read_graph'] : [], ...searchMigration ? ['dsh_grep', 'dsh_glob'] : [], ...readMigration ? ['dsh_read', 'dsh_edit', 'dsh_write'] : []], codeMode: { enabled: false } },
     models: { mode: 'replace', providers: { [live ? 'bridge-live' : 'bridge-fixture']: {
       baseUrl: `http://127.0.0.1:${modelPort}/v1`, api: 'openai-completions', apiKey: 'local-fixture-only',
       models: [{ id: live ? 'deepseek-v4-flash' : 'deterministic', name: live ? 'DeepSeek Flash recorded live acceptance' : 'Deterministic acceptance fixture', reasoning: false, input: ['text'],
@@ -194,10 +220,29 @@ try {
         ...(dynamicContext ? { contextProvider: { capability: 'workspace_context', provider: 'workspace-context', timeoutMs: 2000, maxChars: 2000 } } : {}),
       } } } },
   };
+  if (dshLoop) {
+    const providerDir = path.join(root, 'deepseek-provider');
+    await cp(path.join(pluginRoot, 'node_modules/@openclaw/deepseek-provider'), providerDir, { recursive: true, dereference: true });
+    const manifest = JSON.parse(await readFile(path.join(providerDir, 'package.json'), 'utf8'));
+    manifest.openclaw.extensions = manifest.openclaw.runtimeExtensions;
+    await writeFile(path.join(providerDir, 'package.json'), JSON.stringify(manifest));
+    config.plugins.allow.push('deepseek');
+    config.plugins.load.paths.push(providerDir);
+    config.plugins.entries.deepseek = { enabled: true };
+    config.plugins.entries['dsh-bridge'].config.studio = { stateDir: path.join(root, 'studio') };
+    config.agents.defaults.model.primary = 'deepseek/deepseek-v4-flash';
+    config.agents.defaults.models = { 'deepseek/deepseek-v4-flash': { agentRuntime: { id: 'dsh' } } };
+    const provider = config.models.providers['bridge-fixture'];
+    provider.models[0] = { ...provider.models[0], id: 'deepseek-v4-flash', agentRuntime: { id: 'dsh' } };
+    config.models.providers = { deepseek: provider };
+    env.DEEPSEEK_API_KEY = 'local-fixture-only';
+    env.DEEPSEEK_BASE_URL = `http://127.0.0.1:${modelPort}/v1`;
+  }
   await writeFile(configPath, JSON.stringify(config));
   const adapterHash = await hash(path.join(pluginRoot, 'dist/index.js'));
   const hostAdapterHash = await hash(path.join(pluginRoot, 'dist/host-adapter.js'));
   const contextProviderHash = await hash(path.join(pluginRoot, 'dist/context-provider.js'));
+  const studioHash = dshLoop ? await hash(path.join(pluginRoot, 'dist/studio/index.js')) : undefined;
   const officialCliHash = await hash(cli);
   const gateway = spawn(process.execPath, [cli, 'gateway', 'run', '--port', String(port)], { cwd: workspace, env, stdio: ['ignore', 'pipe', 'pipe'] });
   children.add(gateway);
@@ -270,6 +315,7 @@ try {
   }
   const agentResult = JSON.parse(stdout);
   assert.ok(JSON.stringify(agentResult).includes(`DELIVERED: ${quote}`));
+  assert.equal(agentResult.result.meta.agentMeta.agentHarnessId, dshLoop ? 'dsh' : 'openclaw', 'Assert actual executor, not merely configured selection');
   assert.ok(!stderr.includes('falling back'), 'The agent must use the Gateway, not embedded fallback');
   const failedUpgrade = path.join(root, 'failed-upgrade');
   await mkdir(failedUpgrade);
@@ -323,6 +369,11 @@ try {
   assert.equal((await http('knowledge_search', { query: marker })).status, 200, 'A different agent must retain its permitted search');
   await writeFile(policyFile, '{}');
   await manage('policy', 'set', policyFile);
+  const lifecycleChecks = componentLifecycle ? await qualifyDualLoopComponents({ root, workspace, cli, env, manage, execute, quote, marker,
+    gatewayUrl: `ws://127.0.0.1:${port}`, token }) : undefined;
+  const memoryChecks = memoryMigration ? await qualifyManagedMemory({ root, workspace, cli, env, manage, execute, http }) : undefined;
+  const readChecks = readMigration ? await qualifyManagedRead({ root, workspace, cli, env, manage, execute, gatewayUrl: `ws://127.0.0.1:${port}`, token }) : undefined;
+  const searchChecks = searchMigration ? await qualifyManagedSearch({ root, workspace, cli, env, manage, execute, gatewayUrl: `ws://127.0.0.1:${port}`, token }) : undefined;
   if (dynamicContext) {
     const probeContext = async (label, expected, sessionKey = `agent:main:context-${randomUUID()}`) => {
       contextExpected = expected;
@@ -331,7 +382,8 @@ try {
         '--message', `CONTEXT_PROBE ${marker}`], { cwd: workspace, env, timeout: 60_000, maxBuffer: 4 * 1024 * 1024 });
       assert.ok(turn.stdout.includes('CONTEXT_PROBE_OK'));
       assert.equal(trace.length, before + 1);
-      contextChecks.push({ label, contextPresent: expected, modelRequests: 1, modelToolCalls: 0 });
+      contextChecks.push({ label, contextPresent: expected, modelRequests: 1, modelToolCalls: 0,
+        sessionId: JSON.parse(turn.stdout).result.meta.agentMeta.sessionId });
     };
     await probeContext('enabled provider contributes real source data before tools', true);
     const resetKey = `agent:main:context-reset-${randomUUID()}`;
@@ -388,14 +440,15 @@ try {
   assert.equal(await hash(path.join(pluginRoot, 'dist/index.js')), adapterHash);
   assert.equal(await hash(path.join(pluginRoot, 'dist/host-adapter.js')), hostAdapterHash);
   assert.equal(await hash(path.join(pluginRoot, 'dist/context-provider.js')), contextProviderHash);
+  if (studioHash) assert.equal(await hash(path.join(pluginRoot, 'dist/studio/index.js')), studioHash);
   assert.equal(await hash(cli), officialCliHash);
   const report = { recordedAt: new Date().toISOString(), bridgeVersion: packageVersion, openClawVersion: '2026.9.2',
     model: live ? 'deepseek-v4-flash through a bounded local recording transport' : 'local deterministic OpenAI-compatible fixture; no external model credentials',
     liveProvider: live?.report(),
-    gatewayMainLoop: true, artifactTesting: !!process.env.CONEST_TEST_PLUGIN_ROOT, capabilityGuidance, dynamicContext, contextChecks,
+    gatewayMainLoop: !dshLoop, selectedLoop: dshLoop ? 'dsh' : 'openclaw', lifecycleChecks, searchChecks, readChecks, memoryChecks, artifactTesting: !!process.env.CONEST_TEST_PLUGIN_ROOT, capabilityGuidance, dynamicContext, contextChecks,
     contextDiagnosticsShared: dynamicContext, contextSessionReset: dynamicContext, statusRoutes, modelRequests: trace.length, nativeAndExtensionTools: live
       ? mainTrace.flatMap(step => step.decisions.map(decision => decision.tool)) : trace.slice(0, 4).map(step => step.decision.tool),
-    liveInstallSameWorker: true, adapterUnchanged: true, adapterSha256: adapterHash, hostAdapterSha256: hostAdapterHash, contextProviderSha256: contextProviderHash,
+    liveInstallSameWorker: true, adapterUnchanged: true, adapterSha256: adapterHash, hostAdapterSha256: hostAdapterHash, contextProviderSha256: contextProviderHash, studioSha256: studioHash,
     officialCliUnchanged: true, officialCliSha256: officialCliHash, failedUpgradePreservedLiveVersion: true,
     hostPolicyDeniedHttpStatus: denied.status, dependencyDisableRecovery: true, liveUninstall: true,
     nativeToolSurvivesWorkerCrash: true, workerRecovered: true, capabilityPolicyChecks: policyChecks,
@@ -420,7 +473,7 @@ try {
       recordedAt: new Date().toISOString(), error: error.message, liveProvider: live.report(), trace,
     }, null, 2)));
   }
-  const detail = `${error.stack}\n${error.stdout ?? ''}\n${error.stderr ?? ''}\nFixture errors: ${JSON.stringify(fixtureErrors)}\nGateway log:\n${gatewayLog}\n`;
+  const detail = `${error.stack}\n${error.stdout ?? ''}\n${error.stderr ?? ''}\nContext checks: ${JSON.stringify(contextChecks)}\nFixture errors: ${JSON.stringify(fixtureErrors)}\nGateway log:\n${gatewayLog}\n`;
   process.stderr.write(live ? live.redact(detail) : detail);
   process.exitCode = 1;
 } finally {

@@ -118,14 +118,14 @@ export class BridgeProofAdapter extends LlmAdapter {
       const [, , name = "bridge-user", observation = "prefers concise evidence"] = task.split(":");
       chunks = toolResult
         ? finalResponse(`Persistent memory stored for ${name}: ${observation}`)
-        : toolResponse("mcp__reference_memory__create_entities", {
+        : toolResponse("dsh_mcp__reference_memory__create_entities", {
             entities: [{ name, entityType: "user-preference", observations: [observation] }],
           });
     } else if (task.startsWith("PROOF:MEMORY_RECALL:")) {
       const query = task.slice("PROOF:MEMORY_RECALL:".length);
       chunks = toolResult
         ? finalResponse(`Persistent memory recalled in a new agent session: ${textFromBlocks([toolResult]).trim()}`)
-        : toolResponse("mcp__reference_memory__search_nodes", { query });
+        : toolResponse("dsh_mcp__reference_memory__search_nodes", { query });
     } else {
       chunks = finalResponse(
         "The bridge-proof adapter only accepts PROOF:IMAGE, PROOF:BASH, PROOF:MEMORY_WRITE, and PROOF:MEMORY_RECALL tasks.",

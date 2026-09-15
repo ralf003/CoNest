@@ -1,5 +1,7 @@
 # CoNest Studio 0.6.2 演示手册
 
+2026-09-14 开发增量：共享记忆已由 CoNest worker 的独立组件管理，保留 Studio 原 `memory.jsonl`。权限、隐私规则、停用恢复及验证见[共享记忆服务组件化](docs/共享记忆服务组件化.md)。下文安装与演示保留 0.6.2 交付基线。
+
 CoNest 是 OpenClaw 插件。Studio 将 OpenClaw 插件/工具目录与 DSH Market 完整 feed 合并，DSH Web 通过配套插件显示同一页面与数据。两种 Loop 都在 OpenClaw 会话中执行；DSH Loop 获得当前会话经过授权的 OpenClaw 工具表，其中也包括 CoNest 注册的 DSH 工具。
 
 ## 安装与配置

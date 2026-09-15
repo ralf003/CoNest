@@ -10,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 import { parseEnv, promisify } from 'node:util';
 import { controlRequest, serveControl } from './control.js';
 import { executionEnvironment } from './environment.js';
+import { assertRuntime, assertPrivateFile, protectDirectory, stopProcessTree } from './platform-support.mjs';
 import { BridgeError, HOST_VERSION, BRIDGE_VERSION, type CapabilityCatalog, type RuntimeStatus } from './types.js';
 
 const execute = promisify(execFile);
@@ -35,6 +36,7 @@ function contained(parent: string, child: string): boolean {
 }
 
 async function privateFile(file: string): Promise<void> {
+  if (process.platform === 'win32') { await assertPrivateFile(file); return; }
   const stat = await lstat(file);
   if (!stat.isFile() || stat.isSymbolicLink() || (stat.mode & 0o077) !== 0 || stat.uid !== process.getuid?.()) {
     throw new BridgeError('LOCAL_FILE_UNSAFE', 'Local configuration and credential files must be regular, current-user-owned files with mode 600 or 400');
@@ -71,11 +73,7 @@ export async function localInstallation(): Promise<{ host: string; provider: str
 }
 
 function assertPlatform(): void {
-  const [major, minor] = process.versions.node.split('.').map(Number);
-  const { header } = process.report.getReport() as { header: { glibcVersionRuntime?: string } };
-  if (process.platform !== 'linux' || process.arch !== 'x64' || major !== 24 || minor! < 15 || !header.glibcVersionRuntime) {
-    throw new BridgeError('PLATFORM_UNSUPPORTED', 'This local release requires Linux x64 with glibc and Node.js >=24.15.0 <25');
-  }
+  try { assertRuntime(); } catch(error) { throw new BridgeError('PLATFORM_UNSUPPORTED', String(error)); }
 }
 
 /** Create a new, private profile outside both source material and credentials. Existing profiles are never overwritten. */
@@ -96,6 +94,7 @@ export async function setupLocal(directory: string, options: { workspace: string
   const port = await availablePort(options.port ?? 0);
   const settings: LocalSettings = { schemaVersion: 1, workspaceRoot, credentialFile: canonicalCredential, port, timeoutSeconds: 90, maxOutputTokens: 2048 };
   await mkdir(target, { mode: 0o700 });
+  await protectDirectory(target);
   const profile = profilePaths(target, settings);
   const token = randomUUID();
   await writeFile(path.join(target, 'gateway.token'), token, { flag: 'wx', mode: 0o600 });
@@ -145,7 +144,7 @@ export async function readLocal(directory: string): Promise<LocalProfile> {
   assertPlatform();
   const supplied = path.resolve(directory);
   const stat = await lstat(supplied);
-  if (!stat.isDirectory() || stat.isSymbolicLink() || (stat.mode & 0o077) !== 0 || stat.uid !== process.getuid?.()) {
+  if (!stat.isDirectory() || stat.isSymbolicLink() || (process.platform !== 'win32' && ((stat.mode & 0o077) !== 0 || stat.uid !== process.getuid?.()))) {
     throw new BridgeError('LOCAL_DIRECTORY_UNSAFE', 'The local state directory must be current-user-owned, non-symlink, and mode 700');
   }
   const root = await realpath(supplied);
@@ -194,13 +193,14 @@ export async function validateLocalBoundary(profile: LocalProfile): Promise<void
       host.plugins?.entries?.['dsh-bridge']?.config?.configFile !== profile.bridgeFile || host.tools?.fs?.workspaceOnly !== true) {
     throw new BridgeError('LOCAL_BOUNDARY_CHANGED', 'The local profile must retain its private loopback route, direct provider, bounded task settings, and canonical workspace; create a new profile for a different layout');
   }
-  let lock: { nativeAbi: string; libc: string };
+  let lock: { platform?: string; arch?: string; nativeAbi?: string; libc?: string; napi?: boolean };
   try { lock = JSON.parse(await readFile(path.join(packageRoot, 'runtime-lock.json'), 'utf8')); }
   catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') return; throw error; }
-  const { header } = process.report.getReport() as { header: { glibcVersionRuntime: string } };
-  const current = header.glibcVersionRuntime.split('.').map(Number);
-  const built = lock.libc.split('.').map(Number);
-  if (lock.nativeAbi !== process.versions.modules || current[0]! < built[0]! || (current[0] === built[0] && current[1]! < built[1]!)) {
+  if (lock.platform && lock.platform !== process.platform || lock.arch && lock.arch !== process.arch) throw new BridgeError('PLATFORM_UNSUPPORTED', 'Install the CoNest archive for this operating system and architecture');
+  const { header } = process.report.getReport() as { header: { glibcVersionRuntime?: string } };
+  const current = (header.glibcVersionRuntime ?? '0.0').split('.').map(Number);
+  const built = (lock.libc ?? '0.0').split('.').map(Number);
+  if ((!lock.napi && lock.nativeAbi !== process.versions.modules) || (process.platform === 'linux' && (current[0]! < built[0]! || current[0] === built[0] && current[1]! < built[1]!))) {
     throw new BridgeError('PLATFORM_UNSUPPORTED', 'The installed native runtime requires the recorded Node ABI and a glibc version at least as recent as its build');
   }
 }
@@ -348,6 +348,7 @@ export async function serveLocal(profile: LocalProfile): Promise<void> {
 
 async function stopOwnedChild(child: ChildProcess, graceMs = 10_000): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null || !child.pid) return;
+  if (process.platform === 'win32') { await stopProcessTree(child); return; }
   child.kill('SIGTERM');
   for (let i = 0; i < graceMs / 100 && child.exitCode === null && child.signalCode === null; i++) await pause(100);
   if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');

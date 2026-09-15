@@ -1,3 +1,6 @@
+import { isIncognitoSessionKey } from 'openclaw/plugin-sdk/routing';
+import { MEMORY_CAPABILITIES } from './memory-contract.js';
+import { createMemoryAccess } from './memory-adapter.js';
 import type { AnyAgentTool, OpenClawPluginApi, OpenClawPluginToolContext } from 'openclaw/plugin-sdk/plugin-entry';
 import { defineToolPlugin } from 'openclaw/plugin-sdk/tool-plugin';
 import { createRuntimeConfigReader } from 'openclaw/plugin-sdk/runtime-config-snapshot';
@@ -11,6 +14,8 @@ import { inside, readConfig, resolveConfig } from './config.js';
 import { borrowHost } from './shared-host.js';
 import { configuredHostCeiling, hostPrincipal } from './host-policy.js';
 import { cleanupHostScope, registerHostAdapter, scopedCallId, type HostToolName as ToolName } from './host-adapter.js';
+import { isManagedDshTool, managedDshTools } from './managed-tools.js';
+import type { ManagedReadResult } from './read-contract.js';
 import { registerStudio } from './studio/index.js';
 import { ContextProvider, parseContextProvider, type ContextProviderConfig } from './context-provider.js';
 import { BridgeError, HOST_VERSION, type BridgeConfig, type CapabilityDescriptor, type JsonObject, type Permission } from './types.js';
@@ -53,7 +58,7 @@ const invokeParameters = Type.Object({
   args: Type.Record(Type.String(), Type.Unknown(), { description: 'Arguments matching the capability inputSchema.' }),
 }, { additionalProperties: false });
 
-type PluginState = { config: BridgeConfig; contextProviderConfig?: ContextProviderConfig } & ReturnType<typeof borrowHost>;
+type PluginState = { config: BridgeConfig; contextProviderConfig?: ContextProviderConfig; studio?: ReturnType<typeof registerStudio> } & ReturnType<typeof borrowHost>;
 const states = new WeakMap<OpenClawPluginApi, PluginState>();
 
 const entry = defineToolPlugin({
@@ -62,6 +67,11 @@ const entry = defineToolPlugin({
   description: 'Connect OpenClaw to DSH/Cordis components managed by CoNest Runtime.',
   configSchema,
   tools: tool => [
+    ...managedDshTools.map(descriptor => tool({
+      name: descriptor.openClawName, label: `DSH · ${descriptor.dshName}`,
+      description: descriptor.description, parameters: descriptor.parameters,
+      factory: context => createTool(context.api, context.toolContext, descriptor.openClawName, descriptor.parameters),
+    })),
     tool({
       name: 'bridge_capabilities', label: 'Discover component capabilities',
       description: 'Discover currently available component capabilities, original providers, parameter schemas, permissions, and generation. Use before bridge_invoke; newly installed components appear without changing this adapter.',
@@ -97,7 +107,7 @@ entry.register = (api: OpenClawPluginApi): void => {
   states.set(api, state);
   registerTools(api);
   registerRuntime(api, state);
-  registerStudio(api, state.config.workspaceRoot);
+  state.studio = registerStudio(api, state.config.workspaceRoot, state.scopes, createMemoryAccess(state.host, state.config, createRuntimeConfigReader(api.config)));
 };
 
 function createState(api: OpenClawPluginApi): PluginState {
@@ -106,12 +116,15 @@ function createState(api: OpenClawPluginApi): PluginState {
   const configuredFile = optionalString(api.pluginConfig, 'configFile');
   const configuredWorkspace = optionalString(api.pluginConfig, 'workspaceRoot');
   const configFile = configuredFile ? path.resolve(base, configuredFile) : undefined;
+  const studio = api.pluginConfig?.studio as { stateDir?: string } | undefined;
+  if (studio && (!studio.stateDir || !path.isAbsolute(studio.stateDir))) throw new Error('CoNest Studio requires an absolute stateDir');
+  const memoryFilePath = studio?.stateDir ? path.join(studio.stateDir, 'memory.jsonl') : undefined;
   const config = configFile
-    ? readConfig(configFile)
-    : resolveConfig({ workspaceRoot: configuredWorkspace ? path.resolve(base, configuredWorkspace) : base });
+    ? readConfig(configFile, memoryFilePath)
+    : resolveConfig({ workspaceRoot: configuredWorkspace ? path.resolve(base, configuredWorkspace) : base }, base, memoryFilePath);
   const workerFile = fileURLToPath(new URL('./worker.js', import.meta.url));
-  const shared = borrowHost(configFile ? realpathSync(configFile) : `workspace:${config.workspaceRoot}`, {
-    workerFile,
+  const shared = borrowHost(JSON.stringify([configFile ? realpathSync(configFile) : `workspace:${config.workspaceRoot}`, config.memoryFilePath]), {
+    workerFile, memoryFilePath,
     ...(configFile ? { configFile } : { workspaceRoot: config.workspaceRoot }),
     startupTimeoutMs: config.startupTimeoutMs,
     shutdownTimeoutMs: config.shutdownTimeoutMs,
@@ -125,13 +138,16 @@ function createTool(
   api: OpenClawPluginApi,
   toolContext: OpenClawPluginToolContext,
   name: ToolName,
-  parameters: typeof searchParameters | typeof verifyParameters | typeof catalogParameters | typeof invokeParameters,
+  parameters: AnyAgentTool['parameters'],
 ): AnyAgentTool | null {
   const state = states.get(api);
   if (!state) throw new Error('CoNest Connector plugin state is unavailable');
   const permissions = toolPermissions(toolContext.fsPolicy, toolContext.workspaceDir, state.config.workspaceRoot);
   if (toolContext.sandboxed || !permissions.includes('workspace:read')) return null;
-  const descriptor = name === 'knowledge_search' || name === 'knowledge_verify' ? findDescriptor(state.config, name) : undefined;
+  const incognito = isIncognitoSessionKey(toolContext.sessionKey);
+  if (incognito && MEMORY_CAPABILITIES.includes(name)) return null;
+  if (!incognito && state.config.memoryFilePath) permissions.push('memory:read', 'memory:write');
+  const descriptor = name !== 'bridge_capabilities' && name !== 'bridge_invoke' ? findDescriptor(state.config, name) : undefined;
   return {
     name,
     label: name,
@@ -148,7 +164,7 @@ function createTool(
       const principal = binding.principal ?? hostPrincipal(toolContext);
       if (principal.kind !== 'agent') throw new BridgeError('INVALID_PRINCIPAL', 'Host tools require an agent principal');
       const capabilityCeiling = configuredHostCeiling(toolContext.getRuntimeConfig?.() ?? toolContext.runtimeConfig ?? toolContext.config ?? api.config, principal.agentId, toolContext.activeModel);
-      capabilityCeiling.deny = [...new Set([...capabilityCeiling.deny ?? [], ...state.scopes.runDenials(binding.runId)])];
+      capabilityCeiling.deny = [...new Set([...capabilityCeiling.deny ?? [], ...state.scopes.runDenials(binding.runId), 'memory_recall', 'memory_remember', ...(incognito ? MEMORY_CAPABILITIES : [])])];
       if (name === 'bridge_capabilities') {
         const catalog = await state.host.catalog({ principal, permissions, capabilityCeiling });
         binding.signal.throwIfAborted();
@@ -178,9 +194,24 @@ function createTool(
           });
         },
       });
+      let publicValue = result.value;
+      if (capability === 'dsh_read') {
+        const read = result.value as ManagedReadResult;
+        binding.signal.throwIfAborted();
+        if (read.observation && state.studio) await state.studio.observeRead(read.observation,
+          toolContext.sessionKey ?? toolContext.sessionId ?? toolContext.agentId ?? 'operator', binding.signal);
+        binding.signal.throwIfAborted();
+        if (read.isError) throw new BridgeError(read.error?.code ?? 'READ_FAILED', read.error?.message ?? 'File read failed');
+        publicValue = { content: read.content, value: read.value };
+      }
+      if (isManagedDshTool(name)) {
+        const search = object(publicValue);
+        return { content: search.content as Array<{ type: 'text'; text: string }>,
+          details: { source: 'dsh', tool: name.slice(4), bridge: 'cordis-process', generation: result.generation, value: search.value } };
+      }
       return {
-        content: [{ type: 'text' as const, text: renderToolResult(capability, result.value) }],
-        details: { bridge: 'cordis-process', generation: result.generation, value: result.value },
+        content: [{ type: 'text' as const, text: renderToolResult(capability, publicValue) }],
+        details: { bridge: 'cordis-process', generation: result.generation, value: publicValue },
       };
       } finally { state.scopes.endCall(scopeId); }
     },

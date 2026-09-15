@@ -1,5 +1,11 @@
 import { Context, type Fiber } from '@deepseek-ai/cordis';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import type { Agent } from '@deepseek-ai/dsh-agent';
+import { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session';
+import { realpath } from 'node:fs/promises';
+import path from 'node:path';
+import { inside } from './config.js';
+import { managedSearchTools } from './search-contract.js';
 import { CallId } from '@deepseek-ai/dsh-llm';
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
 import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local';
@@ -21,6 +27,8 @@ import type {
   Permission,
   PublishedCapability,
 } from './types.js';
+import { dshMemoryComponent } from './memory-component.js';
+import { dshReadComponent } from './read-component.js';
 import { BridgeError } from './types.js';
 
 declare module '@deepseek-ai/cordis' {
@@ -155,7 +163,7 @@ const dshSearchComponent: ComponentModule = {
   async apply(ctx) {
     await ctx.plugin(ToolFsSearch, {
       sampleOverCapGlobResults: false,
-      grepMaxMatches: 100,
+      grepMaxMatches: 250,
       grepMaxLineBytes: 2_000,
       searchMetaMaxBytes: 65_536,
       rawOutputMaxBytes: 20_000_000,
@@ -167,16 +175,7 @@ const dshSearchComponent: ComponentModule = {
       const query = args.query as string;
       invocation.progress('Searching workspace sources');
       const startedAt = performance.now();
-      const result = await ctx.tools.execute({
-        callId: CallId(invocation.callId),
-        name: 'grep',
-        arguments: { pattern: escapeRegex(query), path: invocation.workspaceRoot },
-        signal: invocation.signal,
-      });
-      invocation.signal.throwIfAborted();
-      if (result.isError) {
-        throw new BridgeError(result.error.info?.code ?? 'SEARCH_FAILED', result.error.message);
-      }
+      const result = await executeSearch(ctx, 'grep', { pattern: escapeRegex(query) }, invocation, false);
       const matches = readMatches(result.value);
       return {
         query,
@@ -186,8 +185,41 @@ const dshSearchComponent: ComponentModule = {
         durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
       };
     });
+    for (const tool of managedSearchTools) {
+      ctx.bridgeCapabilities.register(ctx, tool.openClawName, async (args, invocation) => {
+        invocation.progress(`Searching workspace with ${tool.dshName}`);
+        const result = await executeSearch(ctx, tool.dshName, args, invocation, true);
+        // Preserve DSH's rendered text and canonical value across the process boundary.
+        return { content: result.content, value: result.value };
+      });
+    }
   },
 };
+
+async function executeSearch(ctx: Context, name: 'grep' | 'glob', args: JsonObject, invocation: Invocation, nativeView: boolean) {
+  invocation.signal.throwIfAborted();
+  if (args.path !== undefined && (typeof args.path !== 'string' || !args.path.trim())) {
+    throw new BridgeError('INVALID_ARGUMENTS', 'Search path must be a non-empty string');
+  }
+  const root = invocation.workspaceRoot;
+  const target = await realpath(path.resolve(root, typeof args.path === 'string' ? args.path : '.'));
+  if (!inside(root, target)) throw new BridgeError('PERMISSION_DENIED', 'Search path must remain inside the authorized workspace');
+  invocation.signal.throwIfAborted();
+  // Detached tool owner supplies DSH's workspace-relative presentation only. It is
+  // never published to SessionStore and runs no Agent Loop or model; no cached sessions.
+  const id = SessionId(`conest-search:${invocation.taskId}`);
+  const agent = nativeView ? {
+    id, ctx, options: {}, status: 'idle',
+    session: Session.create(id, [], { version: SESSION_FORMAT_VERSION, id, createdAt: Date.now(), cwd: root }),
+  } as Agent : undefined;
+  const result = await ctx.tools.execute({
+    callId: CallId(invocation.callId), name, arguments: { ...args, path: target },
+    ...(agent ? { agent } : {}), signal: invocation.signal,
+  });
+  invocation.signal.throwIfAborted();
+  if (result.isError) throw new BridgeError(result.error.info?.code ?? 'SEARCH_FAILED', result.error.message);
+  return result;
+}
 
 const resultVerifierComponent: ComponentModule = {
   name: 'result-verifier',
@@ -224,6 +256,8 @@ const resultVerifierComponent: ComponentModule = {
 
 const builtins = new Map<string, ComponentModule>([
   ['builtin:dsh-search', dshSearchComponent],
+  ['builtin:dsh-read', dshReadComponent],
+  ['builtin:dsh-memory', dshMemoryComponent],
   ['builtin:result-verifier', resultVerifierComponent],
 ]);
 

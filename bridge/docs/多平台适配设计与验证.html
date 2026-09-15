@@ -1,0 +1,151 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CoNest 0.6.3 多平台适配设计与验证</title><style>:root{font-family:Inter,"Noto Sans CJK SC","Microsoft YaHei",system-ui,sans-serif;color:#203149;background:#edf3f9;line-height:1.8}*{box-sizing:border-box}body{margin:0}header{background:#102944;color:#fff;padding:32px max(24px,calc((100vw - 1040px)/2))}header strong{font-size:25px;letter-spacing:2px}header p{margin:3px 0;color:#b9d9ed}nav{margin-top:16px;display:flex;flex-wrap:wrap;gap:20px}nav a{color:#9ddcec}main{max-width:1100px;margin:28px auto 60px;background:white;padding:35px 44px;border-radius:18px;box-shadow:0 8px 35px #1636510b}h1{font-size:30px;line-height:1.4}h2{margin-top:42px;padding-bottom:8px;border-bottom:2px solid #e5eff5;color:#174b72}h3{margin-top:28px}a{color:#08799d;text-underline-offset:3px}pre{background:#152d42;color:#e6f3fa;padding:20px;border-radius:10px;overflow-x:auto;line-height:1.65}code{font-family:"DejaVu Sans Mono",Consolas,monospace;font-size:.89em}p code,li code,td code{background:#edf4f8;padding:2px 5px;border-radius:4px;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%;display:block;overflow:auto;margin:20px 0;font-size:14px}th{background:#e5f2f7;color:#174b72}th,td{padding:12px 14px;border:1px solid #d9e4ed;text-align:left;vertical-align:top}tr:nth-child(even){background:#f8fafc}blockquote{border-left:4px solid #56bbaa;margin:20px 0;padding:8px 20px;background:#edf8f4}img{max-width:100%;border-radius:10px}li{margin:8px 0}footer{font-size:13px;color:#65798b;margin-top:36px;border-top:1px solid #e0e8ee;padding-top:16px}@media(max-width:700px){main{margin:12px;padding:20px}h1{font-size:25px}header{padding:22px}pre{padding:14px}}@media print{header,nav{display:none}body{background:white}main{box-shadow:none;margin:0;padding:0}pre{white-space:pre-wrap;background:#f1f4f7;color:black}a{color:inherit}}</style><header><strong>CoNest</strong><p>多平台候选交付 · Connector 0.6.3</p><nav><a href="../先看这里.html">开始使用</a><a href="../docs/RedHat8与Windows安装演示教程.html">安装与演示教程</a><a href="../docs/多平台适配设计与验证.html">当前设计</a><a href="../docs/多平台适配设计与验证.html">验证说明</a></nav></header><main><h1>CoNest 0.6.3 多平台适配设计与验证</h1>
+<p>0.6.3 为多平台候选版，保留 OpenClaw 2026.9.2 与 DSH rc.5 的业务集成机制。本次改动面向 Red Hat 8 系 Linux x64 与 Windows x64 的交付、启动和运行依赖。操作步骤见 <a href="RedHat8%E4%B8%8EWindows%E5%AE%89%E8%A3%85%E6%BC%94%E7%A4%BA%E6%95%99%E7%A8%8B.html">安装演示教程</a>。</p>
+<h2>1. 0.6.2 基线备份</h2>
+<p>多平台代码修改前已生成独立备份，目录名为 <code>conest-0.6.2-before-multiplatform-20260913T120145Z</code>。归档包含 634 个文件，覆盖插件源码、构建产物、教程 Markdown/HTML、交付安装包、演示 ZIP、截图与验收记录；排除开发 node_modules、用户凭据和私有运行状态。交付包内已经包含相应运行依赖。</p>
+<p>备份归档 <code>conest-0.6.2-code-docs-delivery.tar.gz</code> 为 464,348,889 字节，已逐文件回读核对 FILES.json；整个归档的 SHA256 为：</p>
+<pre><code class="language-text">56fed995d9dcaac9d4a2d534ade5213c256a20741ccd04e06bbd8ba568f7bd6f
+</code></pre>
+<p>0.6.2 的插件 tgz、Ubuntu 整体 ZIP 与原验收记录仍保留；0.6.3 使用新的发布目录和默认安装目录。</p>
+<h2>2. 改动与原因</h2>
+<table>
+<thead>
+<tr>
+<th>部分</th>
+<th>0.6.2 情况</th>
+<th>0.6.3 改动</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>发布目标</td>
+<td>固定 Linux x64，复制开发机依赖</td>
+<td>显式 linux-x64 / win32-x64 目标，按 os/cpu/libc 筛选依赖并验证目标包齐全</td>
+</tr>
+<tr>
+<td>Linux PTY</td>
+<td>原模块要求 glibc 2.34</td>
+<td>在 Red Hat UBI 8.10 中重编译相同 node-pty 源码，所需 glibc 最高为 2.28</td>
+</tr>
+<tr>
+<td>Windows 原生依赖</td>
+<td>未收集 Windows 变体</td>
+<td>打包 Windows sharp、Koffi、ripgrep 与 node-pty 的 Windows N-API 预构建文件</td>
+</tr>
+<tr>
+<td>DSH Windows ACL runner</td>
+<td>bundle 外入口未独立交付</td>
+<td>保留其包及运行依赖，满足运行时 import.meta.resolve 的独立入口解析</td>
+</tr>
+<tr>
+<td>默认状态与凭据路径</td>
+<td>演示启动器含开发机 /root 默认路径</td>
+<td>默认从用户主目录推导，保留环境变量覆盖</td>
+</tr>
+<tr>
+<td>权限</td>
+<td>依赖 POSIX mode / uid</td>
+<td>Linux 保持原校验；Windows 使用 ACL 保护目录并检查凭据访问身份</td>
+</tr>
+<tr>
+<td>进程停止</td>
+<td>SIGTERM / SIGKILL</td>
+<td>Windows 使用 taskkill 的进程树停止方式，避免只停止父进程</td>
+</tr>
+<tr>
+<td>本地组件控制</td>
+<td>Unix socket 与文件权限</td>
+<td>Windows named pipe 加私有锁文件 nonce 认证；Linux 保持 Unix socket</td>
+</tr>
+<tr>
+<td>子进程环境</td>
+<td>部分变量名按 POSIX 大小写匹配</td>
+<td>保留 Windows Path/SystemRoot/用户目录变量，仍移除模型 Key 和 Gateway token</td>
+</tr>
+<tr>
+<td>安装体验</td>
+<td>多段人工环境配置</td>
+<td>两个平台各提供入口脚本，统一自动安装 Node、宿主和原生插件；日常启动无需手写环境变量</td>
+</tr>
+</tbody></table>
+<p>目标包各自携带已选择的原生依赖。安装脚本根据当前平台选包，用户无需在演示电脑上编译 node-pty。安装时仍需要联网获取 Node、OpenClaw 和宿主检查所需依赖。</p>
+<h2>3. 实际验证结果</h2>
+<p>以下结果区分组件运行、宿主集成与真实模型，避免把兼容层或静态检查等同于目标系统验收。</p>
+<table>
+<thead>
+<tr>
+<th>检查</th>
+<th>结果</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TypeScript 类型检查</td>
+<td>通过</td>
+<td>插件、适配代码和测试</td>
+</tr>
+<tr>
+<td>回归测试</td>
+<td>80 项通过</td>
+<td>含原有授权/生命周期测试及新增平台、环境变量、私有凭据检查</td>
+</tr>
+<tr>
+<td>Linux ELF 依赖检查</td>
+<td>通过</td>
+<td>随包相关 ELF 的 GLIBC 符号要求不高于 2.28；node-pty 为 2.28</td>
+</tr>
+<tr>
+<td>UBI 8.10 组件运行</td>
+<td>通过</td>
+<td>实际 DSH read、grep、DSH Loop 和重启后记忆</td>
+</tr>
+<tr>
+<td>UBI 8.10 原生插件安装</td>
+<td>通过</td>
+<td>OpenClaw plugins install 安装平台候选包，宿主 peer 链接成功</td>
+</tr>
+<tr>
+<td>UBI 8.10 双 Loop 自检</td>
+<td>通过</td>
+<td>安装目录启动，四段任务、双方工具和共享记忆；模型决策为 fixture</td>
+</tr>
+<tr>
+<td>UBI 8.10 真实模型演示</td>
+<td>通过</td>
+<td>四段任务，7 次 DeepSeek API 请求；实际 Loop 与双方工具完成事件均核对</td>
+</tr>
+<tr>
+<td>Windows 版 Node 组件运行</td>
+<td>通过（Wine）</td>
+<td>使用真正的 win32 Node、Windows 原生依赖和 ripgrep.exe，完成 DSH 工具、Loop 与记忆重启测试</td>
+</tr>
+<tr>
+<td>Windows OpenClaw CLI 版本命令</td>
+<td>通过（Wine）</td>
+<td>2026.9.2 正常输出版本</td>
+</tr>
+<tr>
+<td>Windows OpenClaw 插件安装</td>
+<td>Wine 中未通过</td>
+<td>宿主无法取得 plugin lifecycle lease；尚不能据此判断原生 Windows 的结果</td>
+</tr>
+<tr>
+<td>PowerShell 安装脚本语法</td>
+<td>通过</td>
+<td>使用 PowerShell 自身 Parser 检查；不是 Windows ACL 的实机验证</td>
+</tr>
+<tr>
+<td>原生 Windows 完整安装、ACL、双 Loop、界面</td>
+<td>待验收</td>
+<td>随包提供 verify-windows.ps1，并保留 Windows CI 工作流</td>
+</tr>
+</tbody></table>
+<p>UBI 8.10 是 Red Hat 官方用户空间，glibc 为 2.28；此次运行共享当前机器的 Linux 6.8 内核，不替代公司定制 Red Hat 8 内核和桌面环境的验证。Windows 组件检查使用 Wine，不能标为已通过原生 Windows 完整验收。</p>
+<p>记录位于 <code>reports/multiplatform-0.6.3/</code>，包括原生安装日志、fixture 与 live 的独立记录、Windows 兼容层结果和 ELF 检查。没有将 0.6.2 的旧验收记录改名充当本版证据。</p>
+<h2>4. 保留的能力边界</h2>
+<p>当前默认演示开放 OpenClaw 的 read/session_status 与 DSH 的读取、搜索、记忆查询；自动记忆 hook 完成写入。双方 Loop 仍通过 OpenClaw 当前任务允许的工具表执行，不因多平台改动增加权限。</p>
+<p>DSH Bash、PTY 交互、Windows ACL 沙箱、Linux bwrap/Landlock 属于进一步的系统能力。本次没有用取消沙箱、放宽授权或替换为模拟工具的方式绕过平台限制。RHEL 8 的内核沙箱条件、Windows Bash 与交互终端不在已通过的核心演示验收范围内。</p>
+<p>统一清单展示 DSH Market 的可发现条目；本次没有新增任意市场第三方插件的一键安装与执行适配。独立 DSH Web 的平台分发包也不属于本次候选 ZIP；其界面 companion 源码仍提供。</p>
+<h2>5. 复现与发布</h2>
+<p>在原冻结开发工作区中，使用 <code>scripts/prepare-native.mjs</code> 收集目标依赖，再用 <code>scripts/pack-release.mjs --target ... --native-dir ... --out ...</code> 生成对应包。Linux 需提供在 glibc 2.28 环境构建的 node-pty 二进制；准备脚本检查其 GLIBC 符号要求。包中 <code>runtime-lock.json</code> 保留平台、最低 libc 和原生资产来源。</p>
+<p><code>dist/probe-platform.mjs</code> 直接检查真实 DSH 运行组件；<code>dist/demo-studio.mjs --verify</code> 检查完整 OpenClaw 集成。Windows 机器安装后，运行随包 <code>verify-windows.ps1</code> 可串联这两项检查。原生 Windows 验收通过前，该目标保持候选状态。</p>
+<p>本文使用的 Node 平台基线来自 <a href="https://github.com/nodejs/node/blob/v24.15.0/BUILDING.md">Node 24.15.0 官方构建说明</a>，其他版本可能有不同系统要求。</p>
+<footer>固定版本：OpenClaw 2026.9.2 · DSH 0.1.0-rc.5 · Node 24.15.0 · Red Hat 8 系 / Windows x64（验证状态见说明）。文档可离线阅读。</footer></main></html>

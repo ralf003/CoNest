@@ -22,7 +22,7 @@ export class ComponentManager {
   private diskDigest: string;
   private busy = false;
 
-  constructor(private readonly runtime: BridgeRuntime, private readonly configFile: string) {
+  constructor(private readonly runtime: BridgeRuntime, private readonly configFile: string, private readonly memoryFileOverride?: string) {
     const contents = readFileSync(configFile, 'utf8');
     this.raw = JSON.parse(contents) as JsonObject;
     this.diskDigest = digest(contents);
@@ -32,7 +32,7 @@ export class ComponentManager {
     return await this.exclusive(async () => {
       const contents = readFileSync(this.configFile, 'utf8');
       const raw = JSON.parse(contents) as JsonObject;
-      const status = await this.runtime.reload(resolveConfig(raw, path.dirname(this.configFile)));
+      const status = await this.runtime.reload(resolveConfig(raw, path.dirname(this.configFile), this.memoryFileOverride));
       this.raw = raw;
       this.diskDigest = digest(contents);
       return status;
@@ -78,7 +78,7 @@ export class ComponentManager {
         } else if (operation.action === 'uninstall') components.splice(index, 1);
         else components[index] = changeEntry(components[index]!, operation);
       }
-      const resolved = resolveConfig(next, path.dirname(this.configFile));
+      const resolved = resolveConfig(next, path.dirname(this.configFile), this.memoryFileOverride);
       const encoded = `${JSON.stringify(next, null, 2)}\n`;
       const status = await this.runtime.reload(resolved, async () => {
         this.assertDiskUnchanged();

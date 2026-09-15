@@ -1,9 +1,10 @@
 import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
+import { DIRECT_CAPABILITY_NAMES } from './managed-tools.js';
 import { hostPrincipal } from './host-policy.js';
 import type { RunScopes } from './run-scope.js';
 import type { PromptContext } from './context-provider.js';
 
-export const HOST_TOOL_NAMES = ['knowledge_search', 'knowledge_verify', 'bridge_capabilities', 'bridge_invoke'] as const;
+export const HOST_TOOL_NAMES = [...DIRECT_CAPABILITY_NAMES, 'bridge_capabilities', 'bridge_invoke'] as const;
 export type HostToolName = typeof HOST_TOOL_NAMES[number];
 
 // Static guidance only: component descriptions and catalog data are not system instructions.
@@ -31,7 +32,7 @@ export function registerHostAdapter(api: OpenClawPluginApi, scopes: RunScopes, o
     const authority = context.toolAuthority;
     if (!context.runId || !authority) return;
     authority.assertActive();
-    const denied = ['knowledge_search', 'knowledge_verify'].filter(name => !authority.allows(name));
+    const denied = DIRECT_CAPABILITY_NAMES.filter(name => !authority.allows(name));
     const guide = options.capabilityGuidance && authority.allows('bridge_capabilities') && authority.allows('bridge_invoke');
     authority.assertActive();
     scopes.restrictRun(context.runId, denied, context);

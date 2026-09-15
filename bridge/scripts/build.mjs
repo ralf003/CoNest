@@ -11,3 +11,8 @@ await import('./build-studio.mjs');
 
 await cp('scripts/demo-studio.mjs', 'dist/demo-studio.mjs');
 await cp('scripts/live-deepseek.mjs', 'dist/live-deepseek.mjs');
+
+await cp('src/platform-support.mjs', 'dist/platform-support.mjs');
+
+await cp('scripts/probe-platform.mjs', 'dist/probe-platform.mjs');
+await import('node:fs/promises').then(async fs => fs.writeFile('dist/probe-platform.mjs', (await fs.readFile('dist/probe-platform.mjs','utf8')).replace('../dist/studio/','./studio/')));

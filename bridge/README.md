@@ -1,23 +1,31 @@
 # CoNest Connector for OpenClaw
 
-本机 Ubuntu 从零安装与演示：[详细教程](docs/Ubuntu本地安装与演示教程.md)。当前机制、部署边界与验收范围：[CoNest 当前设计说明](docs/CoNest当前设计说明.md)。
+**当前开发版本：0.6.3 多平台候选版。** [Red Hat 8 系与 Windows 安装教程](docs/RedHat8与Windows安装演示教程.md)，[适配范围与验证](docs/多平台适配设计与验证.md)。0.6.2 代码、教程、运行包和验收已在修改前独立备份；现有 0.6.2 安装包保留。
+
+2026-09-14 开发增量：[双 Loop 接入同一组件运行时](docs/双Loop组件运行时接入.md)。DSH Harness 通过宿主最终工具准入和生命周期 hooks 接通现有组件 worker；动态发现、调用及权限检查复用现有组件机制。后续[搜索服务组件化](docs/搜索服务组件化.md)已将 `dsh_grep`、`dsh_glob` 与 `knowledge_search` 统一到搜索组件；随后[只读文件服务组件化](docs/只读文件服务组件化.md)将 `dsh_read` 迁入独立读取组件，并保留读后写版本校验；本阶段[共享记忆服务组件化](docs/共享记忆服务组件化.md)继续将九个记忆工具与自动召回/捕获迁入独立记忆组件；写入、编辑、图片、Bash 及 Loop 仍在 Gateway。既有安装包未替换。
+
+0.6.2 基线 Ubuntu 从零安装与演示：[详细教程](docs/Ubuntu本地安装与演示教程.md)。当前机制、部署边界与验收范围：[CoNest 当前设计说明](docs/CoNest当前设计说明.md)。
 
 CoNest Connector 0.6.2 adds an opt-in **CoNest Studio** to the unmodified OpenClaw 2026.9.2 release: a shared OpenClaw + DSH Market catalog, selectable OpenClaw/DSH agent loops, tools from both ecosystems in either loop, persistent shared memory, and a visual execution timeline. A companion DSH Web plugin exposes the same Studio inside DSH. See [the Studio installation and demo guide](./STUDIO.md).
 
-The plugin ID remains `dsh-bridge`. Without `config.studio`, the existing component worker, four bridge tools, authorization and lifecycle behavior remain available. Studio requires explicit configuration and model/tool admission. Market entries are discoverable metadata, not a claim that every upstream plugin is installed or runtime-compatible.
+The plugin ID remains `dsh-bridge`. Without `config.studio`, the component worker and its authorization/lifecycle behavior remain available; shared memory additionally requires a runtime `memoryFilePath`. Studio requires explicit configuration and model/tool admission. Market entries are discoverable metadata, not a claim that every upstream plugin is installed or runtime-compatible.
 
 Historical 0.6.1 component-runtime qualification remains in [HOST-ENHANCEMENT-ACCEPTANCE.md](./HOST-ENHANCEMENT-ACCEPTANCE.md); previous reports are not relabeled as 0.6.2 evidence. The preserved source trees are unchanged. Studio is currently an internal Linux x64/Node 24 demonstration, not a general multi-user production deployment.
 
 ## Architecture and tool contract
 
-The adapter registers four stable OpenClaw tools:
+The development adapter registers sixteen stable OpenClaw tools:
 
 | Tool | Purpose |
 | --- | --- |
+| `dsh_mcp__reference_memory__*` (nine tools) | Shared graph operations in the managed memory component, with separate read/write permissions. |
 | `bridge_capabilities` | Discover currently available capabilities, provider IDs/versions, permissions, input/output schemas, and a generation token. |
 | `bridge_invoke` | Call a discovered capability using its name, generation, and schema-valid arguments. |
 | `knowledge_search` | Convenience tool for the built-in DSH literal search capability. |
 | `knowledge_verify` | Convenience tool for the built-in exact-quote verifier. |
+| `dsh_grep` | DSH regular-expression search with workspace path and file filtering, served by the search component. |
+| `dsh_glob` | DSH file-path glob search, served by the same search component. |
+| `dsh_read` | DSH text read with original line windows and guarded-edit observation handoff. |
 
 New component capabilities appear through discovery and generic invocation without adapter edits, a host restart, or another Agent Loop. They do not each become separately named OpenClaw tools. Capability schemas remain discoverable, rather than being flattened into a generated host tool list.
 
@@ -128,7 +136,8 @@ See [conest.config.example.json](./conest.config.example.json). External `compon
 
 | Setting | Default | Meaning |
 | --- | ---: | --- |
-| `permissions` | `["workspace:read"]` | Worker-wide permission ceiling. |
+| `memoryFilePath` | Studio binding, otherwise absent | Shared JSONL file; changes require worker restart. |
+| `permissions` | `["workspace:read"]`, plus `memory:read` and `memory:write` when a memory file is configured | Worker-wide permission ceiling; explicit arrays preserve their restrictions. |
 | `maxConcurrent` / `maxQueued` | `4` / `32` | Running and queued capability limits. |
 | `maxTasks` | `128` | Bound for pending grants plus admitted tasks. |
 | `taskTtlMs` | `120000` | Maximum authorization and execution lifetime. |
@@ -142,7 +151,7 @@ Unknown fields, duplicate IDs/capability names, invalid schemas, incompatible Co
 
 ## Authorization and recovery boundaries
 
-OpenClaw admits the four host tools under its own policy. The adapter refuses sandboxed execution because its host-side worker would escape that sandbox. Workspace-only host policies must contain the configured canonical root. The worker independently checks workspace identity and permissions for every admitted and nested capability call.
+OpenClaw admits these host tools under its own policy. The adapter refuses sandboxed execution because its host-side worker would escape that sandbox. Workspace-only host policies must contain the configured canonical root. The worker independently checks workspace identity and permissions for every admitted and nested capability call.
 
 The adapter, not model arguments, supplies subject, agent/requester principal, task/call identity, parent run, workspace, capability ceiling, permissions, and abort signal. A random one-use grant binds that scope to an immutable generation and expiry. Replay, forged scope, stale generation, revocation, and expiry are rejected. Host run completion/cancellation revokes retained call bindings; direct operator calls have their own bounded call lifetime.
 
@@ -155,7 +164,7 @@ node dist/cli.js --config /absolute/config/bridge.json policy set ./examples/cap
 
 Policy changes use the same validated atomic commit as component changes. A changed worker policy or permission ceiling revokes pending grants and cancels all active/queued tasks; clients must start new tasks. Component-only upgrades continue to pin active work to its old generation. `status.policyDenials` exposes a process-lifetime denial counter without recording source contents or requester identifiers. The same-user operator socket cannot supply an Agent identity to escape its own rules.
 
-The milestone permits only workspace-read capabilities. Installed JavaScript is trusted and can access the worker OS account; use separate OS/container isolation for untrusted code. Neither manifest permissions nor content hashes sandbox arbitrary imports, environment access, or network calls.
+The built-in components declare workspace-read and memory-read/write permissions. Installed JavaScript is trusted and can access the worker OS account; use separate OS/container isolation for untrusted code. Neither manifest permissions nor content hashes sandbox arbitrary imports, environment access, or network calls.
 
 Task timeout cancels actual cooperative work. An uncooperative task causes worker termination; the client also reaps a worker with a blocked event loop. Worker loss fails interrupted calls without replaying them. A new request can start a replacement worker, bounded to three automatic starts per minute. Use `/conest restart` after correcting repeated failures. Cleanup errors from both rejected disposal promises and structured Cordis unloading diagnostics are exposed as degraded status. A committed update is not reported as rolled back merely because retiring an old entry encountered an error. Process restart is the recovery boundary for uncertain cleanup.
 

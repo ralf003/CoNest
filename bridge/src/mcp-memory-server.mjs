@@ -1,3 +1,4 @@
+process.stdin.once('end', () => process.exit(0));
 // Node 24 can let the official server entry exit during its un-awaited async
 // bootstrap when stdin is a pipe. Keep the process referenced until its MCP
 // transport owns stdin; terminate normally when the parent closes the pipe.

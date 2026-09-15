@@ -4,6 +4,8 @@ import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
+import { assertRuntime, protectDirectory, stopProcessTree } from './platform-support.mjs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import assert from 'node:assert/strict';
@@ -12,11 +14,12 @@ import { createLiveDeepSeek } from './live-deepseek.mjs';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const require=createRequire(import.meta.url);
 const cli=path.resolve(path.dirname(require.resolve('openclaw/plugin-sdk/plugin-entry')),'../../openclaw.mjs');
+assertRuntime();
 const verify=process.argv.includes('--verify');
-const live=process.argv.includes('--live')?await createLiveDeepSeek(process.env.CONEST_CREDENTIAL_FILE??'/root/.config/dsh-bridge/deepseek.env'):undefined;
-const demoRoot=path.resolve(process.env.CONEST_DEMO_STATE??`/root/.local/state/conest-studio-${live?'live':'local'}${verify?'-check-'+Date.now():''}`);
+const live=process.argv.includes('--live')?await createLiveDeepSeek(process.env.CONEST_CREDENTIAL_FILE??path.join(os.homedir(),'conest-demo','credentials','deepseek.env')):undefined;
+const demoRoot=path.resolve(process.env.CONEST_DEMO_STATE??path.join(os.homedir(),'conest-demo',verify?'check-state-'+Date.now():'demo-state'));
 const workspace=path.join(demoRoot,'workspace');const studio=path.join(demoRoot,'studio');
-await mkdir(workspace,{recursive:true});await mkdir(studio,{recursive:true,mode:0o700});
+await protectDirectory(demoRoot);await mkdir(workspace,{recursive:true});await mkdir(studio,{recursive:true,mode:0o700});
 await writeFile(path.join(workspace,'evidence.txt'),'CoNest connects OpenClaw tools and DSH tools in one agent task.\n项目代号：青竹。验收标记：CONEST_BOTH_TOOLS_OK。\n');
 const providerDir=path.join(demoRoot,'deepseek-provider');
 await cp(path.join(root,'node_modules/@openclaw/deepseek-provider'),providerDir,{recursive:true,dereference:true});
@@ -53,7 +56,7 @@ await new Promise(resolve=>model.listen(0,'127.0.0.1',resolve));const modelPort=
 const port=Number(process.env.CONEST_DEMO_PORT??18791);
 const config={logging:{file:path.join(demoRoot,'gateway.log')},gateway:{mode:'local',bind:'loopback',port,auth:{mode:'token',token},controlUi:{enabled:true,allowedOrigins:[`http://127.0.0.1:${port}`,`http://localhost:${port}`]}},
  agents:{ownership:'explicit',defaults:{workspace,skipBootstrap:true,model:{primary:'deepseek/deepseek-v4-flash'},models:{'deepseek/deepseek-v4-flash':{agentRuntime:{id:'dsh'}}},thinkingDefault:'off'},entries:{main:{workspace}}},
- tools:{allow:['read','session_status','dsh_read','dsh_grep','dsh_glob','dsh_mcp__reference_memory__search_nodes'],fs:{workspaceOnly:true},codeMode:{enabled:false}},
+ tools:{allow:['read','session_status','dsh_read','dsh_grep','dsh_glob','dsh_mcp__reference_memory__search_nodes','bridge_capabilities','bridge_invoke','knowledge_search','knowledge_verify'],fs:{workspaceOnly:true},codeMode:{enabled:false}},
  models:{mode:'replace',providers:{deepseek:{baseUrl:`http://127.0.0.1:${modelPort}/v1`,api:'openai-completions',apiKey:'local-transport-only',models:[{id:'deepseek-v4-flash',name:live?'DeepSeek Flash · live':'CoNest · deterministic rehearsal',agentRuntime:{id:'dsh'},reasoning:false,input:['text'],contextWindow:128000,maxTokens:2048,cost:{input:0,output:0,cacheRead:0,cacheWrite:0}}]}}},
  plugins:{enabled:true,allow:['dsh-bridge','deepseek'],slots:{memory:'none'},load:{paths:[process.env.CONEST_PLUGIN_ROOT??root,providerDir]},entries:{deepseek:{enabled:true},'dsh-bridge':{enabled:true,hooks:{allowConversationAccess:true},config:{workspaceRoot:workspace,studio:{stateDir:studio}}}}}};
 const configPath=path.join(demoRoot,'openclaw.json');await writeFile(configPath,JSON.stringify(config,null,2),{mode:0o600});
@@ -61,7 +64,7 @@ const env={...process.env,OPENCLAW_CONFIG_PATH:configPath,OPENCLAW_STATE_DIR:pat
 let log='';let gateway=spawn(process.execPath,[cli,'gateway','run','--port',String(port)],{cwd:workspace,env,stdio:['ignore','pipe','pipe']});gateway.stdout.on('data',c=>log+=c);gateway.stderr.on('data',c=>log+=c);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const base=`http://127.0.0.1:${port}/plugins/conest-studio`;
-const cleanup=async()=>{gateway.kill('SIGTERM');await Promise.race([new Promise(r=>gateway.once('exit',r)),sleep(5000)]);if(gateway.exitCode===null)gateway.kill('SIGKILL');model.close();await writeFile(path.join(demoRoot,'launcher.log'),log);await writeFile(path.join(demoRoot,'model-evidence.json'),JSON.stringify({mode:live?'live':'fixture',requests,usage:live?.report()},null,2),{mode:0o600});};
+const cleanup=async()=>{await stopProcessTree(gateway);model.close();await writeFile(path.join(demoRoot,'launcher.log'),log);await writeFile(path.join(demoRoot,'model-evidence.json'),JSON.stringify({mode:live?'live':'fixture',requests,usage:live?.report()},null,2),{mode:0o600});};
 process.once('SIGTERM',()=>cleanup().then(()=>process.exit()));process.once('SIGINT',()=>cleanup().then(()=>process.exit()));
 try{
  let repaired=false;

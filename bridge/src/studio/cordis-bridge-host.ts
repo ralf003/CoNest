@@ -8,6 +8,7 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { startComposition, type RunningComposition } from "./composition.js";
+import type { ReadObservation } from '../read-contract.js';
 import { generatedComposition } from "./generated/composition.generated.js";
 
 type BridgeState = "stopped" | "starting" | "ready" | "stopping";
@@ -47,11 +48,6 @@ export class CordisAgentRunError extends Error {
   }
 }
 
-export type AutomaticMemoryRecord = {
-  entityName: string;
-  observations: string[];
-};
-
 export type HarnessImage = { data: string; mimeType: string; name?: string };
 export type HarnessToolPolicy = { allow?: readonly string[]; deny?: readonly string[] };
 export type HarnessApprovalRequester = (request: ApprovalRequest) => Promise<ApprovalOutcome>;
@@ -64,8 +60,8 @@ export class CordisBridgeHost {
   private workspaceRoot: string | undefined;
   private readonly agents = new Map<string, Agent>();
   private readonly harnessAgents = new Map<string, Promise<AgentHandle>>();
+  private readonly harnessSessions = new Map<string, { sessionId: string; agentId?: string; lifecycleRevision?: string }>();
   private readonly coldResumedHandles = new WeakSet<AgentHandle>();
-  private automaticMemoryQueue: Promise<void> = Promise.resolve();
 
   status(): BridgeState {
     return this.state;
@@ -73,7 +69,6 @@ export class CordisBridgeHost {
 
   start(options: {
     workspaceRoot: string;
-    memoryFilePath?: string;
     sessionPersistenceRoot?: string;
     enableBridgeProofAdapter?: boolean;
   }): Promise<void> {
@@ -91,7 +86,6 @@ export class CordisBridgeHost {
 
   private async boot(options: {
     workspaceRoot: string;
-    memoryFilePath?: string;
     sessionPersistenceRoot?: string;
     enableBridgeProofAdapter?: boolean;
   }): Promise<void> {
@@ -125,6 +119,7 @@ export class CordisBridgeHost {
     const composition = this.composition;
     const harnessAgents = [...this.harnessAgents.values()];
     this.harnessAgents.clear();
+    this.harnessSessions.clear();
     try {
       const handles = await Promise.allSettled(harnessAgents);
       await Promise.allSettled(
@@ -137,6 +132,23 @@ export class CordisBridgeHost {
       this.agents.clear();
       this.state = "stopped";
     }
+  }
+
+  /** Accept only trusted worker observations, retaining the version actually read. */
+  async observeRead(receipt: ReadObservation, sessionKey: string, signal: AbortSignal): Promise<void> {
+    signal.throwIfAborted();
+    if (this.state !== 'ready' || !this.composition || !this.workspaceRoot) throw new Error('Studio filesystem is not ready');
+    if (!receipt?.target || typeof receipt.target.targetKey !== 'string' || typeof receipt.target.displayPath !== 'string'
+      || !receipt.observation || !['present', 'absent'].includes(receipt.observation.kind)
+      || (receipt.observation.kind === 'present' && typeof receipt.observation.version !== 'string')) throw new Error('Invalid worker read observation');
+    const composition = this.composition;
+    const root = await composition.context.fs.resolve(this.workspaceRoot, { signal });
+    const target = await composition.context.fs.resolve(receipt.target.displayPath, { signal });
+    signal.throwIfAborted();
+    if (this.composition !== composition || this.state !== 'ready') throw new Error('Studio filesystem changed during read handoff');
+    if (!composition.context.fs.contains(root, target) || target.targetKey !== receipt.target.targetKey) return;
+    // Never stat again and adopt a newer version: that would approve unseen changes.
+    composition.context.emit('fs/observed', target, receipt.observation, { agent: this.agentFor(sessionKey) });
   }
 
   async execute(
@@ -188,6 +200,9 @@ export class CordisBridgeHost {
   async runHarnessAgent(options: {
     task: string;
     sessionKey: string;
+    hostSessionId?: string;
+    hostAgentId?: string;
+    hostLifecycleRevision?: string;
     provider: string;
     model: string;
     timeoutMs: number;
@@ -201,19 +216,29 @@ export class CordisBridgeHost {
     if (this.state !== "ready" || !this.composition || !this.workspaceRoot) {
       throw new Error(`Cordis bridge is ${this.state}; the OpenClaw plugin service is not ready`);
     }
-    const bindingKey = `${options.sessionKey}\u0000${options.provider}\u0000${options.model}`;
+    // A routing key or stable session ID can survive reset. The public host
+    // lifecycle revision selects history and retires handles from prior epochs.
+    if (options.hostSessionId && options.hostLifecycleRevision) await this.endHarnessSession({
+      sessionId: options.hostSessionId, agentId: options.hostAgentId, keepLifecycleRevision: options.hostLifecycleRevision,
+    });
+    const bindingKey = options.hostSessionId
+      ? JSON.stringify([options.sessionKey, options.hostSessionId, options.hostAgentId, options.hostLifecycleRevision, options.provider, options.model])
+      : `${options.sessionKey}\u0000${options.provider}\u0000${options.model}`;
     let handlePromise = this.harnessAgents.get(bindingKey);
     const sessionReused = handlePromise !== undefined;
     if (!handlePromise) {
       handlePromise = this.openHarnessAgent(bindingKey, options);
       this.harnessAgents.set(bindingKey, handlePromise);
+      if (options.hostSessionId) this.harnessSessions.set(bindingKey, { sessionId: options.hostSessionId, agentId: options.hostAgentId, lifecycleRevision: options.hostLifecycleRevision });
       void handlePromise.catch(() => {
         if (this.harnessAgents.get(bindingKey) === handlePromise) {
           this.harnessAgents.delete(bindingKey);
+          this.harnessSessions.delete(bindingKey);
         }
       });
     }
     const handle = await handlePromise;
+    if (this.harnessAgents.get(bindingKey) !== handlePromise) throw new CordisAgentRunError('aborted', 'The owning OpenClaw session ended');
     if (handle.agent.status !== "idle") {
       throw new CordisAgentRunError("failed", `DSH session ${handle.agent.id} is already running`);
     }
@@ -221,6 +246,21 @@ export class CordisBridgeHost {
       sessionReused,
       disposeAfterTurn: false,
     });
+  }
+
+  async endHarnessSession(session: { sessionId: string; agentId?: string; keepLifecycleRevision?: string }): Promise<void> {
+    const removed: Promise<AgentHandle>[] = [];
+    for (const [key, owner] of this.harnessSessions) {
+      if (owner.sessionId !== session.sessionId || (session.agentId && owner.agentId && session.agentId !== owner.agentId)) continue;
+      if (session.keepLifecycleRevision && owner.lifecycleRevision === session.keepLifecycleRevision) continue;
+      const handle = this.harnessAgents.get(key);
+      this.harnessSessions.delete(key);
+      this.harnessAgents.delete(key);
+      if (handle) removed.push(handle);
+    }
+    const results = await Promise.allSettled(removed.map(async handle => (await handle).dispose()));
+    const errors = results.flatMap(result => result.status === 'rejected' ? [result.reason] : []);
+    if (errors.length) throw new AggregateError(errors, 'DSH session cleanup failed');
   }
 
   private async openHarnessAgent(
@@ -243,7 +283,7 @@ export class CordisBridgeHost {
       // where the current composition must be reattached.
       setup: (agentCtx: { tools: { schemas(): Array<{ name: string }> } }) => {
         const names = new Set(agentCtx.tools.schemas().map((tool) => tool.name));
-        const required = ["bash", "mcp__reference_memory__search_nodes"];
+        const required = ["bash"];
         const missing = required.filter((name) => !names.has(name));
         if (missing.length > 0) {
           throw new Error(`DSH Agent setup missing live tools: ${missing.join(", ")}`);
@@ -398,69 +438,6 @@ export class CordisBridgeHost {
     }
   }
 
-  async recallAutomaticMemory(entityName: string): Promise<AutomaticMemoryRecord> {
-    return await this.runAutomaticMemoryOperation(async () => {
-      const result = await this.execute(
-        `automatic-memory-open-${crypto.randomUUID()}`,
-        "mcp__reference_memory__open_nodes",
-        { names: [entityName] },
-        `automatic-memory:${entityName}`,
-      );
-      assertToolSucceeded(result, "open_nodes");
-      const entities = readStructuredEntities(result.value);
-      const entity = entities.find((candidate) => candidate.name === entityName);
-      return { entityName, observations: entity?.observations ?? [] };
-    });
-  }
-
-  async storeAutomaticMemory(entityName: string, observation: string): Promise<{
-    action: "created" | "added" | "already-present";
-  }> {
-    return await this.runAutomaticMemoryOperation(async () => {
-      const sessionKey = `automatic-memory:${entityName}`;
-      const existingResult = await this.execute(
-        `automatic-memory-open-${crypto.randomUUID()}`,
-        "mcp__reference_memory__open_nodes",
-        { names: [entityName] },
-        sessionKey,
-      );
-      assertToolSucceeded(existingResult, "open_nodes");
-      const entity = readStructuredEntities(existingResult.value)
-        .find((candidate) => candidate.name === entityName);
-      if (!entity) {
-        const createResult = await this.execute(
-          `automatic-memory-create-${crypto.randomUUID()}`,
-          "mcp__reference_memory__create_entities",
-          {
-            entities: [{
-              name: entityName,
-              entityType: "openclaw-automatic-memory",
-              observations: [observation],
-            }],
-          },
-          sessionKey,
-        );
-        assertToolSucceeded(createResult, "create_entities");
-        return { action: "created" };
-      }
-      if (entity.observations.includes(observation)) return { action: "already-present" };
-      const addResult = await this.execute(
-        `automatic-memory-add-${crypto.randomUUID()}`,
-        "mcp__reference_memory__add_observations",
-        { observations: [{ entityName, contents: [observation] }] },
-        sessionKey,
-      );
-      assertToolSucceeded(addResult, "add_observations");
-      return { action: "added" };
-    });
-  }
-
-  private async runAutomaticMemoryOperation<T>(operation: () => Promise<T>): Promise<T> {
-    const result = this.automaticMemoryQueue.then(operation, operation);
-    this.automaticMemoryQueue = result.then(() => undefined, () => undefined);
-    return await result;
-  }
-
   /** Give DSH policies a stable per-OpenClaw-session owner and workspace identity. */
   private agentFor(sessionKey: string): Agent {
     const existing = this.agents.get(sessionKey);
@@ -512,36 +489,6 @@ function mapOpenClawToolName(name: string): string[] {
 
 function isDshImageMediaType(value: string): value is "image/png" | "image/jpeg" | "image/webp" | "image/gif" {
   return value === "image/png" || value === "image/jpeg" || value === "image/webp" || value === "image/gif";
-}
-
-type StructuredMemoryEntity = {
-  name: string;
-  observations: string[];
-};
-
-function readStructuredEntities(value: unknown): StructuredMemoryEntity[] {
-  const structuredContent = value && typeof value === "object"
-    ? (value as { structuredContent?: unknown }).structuredContent
-    : undefined;
-  const entities = structuredContent && typeof structuredContent === "object"
-    ? (structuredContent as { entities?: unknown }).entities
-    : undefined;
-  if (!Array.isArray(entities)) return [];
-  return entities.flatMap((candidate) => {
-    if (!candidate || typeof candidate !== "object") return [];
-    const name = (candidate as { name?: unknown }).name;
-    const observations = (candidate as { observations?: unknown }).observations;
-    if (typeof name !== "string" || !Array.isArray(observations)) return [];
-    return [{ name, observations: observations.filter((item): item is string => typeof item === "string") }];
-  });
-}
-
-function assertToolSucceeded(result: ToolExecutionResult, operation: string): void {
-  if (!result.isError) return;
-  const message = result.content
-    .flatMap((block) => block.type === "text" ? [block.text] : [])
-    .join("\n");
-  throw new Error(`DSH automatic memory ${operation} failed: ${message || "unknown error"}`);
 }
 
 function messageText(content: readonly unknown[]): string {
