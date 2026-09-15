@@ -1,0 +1,27 @@
+{
+  "workspaceRoot": ".",
+  "components": [],
+  "capabilityPolicy": {
+    "defaults": {},
+    "agents": {},
+    "requesters": [],
+    "operator": {},
+    "requireRequester": false
+  },
+  "builtins": {
+    "dsh-search": { "enabled": true },
+    "result-verifier": { "enabled": true }
+  },
+  "permissions": [
+    "workspace:read"
+  ],
+  "maxConcurrent": 4,
+  "maxQueued": 32,
+  "maxTasks": 128,
+  "taskTtlMs": 120000,
+  "startupTimeoutMs": 15000,
+  "shutdownTimeoutMs": 5000,
+  "maxPayloadBytes": 256000,
+  "maxRetiredGenerations": 2,
+  "abortGraceMs": 1000
+}

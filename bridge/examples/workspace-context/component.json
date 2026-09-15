@@ -1,0 +1,28 @@
+{
+  "id": "workspace-context",
+  "version": "0.1.0",
+  "bridgeVersion": ">=0.6.1 <0.7.0",
+  "description": "Development-only bounded workspace context provider using the real DSH search dependency.",
+  "entry": "./component.mjs",
+  "requires": { "dsh-search": "^0.2.0" },
+  "configSchema": { "type": "object", "additionalProperties": false, "properties": {} },
+  "capabilities": [{
+    "name": "workspace_context",
+    "contextProvider": "workspace-v1",
+    "description": "Select at most three literal search terms from a bounded task and return limited source excerpts. No model calls or history access.",
+    "permissions": ["workspace:read"],
+    "inputSchema": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "task": { "type": "string", "maxLength": 1000 },
+        "maxChars": { "type": "integer", "minimum": 128, "maximum": 4000 }
+      },
+      "required": ["task", "maxChars"]
+    },
+    "outputSchema": {
+      "type": "object", "additionalProperties": false,
+      "properties": { "text": { "type": "string", "maxLength": 4000 } },
+      "required": ["text"]
+    }
+  }]
+}

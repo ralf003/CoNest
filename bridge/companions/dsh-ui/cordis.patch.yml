@@ -1,0 +1,3 @@
+- insert:
+    - id: conest-studio-ui
+      name: '@local/conest-dsh-ui'

@@ -1,0 +1,17 @@
+name: Repository checks
+on:
+  push:
+    branches: [main, night]
+  pull_request:
+    branches: [main, night]
+permissions:
+  contents: read
+jobs:
+  source-checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check source layout, versions and excluded material
+        run: python3 maintenance/check-repository.py

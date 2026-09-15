@@ -1,0 +1,10 @@
+{
+  "defaults": { "allow": ["knowledge_search", "knowledge_verify", "source_verify"] },
+  "agents": {
+    "researcher": { "allow": ["knowledge_search", "source_verify"] },
+    "restricted": { "deny": ["knowledge_search", "knowledge_verify", "source_verify"] }
+  },
+  "operator": { "allow": ["knowledge_search", "knowledge_verify", "source_verify"] },
+  "requesters": [],
+  "requireRequester": false
+}
