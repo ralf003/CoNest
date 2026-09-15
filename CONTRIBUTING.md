@@ -3,9 +3,9 @@
 ## 分支
 
 - `main`：以备份中的 0.6.2 为起点，接收已验证的修复和稳定版本。
-- `night`：当前开发分支。功能分支从 `night` 创建，完成构建与相应验证后通过 PR 合入。
-- 发布前通过 `night → main` 的 PR 审核变更、验证证据和版本；不要将未经验证的候选版标为稳定版。
-- 现有开发服务器默认停留在 `night`。需要检查 `main` 时使用另一个 clone 或 `git worktree`，避免切换正在运行的开发代码。
+- `develop`：当前开发分支。功能分支从 `develop` 创建，完成构建与相应验证后通过 PR 合入。
+- 发布前通过 `develop → main` 的 PR 审核变更、验证证据和版本；不要将未经验证的候选版标为稳定版。
+- 现有开发服务器默认停留在 `develop`。需要检查 `main` 时使用另一个 clone 或 `git worktree`，避免切换正在运行的开发代码。
 
 ## 恢复开发依赖
 
@@ -39,7 +39,7 @@ python3 maintenance/check-repository.py
 
 ## 验证与发布
 
-完整构建与测试遵循 [插件开发说明](bridge/README.md)。`night` 中可按变更范围选择以下验证；0.6.2 不包含后来新增的迁移参数。
+完整构建与测试遵循 [插件开发说明](bridge/README.md)。`develop` 中可按变更范围选择以下验证；0.6.2 不包含后来新增的迁移参数。
 
 ```bash
 CONEST_REPORT_PROFILE=local-check pnpm --dir bridge exec node scripts/test-e2e.mjs --dsh-loop --memory-migration
