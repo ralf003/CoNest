@@ -79,7 +79,7 @@ try {
   await mkdir(path.join(stage, 'companions/dsh-ui'), {recursive:true});
   for(const file of ['package.json','index.js','client.js','cordis.patch.yml','README.md']) await cp(path.join(source,'companions/dsh-ui',file),path.join(stage,'companions/dsh-ui',file));
   topFiles.push('companions');
-  const rootLicense = path.resolve(source, '../source/workspace/deepseek-harness/LICENSE');
+  const rootLicense = path.join(path.dirname(createRequire(import.meta.url).resolve('@deepseek-ai/dsh-tools/package.json')), 'LICENSE');
   const pending = [...packages.entries()];
   let completed = 0;
   const results = await Promise.allSettled(Array.from({ length: 4 }, async () => {
@@ -108,7 +108,7 @@ try {
         await cp(member, path.join(target, file));
       }
       if (licenses.length === 0) {
-        if (name === '@openclaw/deepseek-provider') await cp(path.resolve(source,'../.runtime/node_modules/openclaw/LICENSE'),path.join(target,'LICENSE'));
+        if (name === '@openclaw/deepseek-provider') await cp(path.join(path.dirname(createRequire(import.meta.url).resolve('openclaw/package.json')), 'LICENSE'),path.join(target,'LICENSE'));
         else if (name.startsWith('@img/sharp-libvips-')) {
           assert.ok((await readFile(path.join(directory,'README.md'),'utf8')).includes('## Licensing'));
           await cp(path.join(directory,'README.md'),path.join(target,'NOTICE.md'));

@@ -8,7 +8,7 @@ root = Path(__file__).resolve().parents[1]
 files = subprocess.check_output(['git', 'ls-files', '-z'], cwd=root).decode().split('\0')
 files = [name for name in files if name]
 errors = []
-blocked = {'node_modules', '.runtime', '.tooling', '.platform-testing', 'private', 'backups', 'source', 'dist', 'lib', '__pycache__', '.dsh'}
+blocked = {'node_modules', '.vendor', '.runtime', '.tooling', '.platform-testing', 'private', 'backups', 'source', 'dist', 'lib', '__pycache__', '.dsh'}
 secret_patterns = [
     rb'gh[pousr]_[A-Za-z0-9]{30,}',
     rb'github_pat_[A-Za-z0-9_]{40,}',
@@ -43,4 +43,8 @@ for name in required:
 if errors:
     print('\n'.join(errors))
     raise SystemExit(1)
+for group in ('dependencies', 'devDependencies'):
+    for name, spec in pkg.get(group, {}).items():
+        if spec.startswith('link:') or 'source/workspace' in spec or '.runtime' in spec:
+            raise SystemExit(f'Non-portable dependency: {name}')
 print(f'Repository checks passed: {len(files)} files, CoNest {pkg["version"]}; full runtime tests are separate.')

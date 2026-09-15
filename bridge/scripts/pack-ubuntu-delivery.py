@@ -67,8 +67,8 @@ def main():
     for relative, expected in PAYLOADS.items():
         if digest(BRIDGE / relative) != expected:
             raise RuntimeError(f'Qualified artifact changed: {relative}')
-    node = PROJECT / '.tooling/node_modules/.bin/node'
-    marked = PROJECT / 'source/workspace/deepseek-harness/node_modules/.pnpm/marked@16.4.2/node_modules/marked/lib/marked.esm.js'
+    node = 'node'
+    marked = BRIDGE / 'node_modules/marked/lib/marked.esm.js'
     with tempfile.TemporaryDirectory(prefix='conest-delivery-') as tmp:
         root = Path(tmp) / NAME
         root.mkdir()

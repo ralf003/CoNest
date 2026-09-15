@@ -10,7 +10,8 @@ import path from 'node:path';
 import os from 'node:os';
 const execute=promisify(execFile);
 const bridge=fileURLToPath(new URL('..',import.meta.url));
-const root=path.resolve(bridge,'../source/workspace/deepseek-harness');
+if (!process.env.CONEST_DSH_SOURCE) throw Error('This optional full DSH Web distributor needs CONEST_DSH_SOURCE pointing to an independently built upstream checkout; the CoNest development SDK does not include DSH applications.');
+const root=path.resolve(process.env.CONEST_DSH_SOURCE);
 const output=path.join(bridge,'releases/ubuntu-demo');
 const visited=new Map();
 async function collect(dir){

@@ -34,3 +34,6 @@ __pycache__/
 /bridge/releases/
 /bridge/reports/
 /maintenance/local/
+
+# Downloaded and verified development SDK; never commit dependency contents.
+/.vendor/

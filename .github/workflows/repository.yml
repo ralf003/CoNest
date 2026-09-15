@@ -1,17 +1,32 @@
-name: Repository checks
+name: Build and test
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:
-  source-checks:
+  linux:
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Check source layout, versions and excluded material
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.15.0
+      - name: Install pinned pnpm
+        run: npm install --global pnpm@11.7.0
+      - name: Check repository contents
         run: python3 maintenance/check-repository.py
+      - name: Download and verify the frozen SDK
+        run: node maintenance/bootstrap.mjs
+      - name: Install locked dependencies
+        run: pnpm --dir bridge install --frozen-lockfile
+      - name: Build
+        run: pnpm --dir bridge run build
+      - name: Test
+        run: pnpm --dir bridge exec tsx --test 'test/*.test.ts'

@@ -1,53 +1,64 @@
-# 维护 CoNest
+# 一起构建 CoNest
 
-## 分支
+欢迎通过 Issue 讨论问题与设计，通过 Pull Request 提交改进。日常开发面向 `develop`；`main` 接收通过验收的稳定变更。
 
-- `main`：以备份中的 0.6.2 为起点，接收已验证的修复和稳定版本。
-- `develop`：当前开发分支。功能分支从 `develop` 创建，完成构建与相应验证后通过 PR 合入。
-- 发布前通过 `develop → main` 的 PR 审核变更、验证证据和版本；不要将未经验证的候选版标为稳定版。
-- 现有开发服务器默认停留在 `develop`。需要检查 `main` 时使用另一个 clone 或 `git worktree`，避免切换正在运行的开发代码。
+## 五步开始
 
-## 恢复开发依赖
-
-当前代码和锁文件保留原有工作区路径；本次导入没有改写依赖版本或替换 DSH 实现。需要恢复以下布局：
-
-```text
-CoNest/
-  bridge/                              # 本仓库
-  source/workspace/deepseek-harness/    # 配套冻结源码及已构建 lib
-  source/workspace/openclaw-cordis-bridge-demo/
-  .runtime/node_modules/openclaw/       # 官方 OpenClaw 2026.9.2
-  .tooling/node_modules/.bin/           # 可选：配套 Node / pnpm
-```
-
-`package.json` 的所有 `link:` 引用都必须存在，包括指向冻结工作区 `node_modules` 的依赖。Node 版本为 24.15.0，pnpm 为 11.7.0。冻结快照没有可确认的远端提交号，不能用上游最新源码代替并声称复现原验收。相关工作区及安装包由项目所有者保留，尚未作为此仓库的 Release 附件上传。
-
-在原开发机这些路径已经就绪。另一台机器恢复配套工作区后执行：
+1. Fork 仓库，从 `develop` 创建 `feature/简短名称` 或 `fix/简短名称`。
+2. 准备 Node.js 24.15.0、pnpm 11.7.0、Git 和 tar；原生编译需要 Python 3、make 和 C++ 编译器。
+3. 在仓库根目录恢复固定依赖并构建：
 
 ```bash
-python3 maintenance/check-dependencies.py
+node maintenance/bootstrap.mjs
 pnpm --dir bridge install --frozen-lockfile
 pnpm --dir bridge run build
 pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 ```
 
-没有上述冻结依赖时，仅可运行仓库检查：
+4. 按影响范围运行相关集成验收，更新说明。
+5. 向 `develop` 提交 PR，写明触发场景、行为变化和实际运行的验证。
+
+原开发机的 `.runtime`、`.tooling`、`source/workspace` 均不是必要前提。依赖来源、校验和 node-pty 补丁见 [DEPENDENCIES.md](maintenance/DEPENDENCIES.md)。不要将下载的 `.vendor`、`node_modules` 或状态文件提交到 Git。
+
+## 选择验证
+
+| 变更范围 | 建议验证 |
+|---|---|
+| 文档、仓库配置 | `python3 maintenance/check-repository.py`，检查链接与实际命令 |
+| 插件、worker 或组件行为 | 构建与完整测试；必要时增加有针对性的行为测试 |
+| Studio、Loop 或工具准入 | 在独立状态目录运行 Studio / 双 Loop 验收 |
+| 依赖或 SDK | 两个分支都从干净克隆恢复、安装、构建和测试 |
 
 ```bash
-python3 maintenance/check-repository.py
+# 两个分支都有的 Studio 四段验收，使用本地模型 fixture。
+CONEST_DEMO_STATE=/absolute/disposable/conest-check \
+  pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
+
+# develop 的记忆组件迁移验收；main 不包含该开发增量。
+CONEST_REPORT_PROFILE=local-check \
+  pnpm --dir bridge exec node scripts/test-e2e.mjs --dsh-loop --memory-migration
 ```
 
-## 验证与发布
+默认验收实际运行 Gateway、Loop、worker 和工具，但模型决策来自本地 fixture。真实模型验证需要单独配置凭据，不在 CI 中自动调用付费模型。提交证据前删除 token、个人任务内容和运行数据。
 
-完整构建与测试遵循 [插件开发说明](bridge/README.md)。`develop` 中可按变更范围选择以下验证；0.6.2 不包含后来新增的迁移参数。
+## 分支与发布
 
-```bash
-CONEST_REPORT_PROFILE=local-check pnpm --dir bridge exec node scripts/test-e2e.mjs --dsh-loop --memory-migration
-CONEST_DEMO_STATE=/absolute/disposable/studio-check pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
+```text
+feature/* 或 fix/* → develop → 验收与 PR → main → 版本标签
 ```
 
-默认验收使用本地模型 fixture，Gateway、Loop、worker 和工具实际运行。真实模型测试需单独配置凭据；不在 GitHub CI 中自动调用付费模型。
+`main` 以 0.6.2 稳定代码为起点，`develop` 为 0.6.3 开发线。两个分支的依赖恢复与协作流程共同维护，功能版本保持各自边界。原始 `v0.6.2` 标签固定备份，不因维护说明或构建改进而移动。
 
-GitHub Actions 仅运行无需冻结依赖的仓库检查，不能代替构建、平台或真实模型验收。`bridge/.github/` 保留的历史平台工作流模板不在根目录自动启用，因为它依赖另行提供的候选安装包。
+检查另一分支时使用独立 clone 或 `git worktree`，避免切换正在运行的开发代码。新安装包通过 Releases 分发；发布前核对版本、依赖来源、平台资产和相应验收。SDK Release 是开发依赖，不是 CoNest 插件安装包。
 
-提交源码、必要测试和说明。安装包通过 GitHub Releases 分发，验收记录发布前去除 token、私有任务内容和用户数据。不要把整个原开发工作区或 `node_modules` 加入 Git。
+## 项目布局
+
+```text
+bridge/src/          插件、组件运行时与 Studio
+bridge/test/         行为测试
+bridge/scripts/      构建、集成验证与打包
+bridge/docs/         配置、架构与平台说明
+bridge/patches/      明确记录的依赖补丁
+maintenance/         SDK 获取、来源、仓库检查
+.vendor/             Bootstrap 的下载结果（不提交）
+```

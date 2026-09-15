@@ -31,23 +31,20 @@ The local profile references a private credential file, uses the official DeepSe
 
 ## Development requirements and setup
 
-- Linux x64 development baseline, Node.js 24.15.0, pnpm 11.7.0.
-- Official OpenClaw **2026.9.2 exactly**, installed at `../.runtime/node_modules/openclaw`.
-- Restored DSH source at `../source/workspace/deepseek-harness`.
-- This development workspace uses local `link:` dependencies. The standalone archive replaces them with bundled exact versions and does not need the checkout.
+Linux x64 is the development validation baseline. Use Node.js 24.15.0, pnpm 11.7.0 and tar; Python 3, make and a C++ compiler are required when native dependencies build from source. OpenClaw 2026.9.2 and ordinary dependencies install from npm. The preserved DSH SDK downloads from a checksum-pinned Release, with source, JavaScript libraries, types and licenses.
 
-From this package directory:
+From the repository root:
 
 ```sh
-cd ../source/workspace/deepseek-harness
-pnpm install --frozen-lockfile
-pnpm run build:lib
-cd ../../../bridge
-pnpm install --frozen-lockfile
-pnpm run build
+node maintenance/bootstrap.mjs
+pnpm --dir bridge install --frozen-lockfile
+pnpm --dir bridge run build
+pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 ```
 
-The prepared development environment also has the required Node and pnpm binaries in `../.tooling/node_modules/.bin`. Put that directory on `PATH` if the system Node version differs.
+No original `.runtime`, `.tooling` or `source/workspace` directory is required. See [dependency provenance and offline SDK use](../maintenance/DEPENDENCIES.md) and [the contribution guide](../CONTRIBUTING.md). Git ignores downloaded SDK content and installed dependencies.
+
+The commands below run from the `bridge/` package directory.
 
 Create a dedicated configuration outside the searchable workspace when practical:
 
