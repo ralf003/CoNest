@@ -5,9 +5,9 @@ CoNest 是接入 OpenClaw 的插件，提供 DSH/Cordis 组件运行时、可选
 | 分支 | 维护用途 |
 |---|---|
 | [`main`](https://github.com/zyw02/CoNest/tree/main) | 0.6.2 稳定基线，来自多平台修改前校验通过的备份。 |
-| [`night`](https://github.com/zyw02/CoNest/tree/night) | 当前 0.6.3 开发线，包含多平台适配、双 Loop 组件接入，以及搜索、文本读取、共享记忆组件化。 |
+| [`develop`](https://github.com/zyw02/CoNest/tree/develop) | 当前 0.6.3 开发线，包含多平台适配、双 Loop 组件接入，以及搜索、文本读取、共享记忆组件化。 |
 
-日常开发使用 `night`，通过 Pull Request 审核后再将已验收的变更合入 `main`。`night` 是本项目约定的分支名。
+日常开发使用 `develop`，通过 Pull Request 审核后再将已验收的变更合入 `main`。`develop` 是本项目约定的分支名。
 
 - [插件说明与配置](bridge/README.md)
 - [Studio 使用说明](bridge/STUDIO.md)

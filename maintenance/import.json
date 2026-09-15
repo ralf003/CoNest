@@ -1,5 +1,5 @@
 {
-  "branch": "night",
+  "branch": "develop",
   "version": "0.6.3",
   "parentBaseline": "main / v0.6.2",
   "sourceFiles": {
