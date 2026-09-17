@@ -1,4 +1,4 @@
-param([string]$InstallRoot = (Join-Path $HOME 'conest-demo-0.6.3'))
+param([string]$InstallRoot = (Join-Path $HOME 'conest-demo-0.6.4'))
 $ErrorActionPreference = 'Stop'
 $Config = Get-Content -LiteralPath (Join-Path $InstallRoot 'conest-launch.json') -Raw | ConvertFrom-Json
 & $Config.node (Join-Path $Config.plugin 'dist/probe-platform.mjs')

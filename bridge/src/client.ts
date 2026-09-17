@@ -8,6 +8,8 @@ import { BridgeError, HOST_VERSION, PROTOCOL_VERSION } from './types.js';
 import { isWireEvent, isWireResponse } from './protocol.js';
 import { readFrames } from './framing.js';
 import { executionEnvironment } from './environment.js';
+import type { ExtensionCall, HostCallback } from './extension-protocol.js';
+import { errorData } from './types.js';
 
 type Pending = {
   resolve(value: unknown): void;
@@ -56,6 +58,7 @@ export class BridgeClient {
   private state: 'stopped' | 'starting' | 'ready' | 'failed' = 'stopped';
   private failure: string | undefined;
   private stopping: Promise<void> | undefined;
+  private readonly extensionCalls = new Map<string, { callbacks: NonNullable<ExtensionCall['callbacks']>; lifetime: AbortController; child: ChildProcessWithoutNullStreams }>();
 
   constructor(private readonly options: ClientOptions) {}
 
@@ -152,6 +155,42 @@ export class BridgeClient {
   async reload(): Promise<RuntimeStatus> { return await this.request('reload', {}, 120_000); }
   async manage(operation: ComponentOperation): Promise<RuntimeStatus> { return await this.request('manage', operation, 120_000); }
 
+  async extension<T>(call: ExtensionCall): Promise<T> {
+    const channel = randomUUID();
+    const lifetime = new AbortController();
+    const child = this.child;
+    if (!child || this.state !== 'ready') throw new BridgeError('BRIDGE_UNAVAILABLE', 'CoNest Host is not ready');
+    const signal = call.signal ? AbortSignal.any([call.signal, lifetime.signal]) : lifetime.signal;
+    this.extensionCalls.set(channel, { callbacks: call.callbacks ?? {}, lifetime, child });
+    try {
+      return await this.request<T>('extension', { channel, operation: call.operation, setup: call.setup, args: call.args },
+        call.timeoutMs ?? 120_000, signal, () => {
+          void this.request('extension.cancel', { channel }, 1_000).catch(() => {});
+        });
+    } finally {
+      this.extensionCalls.delete(channel);
+      lifetime.abort(new BridgeError('CALL_ENDED', 'The parent Host call ended'));
+    }
+  }
+
+  private async callback(message: HostCallback): Promise<void> {
+    const { channel, id, name, args } = message.data;
+    const owner = this.extensionCalls.get(channel);
+    if (!owner || owner.child !== this.child) return;
+    let reply: object;
+    try {
+      owner.lifetime.signal.throwIfAborted();
+      const handler = Object.hasOwn(owner.callbacks, name) ? owner.callbacks[name] : undefined;
+      if (!handler) throw new BridgeError('CALLBACK_DENIED', `No admitted ${name} callback`);
+      const result = await handler(args, owner.lifetime.signal);
+      owner.lifetime.signal.throwIfAborted();
+      reply = { channel, callbackId: id, ok: true, result: result ?? null };
+    } catch (error) { reply = { channel, callbackId: id, ok: false, error: errorData(error) }; }
+    // Never deliver an old process's callback result to a replacement process.
+    if (this.child !== owner.child || this.extensionCalls.get(channel) !== owner) return;
+    await this.request('callback', reply, 3_000).catch(() => {});
+  }
+
   async stop(): Promise<void> {
     if (this.stopping) return await this.stopping;
     const child = this.child;
@@ -230,6 +269,13 @@ export class BridgeClient {
       this.options.onLog?.('warn', 'CoNest Runtime process emitted a malformed response');
       return;
     }
+    if (message && typeof message === 'object' && (message as HostCallback).event === 'host.callback') {
+      const data = (message as HostCallback).data;
+      if (data && [data.channel, data.id, data.name].every(value => typeof value === 'string')) {
+        void this.callback(message as HostCallback).catch(error => this.options.onLog?.('warn', String(error)));
+      }
+      return;
+    }
     if (isWireEvent(message)) {
       try { this.progress.get(message.data.callId)?.(message.data); } catch (error) {
         this.options.onLog?.('warn', `Progress observer failed: ${String(error)}`);
@@ -247,6 +293,8 @@ export class BridgeClient {
   }
 
   private rejectPending(error: Error): void {
+    for (const owner of this.extensionCalls.values()) owner.lifetime.abort(error);
+    this.extensionCalls.clear();
     for (const id of this.pending.keys()) this.removePending(id)?.reject(error);
     this.progress.clear();
   }

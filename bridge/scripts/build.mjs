@@ -10,6 +10,7 @@ await cp('src/studio/studio.html', 'dist/studio/studio.html');
 await import('./build-studio.mjs');
 
 await cp('scripts/demo-studio.mjs', 'dist/demo-studio.mjs');
+await cp('scripts/demo-components.mjs', 'dist/demo-components.mjs');
 await cp('scripts/live-deepseek.mjs', 'dist/live-deepseek.mjs');
 
 await cp('src/platform-support.mjs', 'dist/platform-support.mjs');

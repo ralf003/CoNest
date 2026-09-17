@@ -20,7 +20,9 @@
 
 CoNest 是连接 **OpenClaw** 与 **DeepSeek Harness（DSH）** 的插件。你可以在同一工作台选择 Agent Loop、调用双方工具，并在不同 Loop 的任务间共享记忆。底层 Cordis 组件由 CoNest Runtime 管理，Studio 提供统一入口和执行记录。
 
-[目标架构](DESIGN-zh.md) 将 Cordis 对 OpenClaw 的增强扩展为不依赖 DSH 也能运行的模式。默认采用 Gateway 与 CoNest Host 两个常驻应用进程；Management、Runtime 和可选 DSH 组合共享 Host。该结构是后续迁移目标，尚未全部实现。
+[目标架构](DESIGN-zh.md) 将 Cordis 对 OpenClaw 的增强扩展为不依赖 DSH 也能运行的模式。默认采用 Gateway 与 CoNest Host 两个常驻应用进程；Management、Runtime 和可选 DSH 组合共享 Host。0.6.4 已落实双进程结构；完整插件贡献模型等仍为后续目标。
+
+**0.6.4：** [Windows 安装与演示](bridge/docs/windows-0.6.4-zh.md) · [版本范围](bridge/docs/release-0.6.4-zh.md)。Gateway 与 CoNest Host 双进程已落地，DSH Agent/Session 已迁入 Host。新增办公服务组合与单次调用版本一致性演示；`--core` 可关闭 DSH。独立 Core/DSH 发行包仍待拆分。
 
 <table>
 <tr><td width="50%">

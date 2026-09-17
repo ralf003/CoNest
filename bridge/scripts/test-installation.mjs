@@ -70,9 +70,9 @@ try {
   const lock = JSON.parse(await readFile(path.join(installed, 'runtime-lock.json'), 'utf8'));
   assert.ok(Object.values(manifest.dependencies).every(value => !/^(link|workspace|file):/.test(value)));
   for (const dependency of lock.dependencies) {
-    const canonical = await realpath(path.join(installed, 'node_modules', dependency.name));
+    const canonical = await realpath(path.join(installed, 'node_modules', dependency.location ?? dependency.name));
     assert.ok(canonical.startsWith(`${installation}${path.sep}`), `${dependency.name} escaped the clean installation`);
-    const files = await filesIn(canonical);
+    const files = (await filesIn(canonical)).filter(file => !file.split(path.sep).includes('node_modules'));
     assert.equal(files.length, dependency.files, `Installed file count differs for ${dependency.name}`);
     const hash = createHash('sha256');
     for (const file of files) hash.update(file).update('\0').update(await readFile(path.join(canonical, file))).update('\0');

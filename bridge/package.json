@@ -1,6 +1,6 @@
 {
   "name": "@local/conest-connector",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "CoNest Connector for OpenClaw, with the CoNest Runtime for DSH/Cordis components.",
   "private": true,
   "type": "module",
@@ -32,7 +32,10 @@
     "bridge": "tsx src/cli.ts",
     "demo:studio": "node scripts/demo-studio.mjs",
     "test:studio": "node scripts/demo-studio.mjs --verify",
-    "bootstrap": "node ../maintenance/bootstrap.mjs"
+    "bootstrap": "node ../maintenance/bootstrap.mjs",
+    "test:components": "node scripts/demo-components.mjs",
+    "demo:core": "node scripts/demo-studio.mjs --core",
+    "test:core": "node scripts/demo-studio.mjs --verify --core"
   },
   "dependencies": {
     "@deepseek-ai/cordis-plugin-loader": "file:../.vendor/dsh/vendor/loader",

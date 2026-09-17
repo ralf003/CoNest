@@ -5,7 +5,8 @@ import { isIncognitoSessionKey } from 'openclaw/plugin-sdk/routing';
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import type { ReadObservation } from '../read-contract.js';
-import { CordisBridgeHost } from './cordis-bridge-host.js';
+import { RemoteCordisHost } from './remote-host.js';
+import type { BridgeHost } from '../host.js';
 import { createDshAgentHarness } from './dsh-agent-harness.js';
 import { generatedComposition } from './generated/composition.generated.js';
 import { extractLatestUserText, formatAutomaticMemoryContext, selectAutomaticMemory } from './automatic-memory.js';
@@ -13,19 +14,20 @@ import { StudioActivity } from './activity.js';
 import { MarketCatalog, type CatalogItem } from './catalog.js';
 
 const sharedKey = Symbol.for('conest.studio.v1');
-type StudioState = { host: CordisBridgeHost; activity: StudioActivity; market: MarketCatalog; owners: number; pending: Map<string, string>; loops: Map<string, string>; memoryLifetime: AbortController };
+type StudioState = { host: RemoteCordisHost; activity: StudioActivity; market: MarketCatalog; owners: number; pending: Map<string, string>; loops: Map<string, string>; memoryLifetime: AbortController };
 const shared = ((globalThis as Record<symbol, unknown>)[sharedKey] ??= new Map<string, StudioState>()) as Map<string, StudioState>;
 const PREFIX = '/plugins/conest-studio';
 
-export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, runtime: { endRun(runId: string): void }, memoryAccess: MemoryAccess): { observeRead(receipt: ReadObservation, sessionKey: string, signal: AbortSignal): Promise<void> } | undefined {
-  const config = api.pluginConfig?.studio as { stateDir?: string } | undefined;
+export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, runtime: { endRun(runId: string): void }, memoryAccess: MemoryAccess, componentHost: BridgeHost): { observeRead(receipt: ReadObservation, sessionKey: string, signal: AbortSignal): Promise<void> } | undefined {
+  const config = api.pluginConfig?.studio as { stateDir?: string; dsh?: boolean } | undefined;
   if (!config) return;
+  const dshEnabled = config.dsh !== false;
   if (!config.stateDir || !path.isAbsolute(config.stateDir)) throw new Error('CoNest Studio requires an absolute stateDir');
   mkdirSync(config.stateDir, { recursive: true, mode: 0o700 });
   const stateDir = realpathSync(config.stateDir);
   let state = shared.get(stateDir);
   if (!state) {
-    state = { host: new CordisBridgeHost(), activity: new StudioActivity(stateDir), market: new MarketCatalog(stateDir), owners: 0, pending: new Map(), loops: new Map(), memoryLifetime: new AbortController() };
+    state = { host: new RemoteCordisHost(componentHost), activity: new StudioActivity(stateDir), market: new MarketCatalog(stateDir), owners: 0, pending: new Map(), loops: new Map(), memoryLifetime: new AbortController() };
     shared.set(stateDir, state);
   }
   const { host, activity, market } = state;
@@ -35,9 +37,10 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
     id: 'conest-studio-runtime',
     async start() {
       if (state!.memoryLifetime.signal.aborted) state!.memoryLifetime = new AbortController();
-      await host.start({ workspaceRoot, sessionPersistenceRoot: path.join(stateDir, 'sessions') });
+      await componentHost.start();
+      if (dshEnabled) await host.start({ workspaceRoot, sessionPersistenceRoot: path.join(stateDir, 'sessions') });
       if (!serviceOwned) { serviceOwned = true; state!.owners++; }
-      void market.get(true).catch(error => api.logger.warn(`CoNest market: ${String(error)}`));
+      if (dshEnabled) void market.get(true).catch(error => api.logger.warn(`CoNest market: ${String(error)}`));
     },
     async stop() {
       if (!serviceOwned) return;
@@ -45,7 +48,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
       if (--state!.owners === 0) { state!.memoryLifetime.abort(); pending.clear(); loops.clear(); await host.stop(); }
     },
   });
-  api.registerAgentHarness(createDshAgentHarness({ host, timeoutMs: 120_000,
+  if (dshEnabled) api.registerAgentHarness(createDshAgentHarness({ host, timeoutMs: 120_000,
     onRunEnded: runId => runtime.endRun(runId),
     onRunStarted: (runId, sessionKey) => { loops.set(runId, 'dsh'); loops.set(sessionKey, 'dsh'); },
     onSupportEvaluated: message => api.logger.info('CoNest DSH: ' + message),
@@ -61,7 +64,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
     await host.endHarnessSession({ sessionId: event.sessionId, agentId: context.agentId });
   });
 
-  for (const descriptor of generatedComposition.tools) api.registerTool(context => {
+  for (const descriptor of dshEnabled ? generatedComposition.tools : []) api.registerTool(context => {
     if (context.sandboxed) return null;
     if (context.fsPolicy?.workspaceOnly) {
       try {
@@ -86,6 +89,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
     const key = context.runId ?? context.sessionKey;
     const loop = (key ? loops.get(key) : undefined) ?? (context.sessionKey ? loops.get(context.sessionKey) : undefined) ?? 'openclaw';
     if (key) loops.set(key, loop);
+    if (!dshEnabled) return;
     const candidate = selectAutomaticMemory(event.prompt, 500) ?? selectAutomaticMemory(extractLatestUserText(event.messages) ?? '', 500);
     if (key && candidate) pending.set(key, candidate);
     api.logger.debug?.(`CoNest memory stage prompt=${event.prompt.length} latest=${extractLatestUserText(event.messages)?.length ?? 0} candidate=${!!candidate} key=${key}`);
@@ -108,7 +112,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
       activity.record({ kind: 'run.complete', loop, runId: context.runId, sessionKey: context.sessionKey,
         state: event.success ? 'completed' : 'failed', text: last?.content?.map(c => c.text ?? '').join('') || event.error });
     }
-    if (!event.success || isIncognitoSessionKey(context.sessionKey)) return;
+    if (!dshEnabled || !event.success || isIncognitoSessionKey(context.sessionKey)) return;
     if (candidate) {
       try {
         await memoryAccess('memory_remember', { observation: candidate }, context, state!.memoryLifetime.signal);
@@ -122,6 +126,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
     api.logger.warn('CoNest shared memory unavailable; main task continues');
   }
   const operatorMemory = async () => {
+    if (!dshEnabled) return { observations: [] };
     try { return await memoryAccess('memory_recall', {}, undefined, state!.memoryLifetime.signal); }
     catch { return { observations: [], unavailable: true }; }
   };
@@ -173,7 +178,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           const results = await Promise.allSettled([
             gatewayRequest<Record<string, unknown>>('plugins.list', {}),
             gatewayRequest<{ groups: Array<{ tools: Array<{ id: string; label: string; description: string }> }> }>('tools.catalog', { agentId: 'main', includePlugins: true }),
-            market.get(url.searchParams.get('refresh') === '1'),
+            dshEnabled ? market.get(url.searchParams.get('refresh') === '1') : Promise.resolve(undefined),
           ]);
           const plugins = results[0].status === 'fulfilled' ? results[0].value : undefined;
           const tools = results[1].status === 'fulfilled' ? results[1].value.groups.flatMap(g => g.tools) : [];
@@ -186,8 +191,9 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
               kind: 'tool', description: t.description, status: 'registered' })),
             ...remote?.items ?? [],
           ];
-          const memory = await operatorMemory();
-          res.end(JSON.stringify({ version: '0.6.3', status: host.status(), items,
+          const memory = dshEnabled ? await operatorMemory() : { observations: [] };
+          const components = await componentHost.refresh();
+          res.end(JSON.stringify({ components, dshEnabled, version: '0.6.4', process: { gatewayPid: process.pid, hostPid: components.pid, deployment: 'gateway+host', dshInHost: dshEnabled }, status: components.state === 'ready' ? 'ready' : components.state, items,
             market: remote ? { ...remote, items: undefined } : undefined, activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory,
             errors: results.flatMap(r => r.status === 'rejected' ? [String(r.reason)] : []) }));
         } else if (req.method === 'POST' && url.pathname === `${PREFIX}/api/run`) {
@@ -195,7 +201,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           if (origin && origin !== 'null' && new URL(origin).host !== req.headers.host) throw new Error('跨站任务请求被拒绝');
           let raw = ''; for await (const chunk of req) { raw += chunk; if (Buffer.byteLength(raw) > 16_000) throw new Error('任务文本过长'); }
           const body = JSON.parse(raw);
-          if (!['openclaw', 'dsh'].includes(body.loop) || typeof body.message !== 'string' || !body.message.trim()) throw new Error('请选择 Loop 并输入任务');
+          if (!(dshEnabled ? ['openclaw', 'dsh'] : ['openclaw']).includes(body.loop) || typeof body.message !== 'string' || !body.message.trim()) throw new Error('请选择 Loop 并输入任务');
           const sessionKey = `agent:main:conest-${crypto.randomUUID()}`;
           const selection = await gatewayRequest<{ runId?: string }>('chat.send', {
             sessionKey, message: `/model deepseek/deepseek-v4-flash --runtime ${body.loop === 'dsh' ? 'auto' : 'openclaw'}`, idempotencyKey: crypto.randomUUID(),

@@ -8,6 +8,8 @@ import { ComponentManager, parseOperation } from './management.js';
 import { readFrames } from './framing.js';
 import { serveControl } from './control.js';
 import { parsePrincipal, parseCeiling } from './policy.js';
+import { ExtensionHost } from './extension-host.js';
+import type { HostCallback } from './extension-protocol.js';
 
 export type ServerOptions = {
   config: BridgeConfig;
@@ -25,11 +27,12 @@ export async function serve(options: ServerOptions): Promise<void> {
   let manager: ComponentManager | undefined;
   let closeControl: (() => Promise<void>) | undefined;
   let closing: Promise<void> | undefined;
-  const send = (message: WireResponse | WireEvent): void => {
+  const send = (message: WireResponse | WireEvent | HostCallback): void => {
     const frame = `${JSON.stringify(message)}\n`;
     if (Buffer.byteLength(frame) > 2_000_000) throw new BridgeError('RESULT_TOO_LARGE', 'The component result exceeds the 2 MiB response limit');
     if (!process.stdout.destroyed) process.stdout.write(frame);
   };
+  const extensions = new ExtensionHost(options.config, send);
   const manage = async (method: 'status' | 'reload' | 'manage', params: unknown): Promise<RuntimeStatus> => {
     await ready.promise;
     if (closing) throw new BridgeError('BRIDGE_STOPPING', 'The CoNest Runtime is stopping');
@@ -84,6 +87,7 @@ export async function serve(options: ServerOptions): Promise<void> {
       process.stdin.destroy();
       try {
         await closeControl?.();
+        await extensions.close();
         await runtime.close();
       } finally {
         process.off('SIGTERM', onSignal);
@@ -118,6 +122,9 @@ export async function serve(options: ServerOptions): Promise<void> {
     if (closing) throw new BridgeError('BRIDGE_STOPPING', 'The CoNest Runtime is stopping');
     let result: unknown;
     switch (request.method) {
+      case 'extension': result = await extensions.call(request.params); break;
+      case 'extension.cancel': extensions.cancel(requiredString(object(request.params), 'channel')); result = null; break;
+      case 'callback': extensions.reply(request.params); result = null; break;
       case 'status': case 'reload': case 'manage':
         result = await manage(request.method, request.params);
         break;
@@ -154,7 +161,7 @@ function parseRequest(line: string): WireRequest {
   const request = object(JSON.parse(line));
   requiredString(request, 'id');
   const method = requiredString(request, 'method');
-  if (!['status', 'catalog', 'authorize', 'release', 'invoke', 'cancel', 'reload', 'manage', 'shutdown'].includes(method)) {
+  if (!['status', 'catalog', 'authorize', 'release', 'invoke', 'cancel', 'reload', 'manage', 'shutdown', 'extension', 'extension.cancel', 'callback'].includes(method)) {
     throw new BridgeError('METHOD_NOT_FOUND', `Unknown CoNest Runtime method ${method}`);
   }
   return request as WireRequest;

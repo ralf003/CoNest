@@ -1,16 +1,5 @@
 import { Context, type Fiber } from '@deepseek-ai/cordis';
 import { AsyncLocalStorage } from 'node:async_hooks';
-import type { Agent } from '@deepseek-ai/dsh-agent';
-import { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session';
-import { realpath } from 'node:fs/promises';
-import path from 'node:path';
-import { inside } from './config.js';
-import { managedSearchTools } from './search-contract.js';
-import { CallId } from '@deepseek-ai/dsh-llm';
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local';
-import ToolRuntime from '@deepseek-ai/dsh-tools';
-import * as ToolFsSearch from '@deepseek-ai/dsh-tool-fs-search';
 import { Ajv, type ValidateFunction } from 'ajv';
 import semver from 'semver';
 import { pathToFileURL } from 'node:url';
@@ -27,8 +16,6 @@ import type {
   Permission,
   PublishedCapability,
 } from './types.js';
-import { dshMemoryComponent } from './memory-component.js';
-import { dshReadComponent } from './read-component.js';
 import { BridgeError } from './types.js';
 
 declare module '@deepseek-ai/cordis' {
@@ -157,70 +144,6 @@ export type RuntimeGeneration = {
   dispose(): Promise<void>;
 };
 
-const dshSearchComponent: ComponentModule = {
-  name: 'dsh-search',
-  inject: ['bridgeCapabilities', 'tools', 'systemPrompt', 'subprocess'],
-  async apply(ctx) {
-    await ctx.plugin(ToolFsSearch, {
-      sampleOverCapGlobResults: false,
-      grepMaxMatches: 250,
-      grepMaxLineBytes: 2_000,
-      searchMetaMaxBytes: 65_536,
-      rawOutputMaxBytes: 20_000_000,
-      graceMs: 3_000,
-      stderrMaxBytes: 65_536,
-      timeoutMs: 30_000,
-    });
-    ctx.bridgeCapabilities.register(ctx, 'knowledge_search', async (args, invocation) => {
-      const query = args.query as string;
-      invocation.progress('Searching workspace sources');
-      const startedAt = performance.now();
-      const result = await executeSearch(ctx, 'grep', { pattern: escapeRegex(query) }, invocation, false);
-      const matches = readMatches(result.value);
-      return {
-        query,
-        matches: matches.slice(0, 100),
-        totalMatches: matches.length,
-        truncated: matches.length > 100,
-        durationMs: Math.round((performance.now() - startedAt) * 100) / 100,
-      };
-    });
-    for (const tool of managedSearchTools) {
-      ctx.bridgeCapabilities.register(ctx, tool.openClawName, async (args, invocation) => {
-        invocation.progress(`Searching workspace with ${tool.dshName}`);
-        const result = await executeSearch(ctx, tool.dshName, args, invocation, true);
-        // Preserve DSH's rendered text and canonical value across the process boundary.
-        return { content: result.content, value: result.value };
-      });
-    }
-  },
-};
-
-async function executeSearch(ctx: Context, name: 'grep' | 'glob', args: JsonObject, invocation: Invocation, nativeView: boolean) {
-  invocation.signal.throwIfAborted();
-  if (args.path !== undefined && (typeof args.path !== 'string' || !args.path.trim())) {
-    throw new BridgeError('INVALID_ARGUMENTS', 'Search path must be a non-empty string');
-  }
-  const root = invocation.workspaceRoot;
-  const target = await realpath(path.resolve(root, typeof args.path === 'string' ? args.path : '.'));
-  if (!inside(root, target)) throw new BridgeError('PERMISSION_DENIED', 'Search path must remain inside the authorized workspace');
-  invocation.signal.throwIfAborted();
-  // Detached tool owner supplies DSH's workspace-relative presentation only. It is
-  // never published to SessionStore and runs no Agent Loop or model; no cached sessions.
-  const id = SessionId(`conest-search:${invocation.taskId}`);
-  const agent = nativeView ? {
-    id, ctx, options: {}, status: 'idle',
-    session: Session.create(id, [], { version: SESSION_FORMAT_VERSION, id, createdAt: Date.now(), cwd: root }),
-  } as Agent : undefined;
-  const result = await ctx.tools.execute({
-    callId: CallId(invocation.callId), name, arguments: { ...args, path: target },
-    ...(agent ? { agent } : {}), signal: invocation.signal,
-  });
-  invocation.signal.throwIfAborted();
-  if (result.isError) throw new BridgeError(result.error.info?.code ?? 'SEARCH_FAILED', result.error.message);
-  return result;
-}
-
 const resultVerifierComponent: ComponentModule = {
   name: 'result-verifier',
   inject: ['bridgeCapabilities'],
@@ -255,9 +178,6 @@ const resultVerifierComponent: ComponentModule = {
 };
 
 const builtins = new Map<string, ComponentModule>([
-  ['builtin:dsh-search', dshSearchComponent],
-  ['builtin:dsh-read', dshReadComponent],
-  ['builtin:dsh-memory', dshMemoryComponent],
   ['builtin:result-verifier', resultVerifierComponent],
 ]);
 
@@ -266,9 +186,7 @@ export function componentService(id: string): string { return `bridge-component:
 
 /** Infrastructure belongs to the search entry, never to unrelated graph revisions. */
 export async function startSearchInfrastructure(ctx: Context): Promise<void> {
-  await startFiber(ctx, SystemPrompt, {});
-  await startFiber(ctx, ToolRuntime, { mode: 'native' });
-  await startFiber(ctx, LocalSubprocessRuntime, {});
+  await (await import('./dsh-search-component.js')).startSearchInfrastructure(ctx);
 }
 
 export async function startFiber(ctx: Context, plugin: object, config: JsonObject, timeoutMs = 15_000): Promise<Fiber> {
@@ -290,6 +208,9 @@ export async function startFiber(ctx: Context, plugin: object, config: JsonObjec
 }
 
 export async function resolveComponent(spec: ComponentSpec, importModule: (specifier: string) => Promise<unknown>): Promise<ComponentModule> {
+  if (spec.manifest.entry === 'builtin:dsh-search') return (await import('./dsh-search-component.js')).dshSearchComponent;
+  if (spec.manifest.entry === 'builtin:dsh-read') return (await import('./read-component.js')).dshReadComponent;
+  if (spec.manifest.entry === 'builtin:dsh-memory') return (await import('./memory-component.js')).dshMemoryComponent;
   const builtin = builtins.get(spec.manifest.entry);
   if (builtin) return builtin;
   const specifier = `${pathToFileURL(spec.manifest.entry).href}?version=${encodeURIComponent(spec.manifest.version)}&integrity=${spec.integrity ?? ''}`;
@@ -350,10 +271,6 @@ function readSearchResult(value: unknown): SearchResult {
 
 function childInvocation(parent: Invocation, suffix: string): Invocation {
   return { ...parent, callId: `${parent.callId}:${suffix}` };
-}
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 export function hasPermissions(required: Permission[], available: Permission[]): boolean {

@@ -2,7 +2,7 @@ import type { Progress } from './types.js';
 
 export type WireRequest = {
   id: string;
-  method: 'status' | 'catalog' | 'authorize' | 'release' | 'invoke' | 'cancel' | 'reload' | 'manage' | 'shutdown';
+  method: 'status' | 'catalog' | 'authorize' | 'release' | 'invoke' | 'cancel' | 'reload' | 'manage' | 'shutdown' | 'extension' | 'extension.cancel' | 'callback';
   params?: unknown;
 };
 export type WireResponse = {

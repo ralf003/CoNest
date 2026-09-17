@@ -31,9 +31,10 @@ export type CompositionOptions = {
   workspaceRoot: string;
   sessionPersistenceRoot?: string;
   enableBridgeProofAdapter?: boolean;
+  modelRoute?: { apiKey?: string; baseURL?: string };
 };
 
-/** Boot the Gateway-owned DSH loop, filesystem and sandboxed Bash. */
+/** Boot the Host-owned DSH loop, filesystem and sandboxed Bash. */
 export async function startComposition(options: CompositionOptions): Promise<RunningComposition> {
   const context = new Context();
   const fibers: Fiber[] = [];
@@ -50,6 +51,10 @@ export async function startComposition(options: CompositionOptions): Promise<Run
     fibers.push(await context.plugin(ToolRuntime, { mode: "native" }));
     fibers.push(await context.plugin(AgentRegistry));
 
+    if (options.modelRoute) {
+      const apiKey = options.modelRoute.apiKey;
+      context.provide('credentials', { resolve: async (ref: string) => ref === 'DEEPSEEK_API_KEY' && apiKey ? { value: apiKey } : undefined } as never);
+    }
     if (options.enableBridgeProofAdapter) registerBridgeProofAdapter(context);
     fibers.push(
       await context.plugin(LlmPiAi, {
@@ -58,7 +63,7 @@ export async function startComposition(options: CompositionOptions): Promise<Run
             displayName: "DeepSeek (OpenClaw route)",
             apiKeyEnv: "DEEPSEEK_API_KEY",
             api: "openai-completions",
-            baseURL: process.env.DEEPSEEK_BASE_URL?.trim() || "https://api.deepseek.com",
+            baseURL: options.modelRoute?.baseURL?.trim() || process.env.DEEPSEEK_BASE_URL?.trim() || "https://api.deepseek.com",
             compat: {
               thinkingFormat: "deepseek",
               supportsReasoningEffort: true,

@@ -30,7 +30,7 @@ CONEST_CREDENTIAL_FILE=/path/to/deepseek.env node /path/to/plugin/dist/demo-stud
 
 默认是确定性彩排：模型决策为 fixture，Gateway 会话、DSH Loop、双方工具和磁盘记忆实际执行。`--live` 才调用真实模型。每次启动最多 12 次真实模型请求，达到预算后需重启。不要将彩排介绍为真实模型推理。
 
-启动输出包含页面地址和 `connection.json` 路径，该文件保存 Gateway token，在 Studio 连接设置中输入。OpenClaw 的受限 iframe 中令牌仅保存在当前页面内存，重新打开页面时需再次输入。token 不进入分发包和报告。`CONEST_DEMO_STATE`、`CONEST_DEMO_PORT` 可覆盖目录与端口。加 `--verify` 自动执行四段验收后退出，结果保存到状态目录的 `acceptance.json`。
+启动输出包含页面地址和 `connection.json` 路径，该文件保存 Gateway token，在 Studio 连接设置中输入。OpenClaw 的受限 iframe 中令牌仅保存在当前页面内存，重新打开页面时需再次输入。token 不进入分发包和报告。`CONEST_DEMO_STATE`、`CONEST_DEMO_PORT` 可覆盖目录与端口。0.6.4 加 `--verify` 自动执行六段验收后退出，`--verify --core` 单独验证无 DSH 的办公场景，结果保存到状态目录的 `acceptance.json`。
 
 ## DSH 端
 
@@ -47,3 +47,7 @@ CONEST_CREDENTIAL_FILE=/path/to/deepseek.env node /path/to/plugin/dist/demo-stud
 ## 范围
 
 当前为受信任操作者的单用户内部演示。DSH harness 在 sandbox 会话中拒绝执行；工具通过 OpenClaw 当前会话工具表调用。Studio 不提供 Market 全量插件自动安装，也未承诺任意版本、平台、模型和第三方插件的运行兼容性。目录可见性和执行兼容性分别标注。
+
+## 0.6.4
+
+[Windows 安装与演示](docs/windows-0.6.4-zh.md)。DSH Agent/Session 已迁到 CoNest Host，与 Management 和受管组件 Runtime 同进程。`--core` 仅启动 OpenClaw Loop 与办公组件；发行包仍携带可选 DSH 代码。

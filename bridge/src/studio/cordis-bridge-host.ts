@@ -37,16 +37,8 @@ export type AgentRunResult = {
   };
 };
 
-export class CordisAgentRunError extends Error {
-  constructor(
-    public readonly kind: "aborted" | "failed" | "timeout",
-    message: string,
-    options?: ErrorOptions,
-  ) {
-    super(message, options);
-    this.name = "CordisAgentRunError";
-  }
-}
+export { CordisAgentRunError } from './agent-error.js';
+import { CordisAgentRunError } from './agent-error.js';
 
 export type HarnessImage = { data: string; mimeType: string; name?: string };
 export type HarnessToolPolicy = { allow?: readonly string[]; deny?: readonly string[] };
@@ -71,6 +63,7 @@ export class CordisBridgeHost {
     workspaceRoot: string;
     sessionPersistenceRoot?: string;
     enableBridgeProofAdapter?: boolean;
+    modelRoute?: { apiKey?: string; baseURL?: string };
   }): Promise<void> {
     if (this.state === "ready") return Promise.resolve();
     if (this.state === "starting" && this.transition) return this.transition;
@@ -88,6 +81,7 @@ export class CordisBridgeHost {
     workspaceRoot: string;
     sessionPersistenceRoot?: string;
     enableBridgeProofAdapter?: boolean;
+    modelRoute?: { apiKey?: string; baseURL?: string };
   }): Promise<void> {
     try {
       const composition = await startComposition(options);

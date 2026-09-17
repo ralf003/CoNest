@@ -107,7 +107,7 @@ entry.register = (api: OpenClawPluginApi): void => {
   states.set(api, state);
   registerTools(api);
   registerRuntime(api, state);
-  state.studio = registerStudio(api, state.config.workspaceRoot, state.scopes, createMemoryAccess(state.host, state.config, createRuntimeConfigReader(api.config)));
+  state.studio = registerStudio(api, state.config.workspaceRoot, state.scopes, createMemoryAccess(state.host, state.config, createRuntimeConfigReader(api.config)), state.host);
 };
 
 function createState(api: OpenClawPluginApi): PluginState {

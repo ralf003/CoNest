@@ -25,10 +25,10 @@ import {
 } from "openclaw/plugin-sdk/session-transcript-runtime";
 import type { CordisBridgeHost, AgentRunResult } from "./cordis-bridge-host.js";
 import type { SessionEvent } from "@deepseek-ai/dsh-session";
-import { CordisAgentRunError } from "./cordis-bridge-host.js";
+import { CordisAgentRunError } from "./agent-error.js";
 
 export type DshAgentHarnessOptions = {
-  host: CordisBridgeHost;
+  host: Pick<CordisBridgeHost, 'runHarnessAgent'>;
   timeoutMs: number;
   onRunStarted?: (runId: string, sessionKey: string) => void;
   onRunCompleted?: (result: AgentRunResult) => void;

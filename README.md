@@ -20,7 +20,9 @@
 
 CoNest connects **OpenClaw** with **DeepSeek Harness (DSH)**. Choose an agent loop, use tools from both ecosystems, and share memory between tasks in one workspace. CoNest Runtime manages the underlying Cordis components; Studio provides the interface and execution history.
 
-The [target architecture (中文)](DESIGN-zh.md) extends Cordis-based OpenClaw enhancement to work without DSH. Its default deployment uses two persistent application processes: Gateway and CoNest Host. Management, Runtime and optional DSH compositions share the Host; migration from the current implementation is planned.
+The [target architecture (中文)](DESIGN-zh.md) extends Cordis-based OpenClaw enhancement to work without DSH. Its default deployment uses two persistent application processes: Gateway and CoNest Host. In 0.6.4, Management, Runtime and the optional DSH composition share that Host. DSH is optional at runtime; separate Core/DSH distribution packages remain future work.
+
+**0.6.4 demo:** [Windows installation and scenarios (中文)](bridge/docs/windows-0.6.4-zh.md) · [Release scope](bridge/docs/release-0.6.4-zh.md). The new office example demonstrates reusable Cordis services and per-call dependency graph consistency. Use `--core` to run the OpenClaw scenario without starting DSH.
 
 <table>
 <tr><td width="50%">

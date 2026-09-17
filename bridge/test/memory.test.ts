@@ -129,7 +129,7 @@ test('Studio memory failure degrades recall and capture without failing the main
     registerService() {}, registerAgentHarness() {}, registerTool() {}, registerHttpRoute() {},
     session: { controls: { registerControlUiDescriptor() {} } }, on(name: string, fn: Function) { hooks.set(name, fn); },
   };
-  registerStudio(api as any, f.workspace, { endRun() {} }, async () => { invocations++; throw new Error('unavailable'); });
+  registerStudio(api as any, f.workspace, { endRun() {} }, async () => { invocations++; throw new Error('unavailable'); }, {} as any);
   const context = { agentId: 'main', runId: 'run', sessionKey: 'agent:main:test' };
   const messages = [{ role: 'user', content: 'Remember: bounded preference' }];
   assert.equal(await hooks.get('before_prompt_build')!({ prompt: 'Remember: bounded preference', messages }, context), undefined);

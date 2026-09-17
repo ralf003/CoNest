@@ -1,8 +1,8 @@
 import type { Context } from '@deepseek-ai/cordis';
 
 export const HOST_VERSION = '2026.9.2';
-export const BRIDGE_VERSION = '0.6.3';
-export const PROTOCOL_VERSION = 3;
+export const BRIDGE_VERSION = '0.6.4';
+export const PROTOCOL_VERSION = 4;
 
 export type JsonObject = Record<string, unknown>;
 export const ALL_PERMISSIONS = ['workspace:read', 'memory:read', 'memory:write'] as const;

@@ -41,8 +41,9 @@ async function resolvePackage(name, parent) {
   }
 }
 
-async function collect(parent, manifest) {
+async function collect(parent, manifest, owner) {
   const references = { ...manifest.dependencies, ...manifest.optionalDependencies, ...manifest.peerDependencies };
+  const discovered = [];
   for (const name of Object.keys(references).sort()) {
     if (name === 'openclaw' || (platform !== 'linux' && name === '@deepseek-ai/node-addon-landlock-run-linux-x64')) continue;
     const directory = await resolvePackage(name, parent);
@@ -53,13 +54,34 @@ async function collect(parent, manifest) {
     }
     const value = await readJson(path.join(directory, 'package.json'));
     if (!compatible(value)) { assert.ok(manifest.optionalDependencies?.[name], `Required package ${name} is incompatible with ${target}`); continue; }
-    const previous = packages.get(name);
-    if (previous) {
-      assert.equal(previous.directory, directory, `Multiple installed copies of ${name} require an explicit packaging decision`);
+    // Resolve in the staged npm hierarchy. Preserve incompatible versions under
+    // their actual consumer instead of flattening them into one incorrect version.
+    const candidates = [];
+    let ancestor = owner;
+    while (ancestor) {
+      candidates.push(`${ancestor}/node_modules/${name}`);
+      const split = ancestor.lastIndexOf('/node_modules/');
+      ancestor = split < 0 ? '' : ancestor.slice(0, split);
+    }
+    candidates.push(name);
+    const visible = candidates.find(candidate => packages.has(candidate));
+    let location = visible ?? name;
+    if (visible && packages.get(visible).directory !== directory) {
+      assert.ok(owner, `Root dependency conflict: ${name}`);
+      location = `${owner}/node_modules/${name}`;
+    }
+    if (owner) packages.get(owner).references.set(name, location);
+    if (packages.has(location)) {
+      assert.equal(packages.get(location).directory, directory, `Unresolved dependency conflict at ${location}`);
       continue;
     }
-    packages.set(name, { directory, manifest: value });
-    await collect(directory, value);
+    packages.set(location, { directory, manifest: value, references: new Map() });
+    discovered.push(location);
+  }
+  // Reserve each direct dependency before recursively collecting transitive ones.
+  for (const location of discovered) {
+    const entry = packages.get(location);
+    await collect(entry.directory, entry.manifest, location);
   }
 }
 
@@ -84,6 +106,9 @@ try {
     'INSTALLATION.md', 'NAMING.md', 'RUNTIME-ACCEPTANCE.md', 'HOST-ADAPTER.md', 'CONTEXT-PROVIDERS.md', 'HOST-ENHANCEMENT-ACCEPTANCE.md',
     'conest.config.example.json', 'bridge.config.example.json', 'openclaw.plugin.json'];
   for (const file of topFiles) await cp(path.join(source, file), path.join(stage, file), { recursive: true, dereference: false });
+  for (const file of await filesIn(path.join(stage, 'dist'))) {
+    if (file.endsWith('.meta.json')) await rm(path.join(stage, 'dist', file));
+  }
   await mkdir(path.join(stage, 'companions/dsh-ui'), {recursive:true});
   for(const file of ['package.json','index.js','client.js','cordis.patch.yml','README.md']) await cp(path.join(source,'companions/dsh-ui',file),path.join(stage,'companions/dsh-ui',file));
   topFiles.push('companions');
@@ -94,8 +119,9 @@ try {
     for (;;) {
       const item = pending.shift();
       if (!item) return;
-      const [name, { directory, manifest }] = item;
-      const targetDirectory = path.join(stage, 'node_modules', name);
+      const [location, { directory, manifest, references }] = item;
+      const name = manifest.name;
+      const targetDirectory = path.join(stage, 'node_modules', location);
       // Let npm's pinned file-list implementation apply publishing rules without asking
       // Arborist to traverse the source workspace's linked development dependency graph.
       const listed = await packlist({ path: directory, package: { ...manifest, bundleDependencies: [] },
@@ -117,7 +143,7 @@ try {
         await cp(member, path.join(targetDirectory, file));
       }
       if (licenses.length === 0) {
-        if (name === '@openclaw/deepseek-provider') await cp(path.join(path.dirname(createRequire(import.meta.url).resolve('openclaw/package.json')), 'LICENSE'),path.join(targetDirectory,'LICENSE'));
+        if (name === '@openclaw/deepseek-provider') await cp(path.join(await resolvePackage('openclaw', source), 'LICENSE'),path.join(targetDirectory,'LICENSE'));
         else if (name.startsWith('@img/sharp-libvips-')) {
           assert.ok((await readFile(path.join(directory,'README.md'),'utf8')).includes('## Licensing'));
           await cp(path.join(directory,'README.md'),path.join(targetDirectory,'NOTICE.md'));
@@ -130,22 +156,37 @@ try {
       for (const field of ['devDependencies', 'scripts', 'pnpm', 'workspaces', 'packageManager']) delete rewritten[field];
       for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
         if (!rewritten[field]) continue;
-        rewritten[field] = Object.fromEntries(Object.keys(rewritten[field]).filter(key => packages.has(key))
-          .map(key => [key, packages.get(key).manifest.version]));
+        rewritten[field] = Object.fromEntries(Object.keys(rewritten[field]).filter(key => references.has(key))
+          .map(key => [key, packages.get(references.get(key)).manifest.version]));
       }
+      rewritten.bundledDependencies = [...references].filter(([name, child]) => child === `${location}/node_modules/${name}`).map(([name]) => name);
       await writeFile(path.join(targetDirectory, 'package.json'), `${JSON.stringify(rewritten, null, 2)}\n`);
-      const digest = createHash('sha256');
-      const files = await filesIn(targetDirectory);
-      for (const file of files) digest.update(file).update('\0').update(await readFile(path.join(targetDirectory, file))).update('\0');
-      provenance.push({ name, version: manifest.version, license: manifest.license, files: files.length,
-        sha256: digest.digest('hex'), metadataRewritten: true,
+      provenance.push({ name, location, version: manifest.version, license: manifest.license, metadataRewritten: true,
         ...(name === 'node-pty' ? { napi: true, patched: true, target } : {}) });
       process.stderr.write(`Packed dependency ${++completed}/${packages.size}: ${name}\n`);
     }
   }));
   const failed = results.find(result => result.status === 'rejected');
   if (failed) throw failed.reason;
-  const dependencies = Object.fromEntries([...packages].sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => [name, value.manifest.version]));
+  for (const [location, entry] of packages) {
+    const resolver = createRequire(path.join(stage, 'node_modules', location, 'package.json'));
+    for (const [name, expected] of entry.references) {
+      let actual;
+      for (const base of resolver.resolve.paths(name) ?? []) {
+        try { actual = await realpath(path.join(base, name)); break; }
+        catch (error) { if (error.code !== 'ENOENT') throw error; }
+      }
+      assert.equal(actual, path.join(stage, 'node_modules', expected), `Staged dependency resolves incorrectly: ${location} -> ${name}`);
+    }
+  }
+  for (const record of provenance) {
+    const directory = path.join(stage, 'node_modules', record.location);
+    const files = (await filesIn(directory)).filter(file => !file.split(path.sep).includes('node_modules'));
+    const digest = createHash('sha256');
+    for (const file of files) digest.update(file).update('\0').update(await readFile(path.join(directory, file))).update('\0');
+    record.files = files.length; record.sha256 = digest.digest('hex');
+  }
+  const dependencies = Object.fromEntries([...packages].filter(([location]) => !location.includes('/node_modules/')).sort(([a], [b]) => a.localeCompare(b)).map(([name, value]) => [name, value.manifest.version]));
   const manifest = { name: rootManifest.name, version: rootManifest.version, private: true, type: 'module',
     description: `CoNest Connector for OpenClaw with a self-contained ${target} CoNest Runtime`, license: 'UNLICENSED',
     engines: rootManifest.engines, os: [platform], cpu: [arch], ...(platform==='linux'?{libc:['glibc']} : {}),
@@ -168,7 +209,7 @@ try {
     cwd: stage, timeout: 120_000, maxBuffer: 32 * 1024 * 1024,
   });
   const result = packResult(packed.stdout);
-  assert.equal(result.bundled.length, packages.size, 'npm omitted bundled runtime packages');
+  for (const location of packages.keys()) assert.ok(result.files.some(file => file.path === `node_modules/${location}/package.json`), `npm omitted bundled runtime package ${location}`);
   const archive = path.join(output, result.filename);
   await cp(path.join(temporary, result.filename), archive, { errorOnExist: true, force: false });
   const sha256 = createHash('sha256').update(await readFile(archive)).digest('hex');

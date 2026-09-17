@@ -74,13 +74,17 @@
           "stateDir": {
             "type": "string",
             "minLength": 1
+          },
+          "dsh": {
+            "type": "boolean",
+            "description": "Enable the optional DSH support pack in CoNest Host. Defaults to true."
           }
         }
       }
     },
     "additionalProperties": false
   },
-  "version": "0.6.3",
+  "version": "0.6.4",
   "contracts": {
     "tools": [
       "bridge_capabilities",

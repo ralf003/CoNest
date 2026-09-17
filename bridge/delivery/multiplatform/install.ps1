@@ -1,4 +1,4 @@
-param([string]$InstallRoot = (Join-Path $HOME 'conest-demo-0.6.3'))
+param([string]$InstallRoot = (Join-Path $HOME 'conest-demo-0.6.4'))
 $ErrorActionPreference = 'Stop'
 if (-not [Environment]::Is64BitOperatingSystem -or $env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { throw 'This package requires Windows x64.' }
 $DownloadDir = Join-Path $InstallRoot 'node-downloads'

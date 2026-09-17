@@ -2,6 +2,7 @@ import type { Progress, RuntimeStatus, CatalogRequest, CapabilityCatalog } from 
 import { BridgeClient, type ClientInvocation } from './client.js';
 import type { ComponentOperation } from './management.js';
 import { BridgeError } from './types.js';
+import type { ExtensionCall } from './extension-protocol.js';
 
 export type HostOptions = ConstructorParameters<typeof BridgeClient>[0];
 
@@ -79,6 +80,10 @@ export class BridgeHost {
     const client = await this.ensureClient();
     this.lastStatus = await client.manage(operation);
     return this.lastStatus;
+  }
+
+  async extension<T>(call: ExtensionCall): Promise<T> {
+    return await (await this.ensureClient()).extension<T>(call);
   }
 
   async restart(): Promise<RuntimeStatus> {

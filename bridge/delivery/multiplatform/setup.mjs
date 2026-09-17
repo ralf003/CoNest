@@ -5,7 +5,7 @@ import os from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 const bundle=path.dirname(fileURLToPath(import.meta.url));
-const root=path.resolve(process.argv[2]??path.join(os.homedir(),'conest-demo-0.6.3'));
+const root=path.resolve(process.argv[2]??path.join(os.homedir(),'conest-demo-0.6.4'));
 const target=process.platform+'-'+process.arch;
 if(!['linux-x64','win32-x64'].includes(target))throw Error('This package supports Linux x64 and Windows x64');
 const version=JSON.parse(await readFile(path.join(bundle,'delivery.json'),'utf8')).version;
@@ -25,5 +25,5 @@ const settings={root,node:process.execPath,plugin,state:path.join(root,'demo-sta
 await writeFile(path.join(root,'conest-launch.json'),JSON.stringify(settings,null,2));
 // Launch files contain paths only; credentials remain in a separate private file.
 const launcher=await readFile(path.join(bundle,'launch.mjs'),'utf8');await writeFile(path.join(root,'launch.mjs'),launcher);
-console.log('\nInstallation complete. Configure the model key, then start the demo using the guide.');
+console.log('\nInstallation complete. Start the deterministic demo without an API key; use --live for a configured model.');
 console.log('Self-check: '+JSON.stringify(process.execPath)+' '+JSON.stringify(path.join(root,'launch.mjs'))+' --verify');

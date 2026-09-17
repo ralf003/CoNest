@@ -1,8 +1,8 @@
 # CoNest Connector for OpenClaw
 
-**Development version: 0.6.3, multiplatform candidate.** See the [RHEL 8 / Windows installation guide](docs/rhel8-windows-installation-demo-zh.md) and [platform scope and validation](docs/multiplatform-design-validation-zh.md), both in Chinese. The original 0.6.2 source, documentation and release artifacts remain preserved.
+**Development version: 0.6.4.** See the [Windows demo guide](docs/windows-0.6.4-zh.md) and [release scope](docs/release-0.6.4-zh.md). Historical release artifacts remain unchanged.
 
-The 2026-09-14 development changes connect [both loops to the component runtime](docs/dual-loop-component-runtime-zh.md) through finalized host tool admission and lifecycle hooks. The [search](docs/search-component-zh.md), [read](docs/read-component-zh.md) and [memory](docs/memory-component-zh.md) migrations move their tools into managed workers while preserving permissions, guarded-edit observations and shared memory. File writes, edits, images, Bash and the loops remain in Gateway. Existing release archives are unchanged.
+The 2026-09-14 development changes connect [both loops to the component runtime](docs/dual-loop-component-runtime-zh.md) through finalized host tool admission and lifecycle hooks. The [search](docs/search-component-zh.md), [read](docs/read-component-zh.md) and [memory](docs/memory-component-zh.md) migrations move their tools into managed workers while preserving permissions, guarded-edit observations and shared memory. In 0.6.4 the fixed DSH composition, including Agent/Session and write/edit/image/Bash tools, has moved into the shared CoNest Host. Gateway retains the Connector and admitted host tool callbacks. Existing release archives are unchanged.
 
 For the 0.6.2 baseline, see the [Ubuntu installation and demo guide](docs/ubuntu-installation-demo-zh.md) and [architecture, deployment boundaries and validation scope](docs/conest-design-zh.md), both in Chinese.
 

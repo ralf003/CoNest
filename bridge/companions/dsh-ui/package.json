@@ -1,6 +1,6 @@
 {
   "name": "@local/conest-dsh-ui",
-  "version": "0.6.2",
+  "version": "0.6.4",
   "description": "CoNest unified ecosystem and execution studio inside DSH Web",
   "type": "module",
   "main": "index.js",
