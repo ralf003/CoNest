@@ -84,9 +84,11 @@ CONEST_DEMO_STATE=/absolute/disposable/conest-studio \
 
 ## 分支与能力
 
-| | `main` · 0.6.2 稳定基线 | `develop` · 0.6.3 开发线 |
+| | `main` · 0.6.2 稳定基线 | `develop` · 0.6.4 开发线 |
 |---|---|---|
 | OpenClaw / DSH 双 Loop、Studio | ✓ | ✓ |
+| DSH Agent / Session | Gateway 内 | CoNest Host 内 |
+| 不采用 DSH 的 OpenClaw 增强 | — | `--core` 办公组件演示 |
 | 共享记忆 | Gateway 内提供 | 独立 `dsh-memory` 组件 |
 | 组件化工作区搜索 | `knowledge_search` / 验证能力 | 进一步接入 `dsh_grep`、`dsh_glob` |
 | 文本读取 | Gateway 内提供 | 独立 `dsh-read`，保留读后写校验 |

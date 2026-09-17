@@ -84,9 +84,11 @@ The default uses a **local model fixture**: Gateway, loops, tools and persistenc
 
 ## Branches
 
-| Capability | `main` · 0.6.2 stable baseline | `develop` · 0.6.3 development |
+| Capability | `main` · 0.6.2 stable baseline | `develop` · 0.6.4 development |
 |---|---|---|
 | OpenClaw / DSH loops and Studio | ✓ | ✓ |
+| DSH Agent / Session | In Gateway | Inside CoNest Host |
+| OpenClaw without DSH | — | Office component demo via `--core` |
 | Shared memory | Runs in Gateway | Dedicated `dsh-memory` component |
 | Component workspace search | `knowledge_search` and verification | Also serves `dsh_grep` and `dsh_glob` |
 | Text reads | Run in Gateway | Dedicated `dsh-read`, with guarded-edit observations |
