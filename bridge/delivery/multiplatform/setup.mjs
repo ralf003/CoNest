@@ -19,8 +19,11 @@ if(process.platform==='win32')delete env.Path;
 async function run(args){await new Promise((resolve,reject)=>{const child=spawn(process.execPath,args,{env,cwd:root,stdio:'inherit',windowsHide:true});child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error(`Installation step exited with ${code}`)))});}
 console.log('Installing OpenClaw 2026.9.2 and CoNest '+version+' for '+target);
 await run([npm,'install','--prefix',host,'--ignore-scripts','--no-audit','--no-fund','--registry',process.env.CONEST_NPM_REGISTRY??'https://registry.npmjs.org','openclaw@2026.9.2','pnpm@11.7.0']);
-await run([path.join(host,'node_modules/openclaw/openclaw.mjs'),'plugins','install','--force','--accept-capabilities',archive]);
-const plugin=path.join(state,'extensions/dsh-bridge');
+// npm extracts the self-contained artifact without OpenClaw's fixed archive
+// extraction deadline. The public directory install still checks and registers it.
+await run([npm,'install','--prefix',host,'--offline','--ignore-scripts','--legacy-peer-deps','--no-audit','--no-fund',archive]);
+const plugin=path.join(host,'node_modules/@local/conest-connector');
+await run([path.join(host,'node_modules/openclaw/openclaw.mjs'),'plugins','install','--link','--force','--accept-capabilities',plugin]);
 const settings={root,node:process.execPath,plugin,state:path.join(root,'demo-state'),credentials:path.join(root,'credentials/deepseek.env')};
 await writeFile(path.join(root,'conest-launch.json'),JSON.stringify(settings,null,2));
 // Launch files contain paths only; credentials remain in a separate private file.
