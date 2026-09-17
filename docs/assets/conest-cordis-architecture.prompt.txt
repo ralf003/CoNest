@@ -1,0 +1,23 @@
+Asset: conest-cordis-architecture.png
+Method: built-in image_gen, new diagram. The previously inspected approved-platform.png supplies visual style only. This replaces the earlier ecosystem-centered diagram; the prior diagram remains in Git history.
+
+Use case: infographic-diagram.
+Create a crisp flat technical architecture diagram on SOLID PURE WHITE paper, landscape 3:2, high resolution. The architecture centers on Cordis enhancing OpenClaw independently of DSH. DSH is an optional ecosystem pack, never a required foundation or an equal mandatory host. Use English exact labels below. No overall diagram title; titles belong in the document.
+
+Layout: a narrow management column on the left (20% width), and a broad main stack on the right (75% width). Main stack has aligned equal-width rectangular outer regions, ample spacing, fine black borders. White canvas and white interiors, selective flat pastel header bars only. No shadows, gradients, glow, translucent glass, textures, or decorative icons. Black legible text.
+
+Main stack from top to bottom:
+A. Required host boundary with sky-blue header "OpenClaw Gateway · Required". Inside first row three white peer boxes: "Native Loop & sessions", "Native plugins & services", "Identity & delivery". Below these, inside the SAME host boundary, a wide box titled "CoNest Connector" split into two white interface boxes: "Host Services" with small subtitle "Context / tools / hooks" on the left, "Contributions" with subtitle "Tools / context / providers / UI" on the right. Short arrows from native host row down to Host Services and from Contributions up to native host row.
+B. A separate equally wide boundary "Cordis Enhancement Runtime · Required" with a fresh-green header. Its upper row is labelled "CoNest Core" and contains four aligned white small boxes: "Dependency graph", "Scopes & bindings", "Versioned lifecycle", "Typed contracts". Its lower row has a narrow warm-yellow header "Composable enhancement components" and four white boxes "Knowledge services", "Context & policy", "Events & workflows", "UI & backend". This runtime must visibly be a substantial enhancement layer, not a small DSH adapter.
+Between A and B draw TWO separate simple arrows: from Host Services DOWN into Runtime, label "Authorized host access"; from Runtime UP into Contributions, label "Register / invoke / release". These arrows represent the two binding directions; do not connect them to the management column.
+C. Below B a separate full-width boundary with a dashed outline and a narrow coral header "Optional ecosystem packs". Inside three white peer boxes: "DSH Support Pack" with subtitle "Services / Agent / Session / UI"; "MCP / HTTP adapters"; "Other ecosystem packs". Draw ONE GREEN DASHED arrow from this optional region UP into the Enhancement Runtime, label "Add profiles & contributions". This expresses optional extension, not required startup. Do NOT draw DSH above OpenClaw or as the base runtime. In a small white footer below C write exactly "Core mode: OpenClaw + Cordis. No DSH required.".
+
+Left management column: outlined white box "CoNest Manager" with a sky-blue header; inside compact white sections "Packages & config", "Policy & plans", "State & recovery" and a separate small white client box "Studio / CLI". Two thin blue arrows run from Manager to the Connector boundary and to the Runtime boundary, labelled "Manage" near their shared root. They express control, not per-call execution. No arrow routes every call through Manager.
+
+Revision: clarify host binding destinations and distinguish interface exposure from request direction. Edit target: the first generated diagram.
+undefined
+
+Use flat palette sky-blue #75C7EE, green #A5DCB8, warm yellow #F5DA88, coral #EFAFA3 for headers only. Mostly white pixels, strong typographic hierarchy, black text, neat black fine outlines. No gray text. Exact names and correct mandatory/optional boundaries are essential. This must be a clean professional systems diagram, not a dark dashboard. Main boxes aligned; no overlapping text or arrows.
+
+Final validation: OpenClaw and the Cordis Runtime are required; DSH and other ecosystem packs are optional. Host APIs and contributed extension points have separate directions. The contribution arrow terminates at Native plugins & services. Manager arrows are control paths. Core-mode statement is explicit.
+Final PNG SHA256: 0ab0a3216f9bac5d625a49c747fda28bdd421f4c65731dc9efd43421e98d8ab1
