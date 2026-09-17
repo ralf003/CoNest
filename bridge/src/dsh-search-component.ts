@@ -56,7 +56,9 @@ async function executeSearch(ctx: Context, name: 'grep' | 'glob', args: JsonObje
   if (args.path !== undefined && (typeof args.path !== 'string' || !args.path.trim())) {
     throw new BridgeError('INVALID_ARGUMENTS', 'Search path must be a non-empty string');
   }
-  const root = invocation.workspaceRoot;
+  // Compare paths resolved by the same filesystem API. On Windows the sync
+  // and native async APIs can represent junctions / short paths differently.
+  const root = await realpath(invocation.workspaceRoot);
   const target = await realpath(path.resolve(root, typeof args.path === 'string' ? args.path : '.'));
   if (!inside(root, target)) throw new BridgeError('PERMISSION_DENIED', 'Search path must remain inside the authorized workspace');
   invocation.signal.throwIfAborted();

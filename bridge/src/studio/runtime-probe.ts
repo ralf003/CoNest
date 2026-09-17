@@ -6,10 +6,15 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BridgeClient } from '../client.js';
+import { protectDirectory, assertPrivateFile } from '../platform-support.mjs';
 
 /** Real DSH runtime/tool smoke test; model decisions use the explicit proof adapter. */
 export async function probeRuntime() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'conest-platform-'));
+  await protectDirectory(root);
+  const privateFile = path.join(root, 'private-probe.txt');
+  await writeFile(privateFile, 'synthetic permissions probe', { mode: 0o600 });
+  await assertPrivateFile(privateFile);
   const workspace = path.join(root, 'workspace'); await mkdir(workspace);
   await writeFile(path.join(workspace, 'evidence.txt'), 'CoNest cross-platform probe\nCONEST_PLATFORM_OK\n');
   const searchWorker = new BridgeClient({ workerFile: fileURLToPath(new URL('../worker.js', import.meta.url)), workspaceRoot: workspace, memoryFilePath: path.join(root, 'memory.jsonl'), startupTimeoutMs: process.platform === 'win32' ? 60000 : 15000, shutdownTimeoutMs: 5000, onLog: (level, message) => console.error(`[CoNest Host ${level}] ${message}`) });
@@ -28,6 +33,8 @@ export async function probeRuntime() {
     const grep = await searchWorker.invoke({ capability: 'dsh_grep', args: { pattern: 'CONEST_PLATFORM_OK', path: '.' },
       taskId: 'platform-search', callId: 'grep-probe', subject: 'platform-probe', principal: { kind: 'operator' }, workspaceRoot: workspace, permissions: ['workspace:read'] });
     assert(JSON.stringify(grep.value).includes('CONEST_PLATFORM_OK'));
+    await assert.rejects(searchWorker.invoke({ capability: 'dsh_grep', args: { pattern: 'CONEST_PLATFORM_OK', path: root },
+      taskId: 'outside-search', callId: 'outside-search', subject: 'platform-probe', principal: { kind: 'operator' }, workspaceRoot: workspace, permissions: ['workspace:read'] }), /inside the authorized workspace/);
     const localSearch = await execute('local-search-absent', 'grep', { pattern: 'CONEST_PLATFORM_OK' }, 'platform-search');
     assert(localSearch.isError, 'Gateway composition must not retain a second grep implementation');
     assert((await execute('local-memory-absent', 'mcp__reference_memory__read_graph', {}, 'platform')).isError);
@@ -56,6 +63,6 @@ export async function probeRuntime() {
     const recall = await memoryCall('dsh_mcp__reference_memory__search_nodes', { query: 'platform-user' });
     assert(JSON.stringify(recall.value).includes('portable-memory-ok'));
     return { platform: process.platform, arch: process.arch, node: process.version, glibc: (process.report.getReport() as {header:{glibcVersionRuntime?: string}}).header.glibcVersionRuntime,
-      passed: true, read: 'real DSH read in managed component worker', grep: 'real packaged ripgrep in managed component worker', loop: 'real DSH loop in shared CoNest Host, deterministic model decisions', hostPid: support.pid, memory: 'persisted across runtime restart', nativeWindowsHostQualification: process.platform === 'win32' ? 'Record whether this is native Windows or an emulation environment in the test report' : undefined };
+      passed: true, privateState: process.platform === 'win32' ? 'current user / system / administrators only' : 'owner-only mode', read: 'real DSH read in managed component worker', grep: 'real packaged ripgrep in managed component worker; outside workspace rejected', loop: 'real DSH loop in shared CoNest Host, deterministic model decisions', hostPid: support.pid, memory: 'persisted across runtime restart', nativeWindowsHostQualification: process.platform === 'win32' ? 'Record whether this is native Windows or an emulation environment in the test report' : undefined };
   } finally { await searchWorker.stop(); await rm(root, {recursive:true,force:true}); }
 }

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -250,13 +250,16 @@ test('real worker drops pre-upgrade context and cancels pending context on polic
     capabilities: [{ ...descriptor, inputSchema: { type: 'object' } }] };
   // Published provider identity is worker-owned, never part of a component manifest descriptor.
   delete (manifest.capabilities[0] as unknown as Record<string, unknown>).provider;
-  const make = async (version: string, delay: number, text: string) => component(root, { ...manifest, version }, `export default { inject: ['bridgeCapabilities'], apply(ctx) {
+  const oldRelease = path.join(root, 'release-old-context');
+  const newRelease = path.join(root, 'release-new-context');
+  const make = async (version: string, gate: string, text: string) => component(root, { ...manifest, version }, `import { access } from 'node:fs/promises'; import { setTimeout as wait } from 'node:timers/promises'; export default { inject: ['bridgeCapabilities'], apply(ctx) {
     ctx.bridgeCapabilities.register(ctx, 'workspace_context', async (_args, invocation) => {
-      await new Promise((resolve, reject) => { const timer = setTimeout(resolve, ${delay}); invocation.signal.addEventListener('abort', () => { clearTimeout(timer); reject(invocation.signal.reason); }, { once: true }); });
+      for (;;) { invocation.signal.throwIfAborted(); try { await access(${JSON.stringify(gate)}); break; } catch (error) { if (error.code !== 'ENOENT') throw error; } await wait(10, undefined, { signal: invocation.signal }); }
       return { text: ${JSON.stringify(text)} };
     }); } };`);
-  const initial = await make('0.1.0', 500, 'OLD');
-  const upgrade = await make('0.2.0', 100, 'NEW');
+  const initial = await make('0.1.0', oldRelease, 'OLD');
+  const upgrade = await make('0.2.0', newRelease, 'NEW');
+  await writeFile(newRelease, 'ready');
   await writeFile(configFile, JSON.stringify({ workspaceRoot: workspace, components: [{ manifest: initial }] }));
   const host = new BridgeHost({ workerFile: fileURLToPath(new URL('../dist/worker.js', import.meta.url)), configFile, startupTimeoutMs: 5000, shutdownTimeoutMs: 1000 });
   const f = harness(workspace);
@@ -266,8 +269,10 @@ test('real worker drops pre-upgrade context and cancels pending context on polic
     const old = provider.collect('task', f.context);
     await eventually(async () => (await host.refresh()).active === 1);
     await host.manage({ action: 'upgrade', id: 'workspace-context', manifest: upgrade });
+    await writeFile(oldRelease, 'release after publication');
     assert.equal(await old, undefined);
     assert.match((await provider.collect('task', f.context))!, /NEW/);
+    await rm(newRelease);
     const pending = provider.collect('task', f.context);
     await eventually(async () => (await host.refresh()).active === 1);
     await host.manage({ action: 'policy', policy: { agents: { main: { deny: ['workspace_context'] } } } });

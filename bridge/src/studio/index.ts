@@ -19,7 +19,7 @@ const shared = ((globalThis as Record<symbol, unknown>)[sharedKey] ??= new Map<s
 const PREFIX = '/plugins/conest-studio';
 
 export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, runtime: { endRun(runId: string): void }, memoryAccess: MemoryAccess, componentHost: BridgeHost): { observeRead(receipt: ReadObservation, sessionKey: string, signal: AbortSignal): Promise<void> } | undefined {
-  const config = api.pluginConfig?.studio as { stateDir?: string; dsh?: boolean } | undefined;
+  const config = api.pluginConfig?.studio as { stateDir?: string; dsh?: boolean; demoMode?: 'fixture' | 'live' } | undefined;
   if (!config) return;
   const dshEnabled = config.dsh !== false;
   if (!config.stateDir || !path.isAbsolute(config.stateDir)) throw new Error('CoNest Studio requires an absolute stateDir');
@@ -193,7 +193,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           ];
           const memory = dshEnabled ? await operatorMemory() : { observations: [] };
           const components = await componentHost.refresh();
-          res.end(JSON.stringify({ components, dshEnabled, version: '0.6.4', process: { gatewayPid: process.pid, hostPid: components.pid, deployment: 'gateway+host', dshInHost: dshEnabled }, status: components.state === 'ready' ? 'ready' : components.state, items,
+          res.end(JSON.stringify({ components, dshEnabled, demoMode: config.demoMode, version: '0.6.4', process: { gatewayPid: process.pid, hostPid: components.pid, deployment: 'gateway+host', dshInHost: dshEnabled }, status: components.state === 'ready' ? 'ready' : components.state, items,
             market: remote ? { ...remote, items: undefined } : undefined, activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory,
             errors: results.flatMap(r => r.status === 'rejected' ? [String(r.reason)] : []) }));
         } else if (req.method === 'POST' && url.pathname === `${PREFIX}/api/run`) {

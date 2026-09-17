@@ -78,6 +78,14 @@
           "dsh": {
             "type": "boolean",
             "description": "Enable the optional DSH support pack in CoNest Host. Defaults to true."
+          },
+          "demoMode": {
+            "type": "string",
+            "enum": [
+              "fixture",
+              "live"
+            ],
+            "description": "Optional label for the demo launcher: preset model responses or a live model."
           }
         }
       }
