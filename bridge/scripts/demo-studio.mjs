@@ -29,7 +29,7 @@ providerManifest.openclaw.extensions=providerManifest.openclaw.runtimeExtensions
 await writeFile(path.join(providerDir,'package.json'),JSON.stringify(providerManifest,null,2));
 const componentConfig=path.join(demoRoot,'conest.json');
 await cp(path.join(root,'examples/office'),path.join(demoRoot,'office'),{recursive:true});
-await writeFile(componentConfig,JSON.stringify({workspaceRoot:workspace, ...(coreOnly?{builtins:Object.fromEntries(['dsh-search','dsh-read','dsh-memory','result-verifier'].map(id=>[id,{enabled:false}]))}:{}), components:['office-knowledge','office-check','office-context'].map(id=>({manifest:path.join(demoRoot,'office',id,'component.json')}))},null,2));
+await writeFile(componentConfig,JSON.stringify({workspaceRoot:workspace, ...(process.platform==='win32'?{startupTimeoutMs:60000}:{}), ...(coreOnly?{builtins:Object.fromEntries(['dsh-search','dsh-read','dsh-memory','result-verifier'].map(id=>[id,{enabled:false}]))}:{}), components:['office-knowledge','office-check','office-context'].map(id=>({manifest:path.join(demoRoot,'office',id,'component.json')}))},null,2));
 const token=randomUUID();const requests=[];
 const text=m=>typeof m.content==='string'?m.content:(m.content??[]).map(b=>b.text??'').join('\n');
 const model=createServer(async(req,res)=>{try{

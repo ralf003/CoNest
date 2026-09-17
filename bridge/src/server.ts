@@ -46,6 +46,7 @@ export async function serve(options: ServerOptions): Promise<void> {
     return await manager.apply(parseOperation(params));
   };
   try {
+    if (options.configFile) process.stderr.write('CoNest Host startup: initializing operator control\n');
     if (options.configFile) closeControl = await serveControl(options.configFile, async (method, params, signal) => {
       if (method === 'catalog') {
         await ready.promise;
@@ -67,12 +68,14 @@ export async function serve(options: ServerOptions): Promise<void> {
       try { return await runtime.invoke({ ...scope, args: object(input.args), authorization: grant.token }); }
       finally { signal.removeEventListener('abort', cancel); runtime.release(grant.token); }
     });
+    process.stderr.write('CoNest Host startup: activating component graph\n');
     runtime = await BridgeRuntime.create(options.config, progress => send({ event: 'progress', data: progress }), taskId => {
       process.stderr.write(`Task ${taskId} ignored cancellation beyond the grace period; terminating the extension process\n`);
       process.exit(70);
     });
     if (options.configFile) manager = new ComponentManager(runtime, options.configFile, options.memoryFileOverride);
     ready.resolve();
+    process.stderr.write('CoNest Host startup: ready\n');
   } catch (error) {
     ready.reject(error);
     void ready.promise.catch(() => {});

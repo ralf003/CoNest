@@ -88,7 +88,7 @@ export class BridgeClient {
       line => { if (this.child === child) this.receive(line); },
       error => this.fail(child, error));
     const errors = createInterface({ input: child.stderr, crlfDelay: Infinity });
-    errors.on('line', line => this.options.onLog?.('warn', line));
+    errors.on('line', line => this.options.onLog?.(line.startsWith('CoNest Host startup:') ? 'info' : 'warn', line));
     child.stdin.on('error', error => this.fail(child, error));
     child.once('error', error => this.fail(child, error));
     child.once('exit', (code, signal) => {

@@ -43,17 +43,21 @@ jobs:
           New-Item -ItemType Directory -Force evidence | Out-Null
           Get-CimInstance Win32_OperatingSystem | Select-Object Caption,Version,BuildNumber,OSArchitecture | ConvertTo-Json | Set-Content evidence/windows.json
       - name: Install isolated OpenClaw and CoNest
+        id: install
         shell: pwsh
         run: ./delivery/conest-0.6.4-windows-x64/install.ps1 -InstallRoot "$env:RUNNER_TEMP/conest"
       - name: Component graph and no-DSH acceptance
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         shell: pwsh
         run: |
           & "$env:RUNNER_TEMP/conest/start.ps1" -Components
           if ($LASTEXITCODE -ne 0) { throw 'Component acceptance failed' }
       - name: Windows native DSH and dual-loop Gateway acceptance
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         shell: pwsh
         run: ./delivery/conest-0.6.4-windows-x64/verify-windows.ps1 -InstallRoot "$env:RUNNER_TEMP/conest"
       - name: OpenClaw enhancement without DSH
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         shell: pwsh
         run: |
           & "$env:RUNNER_TEMP/conest/start.ps1" -Verify -Core

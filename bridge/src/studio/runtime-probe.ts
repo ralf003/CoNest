@@ -12,7 +12,7 @@ export async function probeRuntime() {
   const root = await mkdtemp(path.join(os.tmpdir(), 'conest-platform-'));
   const workspace = path.join(root, 'workspace'); await mkdir(workspace);
   await writeFile(path.join(workspace, 'evidence.txt'), 'CoNest cross-platform probe\nCONEST_PLATFORM_OK\n');
-  const searchWorker = new BridgeClient({ workerFile: fileURLToPath(new URL('../worker.js', import.meta.url)), workspaceRoot: workspace, memoryFilePath: path.join(root, 'memory.jsonl'), startupTimeoutMs: 15000, shutdownTimeoutMs: 5000 });
+  const searchWorker = new BridgeClient({ workerFile: fileURLToPath(new URL('../worker.js', import.meta.url)), workspaceRoot: workspace, memoryFilePath: path.join(root, 'memory.jsonl'), startupTimeoutMs: process.platform === 'win32' ? 60000 : 15000, shutdownTimeoutMs: 5000, onLog: (level, message) => console.error(`[CoNest Host ${level}] ${message}`) });
   const options = { workspaceRoot: workspace, enableBridgeProofAdapter: true };
   try {
     const worker = await searchWorker.start();

@@ -27,7 +27,7 @@ registerHooks({ resolve(specifier, context, next) {
 await import(${JSON.stringify(pathToFileURL(path.join(root, 'dist/worker.js')).href)});
 `);
 const { BridgeClient } = await import(pathToFileURL(path.join(root, 'dist/client.js')).href);
-const client = new BridgeClient({ workerFile: worker, configFile, startupTimeoutMs: 20_000, shutdownTimeoutMs: 5_000 });
+const client = new BridgeClient({ workerFile: worker, configFile, startupTimeoutMs: process.platform === 'win32' ? 60_000 : 20_000, shutdownTimeoutMs: 5_000, onLog: (level, message) => console.error(`[CoNest Host ${level}] ${message}`) });
 const checks = [];
 const check = (name, evidence) => { checks.push({ name, passed: true, evidence }); console.log('PASS '+name); };
 let count = 0;
