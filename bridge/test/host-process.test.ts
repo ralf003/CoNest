@@ -53,4 +53,28 @@ test('DSH runs in the component Host; tool callbacks can reenter the same runtim
   await new Promise(resolve => setTimeout(resolve, 1500));
   assert.equal((await client.status()).pid, support.pid, 'Cooperative cancellation must preserve Host');
   await assert.rejects(client.extension({ operation: 'start', setup: { workspaceRoot: os.tmpdir() } }), /Host workspace/);
+
+  const pendingTool = Promise.withResolvers<void>();
+  const releaseTool = Promise.withResolvers<void>();
+  const abandoned = client.extension({ operation: 'runHarnessAgent', setup,
+    args: { task: 'PROOF:BASH:', sessionKey: 'retired-process', provider: 'bridge-proof', model: 'test', timeoutMs: 10_000,
+      hostTools: [{ name: 'bash', description: 'Late callback', parameters: { type: 'object' } }] },
+    callbacks: { event() {}, async tool() {
+      pendingTool.resolve(); await releaseTool.promise;
+      return { content: [{ type: 'text', text: 'RETIRED_RESULT' }] };
+    } },
+  });
+  const abandonedFailure = assert.rejects(abandoned);
+  await pendingTool.promise;
+  await client.stop(); await abandonedFailure;
+  const replacement = await client.start();
+  assert.notEqual(replacement.pid, support.pid);
+  releaseTool.resolve();
+  const next = await client.extension<any>({ operation: 'runHarnessAgent', setup,
+    args: { task: 'PROOF:BASH:', sessionKey: 'replacement-process', provider: 'bridge-proof', model: 'test', timeoutMs: 10_000,
+      hostTools: [{ name: 'bash', description: 'Current callback', parameters: { type: 'object' } }] },
+    callbacks: { event() {}, tool() { return { content: [{ type: 'text', text: 'CURRENT_RESULT' }] }; } },
+  });
+  assert.match(next.finalText, /CURRENT_RESULT/);
+  assert.doesNotMatch(next.finalText, /RETIRED_RESULT/);
 });

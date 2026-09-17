@@ -153,7 +153,9 @@ try {
       const rewritten = { ...manifest };
       if (name === 'node-pty' && platform === 'linux') rewritten.files = [...manifest.files, 'build/Release/pty.node'];
       // The artifact is already built and contains exact dependencies. Installation runs no upstream hooks.
-      for (const field of ['devDependencies', 'scripts', 'pnpm', 'workspaces', 'packageManager']) delete rewritten[field];
+      // The staging tree already applies the publisher's file list. Do not let a
+      // second pack pass drop added license notices or verified native assets.
+      for (const field of ['devDependencies', 'scripts', 'pnpm', 'workspaces', 'packageManager', 'files']) delete rewritten[field];
       for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
         if (!rewritten[field]) continue;
         rewritten[field] = Object.fromEntries(Object.keys(rewritten[field]).filter(key => references.has(key))
@@ -210,6 +212,11 @@ try {
   });
   const result = packResult(packed.stdout);
   for (const location of packages.keys()) assert.ok(result.files.some(file => file.path === `node_modules/${location}/package.json`), `npm omitted bundled runtime package ${location}`);
+  for (const record of provenance) {
+    const prefix = `node_modules/${record.location}/`;
+    const files = result.files.filter(file => file.path.startsWith(prefix) && !file.path.slice(prefix.length).split('/').includes('node_modules'));
+    assert.equal(files.length, record.files, `npm changed the staged file list for ${record.location}`);
+  }
   const archive = path.join(output, result.filename);
   await cp(path.join(temporary, result.filename), archive, { errorOnExist: true, force: false });
   const sha256 = createHash('sha256').update(await readFile(archive)).digest('hex');

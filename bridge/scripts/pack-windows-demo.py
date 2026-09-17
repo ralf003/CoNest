@@ -27,7 +27,7 @@ shutil.copy2(bridge / 'docs/windows-0.6.4-zh.md', bundle / 'START-HERE-zh.md')
     'openclaw': '2026.9.2', 'defaultModel': 'deterministic-fixture',
     'validation': 'See the release validation report and Windows workflow; packaging is not execution evidence.',
 }, indent=2) + '\n')
-archive = bundle.with_suffix('.zip')
+archive = Path(str(bundle) + '.zip')
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED) as output:
     for file in sorted(bundle.rglob('*')):
         if file.is_file():
