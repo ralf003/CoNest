@@ -8,7 +8,9 @@
     {
       "name": "ai_debate",
       "description": "Run a structured multi-agent debate on a given topic. Pro and con sub-agents independently argue their positions, then a neutral judge delivers a verdict. Returns the full debate transcript with winner and reasoning.",
-      "permissions": [],
+      "permissions": [
+        "workspace:read"
+      ],
       "inputSchema": {
         "type": "object",
         "additionalProperties": false,
