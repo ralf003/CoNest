@@ -49,16 +49,23 @@ export default {
         }
       }
 
-      const statusPorcelain = git(repoPath, ['status', '--porcelain=v1'])?.trim() || '';
+      // Do NOT trim leading space on first line — porcelain X-column is a meaningful space.
+      const raw = git(repoPath, ['status', '--porcelain=v1']) || '';
+      const statusPorcelain = raw.replace(/^\n+|\n+$/g, '');
       const modified = [], staged = [], untracked = [];
 
+      // porcelain v1: "XY<whitespace>filename" (rename: "XY<whitespace>orig -> new")
+      // Use regex to avoid off-by-one when whitespace count varies.
+      const re = /^(.)(.)\s+(.+)$/;
       for (const line of statusPorcelain.split('\n')) {
         if (!line) continue;
-        const code = line.slice(0, 2);
-        const file = line.slice(3);
-        if (code[0] !== ' ' && code[0] !== '?') staged.push(file);
-        if (code[1] !== ' ' && code[1] !== '?') modified.push(file);
-        if (code.startsWith('??')) untracked.push(file);
+        const m = line.match(re);
+        if (!m) continue;
+        const x = m[1], y = m[2], rest = m[3];
+        const file = rest.split(' -> ').pop();
+        if (x !== ' ' && x !== '?') staged.push(file);
+        if (y !== ' ' && y !== '?') modified.push(file);
+        if (x === '?' && y === '?') untracked.push(file);
       }
 
       return {
