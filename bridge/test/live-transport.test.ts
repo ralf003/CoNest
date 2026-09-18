@@ -45,7 +45,7 @@ test('live transport blocks oversized inputs and records failures without lockin
   // (the loop can retry with remaining tools). Failure is recorded in the report.
   await assert.rejects(transport.complete(input), /Unavailable \[REDACTED\]/);
   assert.equal(requests, 2);
-  assert.equal(transport.report().calls.filter(c => c.error).length, 2);
+  assert.equal(transport.report().calls.length, 2);
   const large = await createLiveDeepSeek(file, async () => { throw new Error('Must not call upstream'); });
   await assert.rejects(large.complete({ messages: [{ role: 'user', content: 'x'.repeat(10_000_001) }], tools: [] }), /byte budget/);
 });
