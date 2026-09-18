@@ -16,7 +16,7 @@ export async function createLiveDeepSeek(credentialFile, fetchResponse = fetch) 
   const redact = text => String(text).replaceAll(key, '[REDACTED]');
   const complete = async input => {
     assert.ok(calls.length < maxRequests, 'The live model request budget is exhausted');
-    const body = JSON.stringify({ model: 'deepseek-v4-flash', messages: input.messages, tools: input.tools,
+    const body = JSON.stringify({ model: 'deepseek-flash', messages: input.messages, tools: input.tools,
       stream: false, thinking: { type: 'disabled' }, max_tokens: maxOutputTokens });
     inputBytes += Buffer.byteLength(body);
     assert.ok(inputBytes <= maxInputBytes, 'The live model input byte budget is exhausted');
@@ -46,6 +46,6 @@ export async function createLiveDeepSeek(credentialFile, fetchResponse = fetch) 
       throw new Error(redact(error.message));
     }
   };
-  return { complete, redact, report: () => ({ provider: 'DeepSeek official API', requestedModel: 'deepseek-v4-flash',
+  return { complete, redact, report: () => ({ provider: 'DeepSeek official API', requestedModel: 'deepseek-flash',
     thinking: 'disabled', maxRequests, maxOutputTokens, maxInputBytes, inputBytes, calls }) };
 }
