@@ -27,7 +27,7 @@ jobs:
       - name: Install pinned pnpm
         run: npm install --global pnpm@11.7.0
       - name: Restore verified DSH adapter SDK
-        run: pnpm bootstrap
+        run: node scripts/maintenance/bootstrap.mjs
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Review changed contracts and repository boundaries

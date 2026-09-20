@@ -3,7 +3,7 @@
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing the repository. The project uses one root Node package. Run commands from the checkout root; do not recreate a nested `bridge/` package or a separate export tree.
 
 - `src/` contains the runtime, Connector and Studio. `test/` contains behavior tests and isolated experiments. `extensions/` contains optional host integrations.
-- Use `pnpm bootstrap`, `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test` and `pnpm check`. Use the relevant integration checks in CONTRIBUTING for affected behavior.
+- On a clean checkout, use `node scripts/maintenance/bootstrap.mjs` before pnpm reads the local SDK dependencies. Then use `pnpm install --frozen-lockfile`, `pnpm build`, `pnpm test` and `pnpm check`. Use the relevant integration checks in CONTRIBUTING for affected behavior.
 - Preserve the existing `dsh-bridge` plugin/configuration ID, CLI aliases and persisted state identifiers unless a separately reviewed migration changes them. A directory refactor is not a protocol rename.
 - Each worktree owns its dependency installation, `.vendor/`, build outputs and local state. Use `git worktree` to manage `.worktrees/`; do not share `node_modules` or check out another branch over active work.
 - Public documentation starts at README (startup), CONTRIBUTING (collaboration), SECURITY (security reports), and `docs/README.md` (implementation references). Only the startup README has a Chinese counterpart.

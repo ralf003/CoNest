@@ -127,7 +127,7 @@ Use `.worktrees/<branch>` for additional checkouts, managed by Git:
 ```bash
 git worktree add .worktrees/main main
 cd .worktrees/main
-pnpm bootstrap
+node scripts/maintenance/bootstrap.mjs
 pnpm install --frozen-lockfile
 pnpm build
 ```

@@ -98,6 +98,7 @@ for name in files:
 pkg = json.loads((root / 'package.json').read_text())
 manifest = json.loads((root / 'openclaw.plugin.json').read_text())
 compatibility = json.loads((root / 'compatibility.json').read_text())
+node_version = (root / '.node-version').read_text().strip()
 if pkg.get('license') != 'MIT' or not (root / 'LICENSE').read_text().startswith('MIT License'):
     errors.append('Project SPDX metadata and the approved license must agree')
 if pkg['version'] != manifest['version']:
@@ -109,6 +110,13 @@ if openclaw_range != pkg.get('peerDependencies', {}).get('openclaw') or openclaw
     errors.append('OpenClaw public compatibility metadata must agree')
 if compatibility.get('contracts', {}).get('runtimeProtocol') != 4:
     errors.append('Published runtime protocol does not match the implemented protocol')
+for workflow in ('.github/workflows/compatibility.yml', '.github/workflows/review.yml'):
+    workflow_text = (root / workflow).read_text()
+    if 'node scripts/maintenance/bootstrap.mjs' not in workflow_text or 'run: pnpm bootstrap' in workflow_text:
+        errors.append(f'Clean-checkout workflow must bootstrap the SDK before pnpm resolves local dependencies: {workflow}')
+windows_installer = (root / 'scripts/platform/install.ps1').read_text()
+if f'node-v{node_version}-win-x64.zip' not in windows_installer or f'node-v{node_version.replace(".", r"\.")}-win-x64' not in windows_installer:
+    errors.append('Windows installer download and checksum match must use .node-version')
 required = ['LICENSE', 'AGENTS.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'compatibility.json', 'src/index.ts', 'src/runtime.ts', 'src/adapters/openclaw-sdk.ts', 'src/adapters/dsh-cordis.ts', 'scripts/build.mjs', 'scripts/review.mjs', 'pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md']
 for name in required:
     if name not in files:

@@ -56,7 +56,7 @@ The office example demonstrates reusable Cordis services and per-call dependency
 ```bash
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
-pnpm bootstrap
+node scripts/maintenance/bootstrap.mjs
 pnpm install --frozen-lockfile
 pnpm build
 CONEST_DEMO_STATE="$PWD/.local/studio" \

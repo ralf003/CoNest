@@ -56,7 +56,7 @@ CoNest 的组件清单与运行协议不依赖某个 Agent SDK；OpenClaw 以及
 ```bash
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
-pnpm bootstrap
+node scripts/maintenance/bootstrap.mjs
 pnpm install --frozen-lockfile
 pnpm build
 CONEST_DEMO_STATE="$PWD/.local/studio" \
