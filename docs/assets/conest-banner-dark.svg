@@ -1,23 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" fill="none" role="img" aria-labelledby="title desc">
-  <title id="title">CoNest — Two loops. One workspace.</title>
-  <desc id="desc">Two interwoven loops form a shared nest. OpenClaw, DeepSeek Harness and Cordis come together in CoNest.</desc>
-  <defs>
-    <linearGradient id="background" x2="1440" y2="620" gradientUnits="userSpaceOnUse"><stop stop-color="#141622"/><stop offset=".55" stop-color="#19192d"/><stop offset="1" stop-color="#132b32"/></linearGradient>
-    <radialGradient id="halo"><stop stop-color="#7260cf" stop-opacity=".65"/><stop offset="1" stop-color="#29243f" stop-opacity="0"/></radialGradient>
-    <linearGradient id="loop-a" x1="-130" y1="-120" x2="125" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#a18cff"/><stop offset=".5" stop-color="#7662e9"/><stop offset="1" stop-color="#5244bd"/></linearGradient>
-    <linearGradient id="loop-b" x1="140" y1="-100" x2="-100" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="#93e5de"/><stop offset=".5" stop-color="#50b8d1"/><stop offset="1" stop-color="#697de1"/></linearGradient>
-    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#7a80a5" opacity=".13"/></pattern>
-  </defs>
-  <rect x="1" y="1" width="1438" height="618" rx="28" fill="url(#background)" stroke="#303249"/>
-  <rect x="760" y="24" width="656" height="548" fill="url(#dots)"/>
-  <ellipse cx="1100" cy="285" rx="330" ry="280" fill="url(#halo)"/>
+  <title id="title">CoNest — A shared home. Room to grow.</title>
+  <desc id="desc">A coral bird lifts its wing above an interwoven navy nest. Independent capabilities, a shared foundation, room to grow.</desc>
+  <rect x="1" y="1" width="1438" height="618" rx="28" fill="#151E2D" stroke="#2D394B"/>
   <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
-    <rect x="76" y="70" width="268" height="34" rx="17" fill="#302a49"/>
-    <circle cx="95" cy="87" r="4" fill="#7862d9"/>
-    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#c6bafa">THE SHARED WORKSPACE</text>
-    <text x="70" y="241" font-size="116" font-weight="750" letter-spacing="-7" fill="#f3f0ff">CoNest<tspan fill="#8471e8">.</tspan></text>
-    <text x="77" y="319" font-size="38" font-weight="500" letter-spacing="-1" fill="#d8d7ef">Two loops. One workspace.</text>
-    <text x="79" y="371" font-size="21" fill="#a5abc5">Shared tools. Shared memory. Built with components.</text>
+    <rect x="76" y="70" width="292" height="34" rx="17" fill="#382D30"/>
+    <circle cx="95" cy="87" r="4" fill="#FF967C"/>
+    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#FFB49F">BUILT TO GROW TOGETHER</text>
+    <text x="70" y="241" font-size="116" font-weight="750" letter-spacing="-7" fill="#F5F0E7">CoNest<tspan fill="#FF967C">.</tspan></text>
+    <text x="77" y="319" font-size="34" font-weight="500" letter-spacing="-1" fill="#E4E7EC">A shared home. Room to grow.</text>
+    <text x="79" y="371" font-size="21" fill="#AAB6C9">Independent agents. Shared tools and memory.</text>
     <path d="M79 427H659" stroke="#353850"/>
     <g font-size="16" font-weight="600">
       <rect x="78" y="453" width="146" height="44" rx="22" fill="#22263b" stroke="#3c405b"/><circle cx="100" cy="475" r="5" fill="#ef897e"/><text x="116" y="481" fill="#d0d5e8">OpenClaw</text>
@@ -26,21 +17,17 @@
       <text x="400" y="481" fill="#a3a7bb" font-weight="400">+</text>
       <rect x="428" y="453" width="128" height="44" rx="22" fill="#22263b" stroke="#3c405b"/><circle cx="450" cy="475" r="5" fill="#58b8a6"/><text x="466" y="481" fill="#d0d5e8">Cordis</text>
     </g>
-    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#9398b5">CONNECT. COMPOSE. CONTINUE.</text>
+    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#AAB6C9">BUILD TOGETHER. GROW TOGETHER.</text>
   </g>
-  <g transform="translate(1080 290)">
-    <circle r="210" stroke="#77709d" stroke-opacity=".45"/>
-    <circle r="253" stroke="#77709d" stroke-opacity=".32" stroke-dasharray="3 10"/>
-    <ellipse rx="214" ry="69" transform="rotate(-32)" stroke="#77709d" stroke-opacity=".4"/>
-    <g stroke-width="31">
-      <rect x="-127" y="-127" width="208" height="254" rx="104" transform="rotate(-35)" stroke="url(#loop-a)"/>
-      <rect x="-81" y="-127" width="208" height="254" rx="104" transform="rotate(35)" stroke="url(#loop-b)"/>
-      <path d="M-127-23v46a104 104 0 0 0 104 104" transform="rotate(-35)" stroke="url(#loop-a)"/>
-    </g>
-    <path d="M0-23C0-9-9 0-23 0C-9 0 0 9 0 23C0 9 9 0 23 0C9 0 0-9 0-23Z" fill="#eeeaff"/>
-    <circle cx="-168" cy="-125" r="9" fill="#ee9d91" stroke="#22263b" stroke-width="4"/>
-    <circle cx="201" cy="61" r="8" fill="#75cabb" stroke="#22263b" stroke-width="4"/>
-    <circle cx="-72" cy="197" r="5" fill="#9c91db"/>
-    <path d="M174-156v16m-8-8h16M-209 66v12m-6-6h12" stroke="#9d95c5" stroke-width="2" stroke-linecap="round"/>
+  <g transform="translate(864 58) scale(.94)">
+<g transform="translate(0 -13.5) scale(0.40829346)">
+<path fill="#FF967C" d="M252 124C264 123 289 168 310 190C376 259 472 302 543 365C672 458 737 615 715 724C710 763 700 795 688 817C667 764 639 727 596 691C538 651 475 633 407 605C311 565 240 532 213 472C163 384 202 210 241 140Q247 125 252 124Z"/>
+<path fill="#FF967C" fill-rule="evenodd" d="M699 494C764 424 792 347 885 337C941 326 1008 344 1040 381L1126 403C1064 419 1022 457 1000 485C952 550 952 674 885 749C832 807 763 848 700 870C748 756 752 616 711 516Z M974 411A24 24 0 1 0 926 411A24 24 0 1 0 974 411Z"/>
+<path fill="#F5F0E7" d="M228 559C334 665 520 659 612 754C636 782 653 827 664 875C585 894 477 866 404 833C304 792 258 744 236 679C224 640 214 582 218 567Q222 557 228 559Z"/>
+<path fill="#F5F0E7" d="M580 892C763 868 939 770 1047 658Q1068 644 1078 662C1097 747 1027 856 978 918Q960 940 936 951C825 943 690 930 580 892Z"/>
+<path fill="#F5F0E7" d="M134 653C183 694 204 731 246 764C355 866 559 913 807 980C731 1016 676 1061 619 1113C443 1057 264 1005 186 904C128 829 106 724 119 671Q124 650 134 653Z"/>
+<path fill="#F5F0E7" d="M159 891C253 1004 392 1067 545 1124C474 1157 415 1180 345 1194C258 1163 198 1095 166 1023C148 977 151 921 159 891Z"/>
+<path fill="#F5F0E7" d="M1049 889C1010 1044 874 1160 721 1191C643 1209 541 1204 477 1196C692 1129 885 1015 1049 889Z"/>
+</g>
   </g>
 </svg>

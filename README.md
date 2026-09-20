@@ -3,7 +3,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-dark.svg" />
   <source media="(prefers-color-scheme: light)" srcset="docs/assets/conest-banner.svg" />
-  <img src="docs/assets/conest-banner.svg" alt="CoNest — Two loops. One workspace. OpenClaw + DSH + Cordis." width="100%" />
+  <img src="docs/assets/conest-banner.svg" alt="CoNest — A shared home. Room to grow. OpenClaw + DSH + Cordis." width="100%" />
 </picture>
 
 <br />
@@ -150,7 +150,7 @@ Git contains source, tests, documentation and build configuration. Historical re
 
 <div align="center">
 
-<img src="docs/assets/readme/loops.svg" width="36" height="36" alt="" />
+<img src="docs/assets/brand/conest-avatar.svg" width="64" height="64" alt="CoNest" />
 
 **Build together, one capability at a time.**
 
