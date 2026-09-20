@@ -37,3 +37,19 @@ __pycache__/
 
 # Downloaded and verified development SDK; never commit dependency contents.
 /.vendor/
+
+# Customer handoffs and rendered documents are local working materials.
+/bridge/delivery/
+/bridge/DEMO-NOW-*
+/bridge/START-HERE-*
+/bridge/docs/*installation-demo*
+/bridge/docs/windows-*-zh.md
+/bridge/docs/conest-0.6.*
+/bridge/docs/assets/
+/bridge/docs/**/*.html
+/bridge/docs/**/*.pdf
+/bridge/scripts/build-customer-docs.py
+/bridge/scripts/pack-ubuntu-delivery.py
+/bridge/scripts/pack-multiplatform.py
+/bridge/scripts/render-platform-docs.py
+/bridge/scripts/pack-dsh-demo.mjs

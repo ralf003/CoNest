@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Wrap the verified Windows npm artifact with the isolated demo installer."""
+"""Wrap the verified Windows npm artifact with the isolated integration-test installer."""
 import argparse
 import hashlib
 import json
@@ -20,8 +20,24 @@ packages.mkdir(parents=True)
 for file in [args.archive, Path(str(args.archive) + '.sha256')]:
     shutil.copy2(file, packages / file.name)
 for name in ['install.ps1', 'start.ps1', 'setup.mjs', 'launch.mjs', 'configure-key.ps1', 'verify-windows.ps1']:
-    shutil.copy2(bridge / 'delivery/multiplatform' / name, bundle / name)
-shutil.copy2(bridge / 'docs/windows-0.6.4-zh.md', bundle / 'START-HERE-zh.md')
+    shutil.copy2(bridge / 'scripts/platform' / name, bundle / name)
+(bundle / 'README.md').write_text(f'''# CoNest {version} — Windows integration fixture
+
+This bundle supports developer installation and regression checks on Windows x64.
+The installer downloads Node.js 24.15.0 and OpenClaw 2026.9.2.
+
+Run in PowerShell from this directory:
+
+```powershell
+./install.ps1 -InstallRoot C:\\conest-dev
+./verify-windows.ps1 -InstallRoot C:\\conest-dev
+C:\\conest-dev/start.ps1 -Components
+C:\\conest-dev/start.ps1 -Verify -Core
+```
+
+The default model is a deterministic local fixture. No API key is needed.
+The developer source and build instructions are at https://github.com/zyw02/CoNest.
+''', encoding='utf-8')
 (bundle / 'delivery.json').write_text(json.dumps({
     'version': version, 'target': 'win32-x64', 'node': '24.15.0',
     'openclaw': '2026.9.2', 'defaultModel': 'deterministic-fixture',

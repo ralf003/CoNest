@@ -1,10 +1,10 @@
 # Capability authorization in CoNest Connector
 
-The 0.5.1 rename preserves the 0.4/0.5 authorization model and wire identifiers; see [NAMING.md](./NAMING.md). Old version-specific evidence remains historical, not a newly executed test.
+The 0.5.1 rename preserves the 0.4/0.5 authorization model and wire identifiers; see [NAMING.md](naming.md). Old version-specific evidence remains historical, not a newly executed test.
 
 Version 0.6.0 retains those policy layers and one-use grants while binding admitted and nested calls to a uniquely identified Loader graph. Returning to identical configuration bytes does not revive an old generation token. A committed policy or permission change cancels tasks across all retained graphs; service isolation is not an authorization grant or a hostile-code sandbox.
 
-The 2026-09-14 development slice also connects the Studio DSH Harness to these four component tools through the official host's finalized tool-authority hook and real tool executor. Both loops use the same worker policy and grants. DSH attempt completion additionally revokes its retained tool proxies and run bindings. See [the integration design and qualification](docs/dual-loop-component-runtime-zh.md). The subsequent [search migration](docs/search-component-zh.md) brings `dsh_grep` and `dsh_glob` through this same policy and lifetime path, with independent capability names and workspace-contained paths. The [read migration](docs/read-component-zh.md) also moves `dsh_read` into an independent component, with the same authorization path and trusted observation handoff for existing guarded Gateway edits. The [memory migration](docs/memory-component-zh.md) moves nine graph tools and automatic memory into `dsh-memory`; filesystem mutation/image tools remain in Gateway. Memory reads and writes have separate permissions. Previously packaged archives are unchanged.
+The 2026-09-14 development slice also connects the Studio DSH Harness to these four component tools through the official host's finalized tool-authority hook and real tool executor. Both loops use the same worker policy and grants. DSH attempt completion additionally revokes its retained tool proxies and run bindings. See [the integration design and qualification](dual-loop-component-runtime-zh.md). The subsequent [search migration](search-component-zh.md) brings `dsh_grep` and `dsh_glob` through this same policy and lifetime path, with independent capability names and workspace-contained paths. The [read migration](read-component-zh.md) also moves `dsh_read` into an independent component, with the same authorization path and trusted observation handoff for existing guarded Gateway edits. The [memory migration](memory-component-zh.md) moves nine graph tools and automatic memory into `dsh-memory`; filesystem mutation/image tools remain in Gateway. Memory reads and writes have separate permissions. Previously packaged archives are unchanged.
 
 ## Scope
 
@@ -31,7 +31,7 @@ The development native tools are `bridge_capabilities`, `bridge_invoke`, `knowle
 }
 ```
 
-For a standalone policy file, omit the outer `capabilityPolicy` property. Apply it with `policy set FILE`; see [the example](./examples/capability-policy.json). Existing configurations with no policy retain the worker ceiling; configuring a memory file adds default memory read/write permissions only when no explicit permission array exists. Use explicit allowlists to prevent a future installation from automatically becoming accessible.
+For a standalone policy file, omit the outer `capabilityPolicy` property. Apply it with `policy set FILE`; see [the example](../examples/capability-policy.json). Existing configurations with no policy retain the worker ceiling; configuring a memory file adds default memory read/write permissions only when no explicit permission array exists. Use explicit allowlists to prevent a future installation from automatically becoming accessible.
 
 Rules accept `allow` and `deny` arrays of capability names or `*` patterns. Omitted `allow` imposes no additional allowlist; `allow: []` denies everything. Unknown fields and malformed patterns are rejected. Rules intersect: a matching Agent or requester rule cannot override a default denial or grant a capability outside the default allowlist. Every nested dependency call must also be allowed; allowing only a verifier does not implicitly authorize search.
 
@@ -98,10 +98,10 @@ Useful errors are `CAPABILITY_DENIED`, `INVALID_POLICY`, `INVALID_PRINCIPAL`, `A
 
 ## Upgrade and remaining work
 
-Stop the old CoNest Connector worker and restart the plugin service when upgrading from 0.3: protocol 3 requires a principal on every task/catalog request. The protocol remains unchanged between 0.4 and 0.5. Do not mix old clients and new workers. Review external manifests' `bridgeVersion` ranges before restarting. The example verifier is now 1.2.0, declaring support for CoNest Connector 0.3 through 0.5; retained older bundles are not silently rewritten.
+Stop the old Connector worker and restart the plugin service when replacing the package. Clients and workers must use the same protocol version. Review external manifests' `bridgeVersion` ranges; retained bundles are not silently rewritten.
 
-Version 0.5 adds a private standalone Linux archive and an owned local service profile; see [INSTALLATION.md](./INSTALLATION.md) and the exact evidence in [ACCEPTANCE.md](./ACCEPTANCE.md). Live channels and broader model reliability remain unqualified. Per-component OS isolation, credential/network mediation, durable audit, and organization admission/release governance remain separate work. The worker environment allowlist reduces accidental credential inheritance; trusted code can still read files available to its OS account.
+See [installation and verification](installation.md). The worker environment allowlist reduces accidental credential inheritance; trusted code can still read files available to its OS account. Per-component OS isolation and organization admission governance remain separate work.
 
 ## Shared memory service
 
-Studio automatic hooks use separately authorized `memory_recall` and `memory_remember` capabilities. These service entries are denied at model-facing discovery/invocation surfaces; the nine graph tools follow finalized tool authority. Worker capability policy and `memory:read` / `memory:write` govern the service calls. Incognito sessions skip automatic hooks and cannot access either memory entry path. See [the memory design](docs/memory-component-zh.md) for ownership, cancellation and failure semantics.
+Studio automatic hooks use separately authorized `memory_recall` and `memory_remember` capabilities. These service entries are denied at model-facing discovery/invocation surfaces; the nine graph tools follow finalized tool authority. Worker capability policy and `memory:read` / `memory:write` govern the service calls. Incognito sessions skip automatic hooks and cannot access either memory entry path. See [the memory design](memory-component-zh.md) for ownership, cancellation and failure semantics.

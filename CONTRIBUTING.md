@@ -27,10 +27,16 @@ For dependency changes, validate both branches from clean clones. See the [Chine
 
 ## File naming
 
-Use English names and ASCII characters for all tracked files and directories. Chinese documents use a `-zh` suffix before the extension, for example `README-zh.md` or `conest-design-zh.html`. Keep links, renderers and packaging scripts consistent when renaming files. The historical paths and hashes in `maintenance/import.json` record the initial import and remain unchanged.
+Use English names and ASCII characters for all tracked files and directories. Chinese documents use a `-zh` suffix before the extension, for example `README-zh.md` or `studio-zh.md`. Keep links, renderers and packaging scripts consistent when renaming files. The historical paths and hashes in `maintenance/import.json` record the initial import and remain unchanged.
 
 ## Submit and release
 
 Describe the concrete problem, resulting behavior and checks performed in your PR. Keep downloaded `.vendor` content, `node_modules`, credentials, logs and runtime state out of Git. CI uses local fixtures and does not invoke paid models.
 
-`main` starts from 0.6.2; `develop` contains 0.6.3 development changes. Maintain shared build and documentation changes in both branches without moving the original `v0.6.2` tag. Use separate clones or worktrees when checking the other branch. SDK releases are development dependencies; plugin installers require their own platform validation.
+`main` starts from 0.6.2; `develop` contains 0.6.4 development changes. Maintain shared build and documentation changes in both branches without moving the original `v0.6.2` tag. Use separate clones or worktrees when checking the other branch. SDK releases are development dependencies; plugin installers require their own platform validation.
+
+## Repository content boundary
+
+Commit developer source, configuration, dependency locks, component examples, tests, build/release scripts and developer documentation. Keep only `README.md` as documentation at the `bridge/` root; put technical guides in `bridge/docs/`.
+
+Keep customer presentations, delivery tutorials, speaker notes, screenshots and rendered HTML/PDF outside Git, or in ignored `maintenance/local/customer-delivery/`. Run evidence belongs in ignored `bridge/reports/`; document reproduction commands and scope. Packaged documentation must be explicitly listed in `pack-release.mjs`; never copy the entire docs directory.

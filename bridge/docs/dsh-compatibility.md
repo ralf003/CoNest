@@ -1,8 +1,8 @@
 # Real DSH compatibility matrix
 
-Stage 3, first executed qualification slice on 0.6.0. This is a **developer-checkout profile**, not an expansion of the default tool catalog. The later 0.6.1 candidate reruns it under `reports/conest-0.6.1/dsh-compatibility/` without changing the original evidence or shipping these additional profiles. OpenClaw 2026.9.2 remains the only target host and sole Agent Loop.
+This document describes the isolated developer profile in `experiments/dsh-compat`, not the complete Studio integration or the default tool catalog. Results below apply only to that profile and its probes; run `pnpm run test:compat` from `bridge/` for current evidence.
 
-Evidence: [machine-readable result](./reports/dsh-compatibility/result.json), [executed TAP](./reports/dsh-compatibility/result.tap), [native-plugin profile](./experiments/dsh-compat/profile.mjs), and [assertions](./experiments/dsh-compat/compat.test.mjs). The passing run has 10 tests, zero failures, zero skipped tests, no paid model calls, and no external web requests. It includes the production worker RPC, but is not a new OpenClaw agent/model or clean-install acceptance run.
+Evidence: machine-readable result, executed TAP, [native-plugin profile](../experiments/dsh-compat/profile.mjs), and [assertions](../experiments/dsh-compat/compat.test.mjs). The passing run has 10 tests, zero failures, zero skipped tests, no paid model calls, and no external web requests. It includes the production worker RPC, but is not a new OpenClaw agent/model or clean-install acceptance run.
 
 ## Version and evidence boundary
 
@@ -57,19 +57,19 @@ The actual filesystem suite registers `write` and `edit` internally, but the pro
 
 The profile owns real, isolated tools, prompt, subprocess, filesystem and skill services; it does not borrow the existing search component's mutable registry. Disabling it through the production Runtime removes read/glob/Todo/Plan registrations, removes its skill provider, and withdraws capabilities. Re-enabling creates a different native tools instance and successfully reads again. The baseline search component runs alongside it without a name collision.
 
-Actual filesystem pre-abort and cancellation after the first real stream chunk are tested. The wrapper passes invocation signals through; this run does **not** establish new end-to-end cancellation guarantees for every plugin. Existing scheduler/worker cancellation qualification remains in [runtime acceptance](./RUNTIME-ACCEPTANCE.md). No watcher teardown is claimed because skill watching is explicitly disabled. No new overlapping-upgrade or module-global rollback guarantee is claimed by this profile's disable/enable test.
+Actual filesystem pre-abort and cancellation after the first real stream chunk are tested. The wrapper passes invocation signals through; this run does **not** establish new end-to-end cancellation guarantees for every plugin. Existing scheduler/worker cancellation qualification remains in [runtime acceptance](runtime.md). No watcher teardown is claimed because skill watching is explicitly disabled. No new overlapping-upgrade or module-global rollback guarantee is claimed by this profile's disable/enable test.
 
 Important limits:
 
 - `fs-local` cwd is not a sandbox. The adapter rejects stable traversal and symlink escapes, but does not defend against hostile concurrent filesystem replacement. Directory listings and skill bodies can be materialized before output slicing; output caps are not complete memory/I/O caps.
 - Skill fixture roots are trusted, controlled test data. Default project/user roots and watchers are disabled. Symlink-heavy or untrusted skill trees, live catalog invalidation, user/model invocation routing, and automatic instruction injection are not qualified.
 - Plan additionally needs a real session workflow and user-question approval channel for success. Todo needs a real owning session and an explicit state-mutation policy. Those are host design work, not reasons to fabricate DSH objects.
-- Network needs a new explicit permission and egress policy. The pinned [HTTP provider README](../source/workspace/deepseek-harness/packages/web/web-fetch-http/README.md) explicitly defers private-network/SSRF defenses; it must not simply be exposed with `workspace:read`. No web execution or cancellation claim is made.
-- The profile imports built modules from the adjacent DSH checkout. It is not a relocatable component bundle, installed market item, default OpenClaw tool extension, or production filesystem security boundary.
+- Network needs a new explicit permission and egress policy. The pinned HTTP provider README explicitly defers private-network/SSRF defenses; it must not simply be exposed with `workspace:read`. No web execution or cancellation claim is made.
+- The profile imports built modules from the restored development SDK. It is not a relocatable component bundle, installed market item, default OpenClaw tool extension, or production filesystem security boundary.
 
 ## Reproduce and next boundary
 
-With this checkout's linked dependencies and built DSH packages available, use Node 24.15.x and run:
+With the checksum-pinned SDK restored and package dependencies installed, use Node 24.15.x and run:
 
 ```sh
 pnpm run test:compat

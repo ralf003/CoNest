@@ -13,7 +13,7 @@
 
 <br />
 
-<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="bridge/STUDIO-zh.md"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Branches</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
+<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="bridge/docs/studio-zh.md"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Branches</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
 
 </div>
 
@@ -25,7 +25,6 @@
 
 > [!TIP]
 > **Explore 0.6.4** — Gateway + CoNest Host, composable office services, and an OpenClaw demo without DSH via `--core`.
-> [Windows demo (中文) →](bridge/docs/windows-0.6.4-zh.md) · [Release scope (中文) →](bridge/docs/release-0.6.4-zh.md)
 
 ## Capabilities, connected
 
@@ -33,9 +32,9 @@
 
 - **[Compose tools & services](bridge/README.md)** — Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.
 
-- **[Let knowledge accumulate](bridge/STUDIO-zh.md)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
+- **[Let knowledge accumulate](bridge/docs/studio-zh.md)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
 
-- **[See how capabilities work](bridge/STUDIO-zh.md)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
+- **[See how capabilities work](bridge/docs/studio-zh.md)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
 
 <details>
 <summary><strong>Architecture & current scope</strong> · Gateway / Host / optional DSH</summary>
@@ -80,7 +79,7 @@ CONEST_DEMO_STATE=/absolute/disposable/conest-studio \
   pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
 ```
 
-The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/openclaw/v/2026.9.2). The default uses a **local model fixture**: Gateway, loops, tools and persistence execute normally without paid model calls. See the [Studio guide (中文)](bridge/STUDIO-zh.md) and [plugin README](bridge/README.md) for installation and model configuration.
+The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/openclaw/v/2026.9.2). The default uses a **local model fixture**: Gateway, loops, tools and persistence execute normally without paid model calls. See the [Studio guide (中文)](bridge/docs/studio-zh.md) and [plugin README](bridge/README.md) for installation and model configuration.
 
 <a name="branches"></a>
 
@@ -101,14 +100,14 @@ The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/o
 
 ## Explore
 
-- **Use CoNest** · [Plugin configuration](bridge/README.md) · [Studio guide (中文)](bridge/STUDIO-zh.md)
+- **Use CoNest** · [Plugin configuration](bridge/README.md) · [Studio guide (中文)](bridge/docs/studio-zh.md)
 - **Build & contribute** · [Contributing](CONTRIBUTING.md) · [Dependencies (中文)](maintenance/DEPENDENCIES-zh.md)
-- **Understand internals** · [Authorization](bridge/AUTHORIZATION.md) · [Import provenance (中文)](maintenance/IMPORT-zh.md)
+- **Understand internals** · [Authorization](bridge/docs/authorization.md) · [Import provenance (中文)](maintenance/IMPORT-zh.md)
 
 <details>
-<summary>Repository contents & historical deliveries</summary>
+<summary>Repository contents</summary>
 
-Git contains source, tests, documentation and build configuration. Historical release packages, private acceptance reports and personal runtime data are distributed or retained separately. Old links into `releases/` and `reports/` require the corresponding delivery materials.
+Git contains developer source, tests, examples, build scripts and technical documentation. Customer materials and run reports stay outside Git.
 
 </details>
 

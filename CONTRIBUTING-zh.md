@@ -32,7 +32,7 @@ pnpm --dir bridge exec tsx --test 'test/*.test.ts'
 | 依赖或 SDK | 两个分支都从干净克隆恢复、安装、构建和测试 |
 
 ```bash
-# 两个分支都有的 Studio 四段验收，使用本地模型 fixture。
+# 两个分支都有的 Studio 集成验收，使用本地模型 fixture。
 CONEST_DEMO_STATE=/absolute/disposable/conest-check \
   pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
 
@@ -49,7 +49,7 @@ CONEST_REPORT_PROFILE=local-check \
 feature/* 或 fix/* → develop → 验收与 PR → main → 版本标签
 ```
 
-`main` 以 0.6.2 稳定代码为起点，`develop` 为 0.6.3 开发线。两个分支的依赖恢复与协作流程共同维护，功能版本保持各自边界。原始 `v0.6.2` 标签固定备份，不因维护说明或构建改进而移动。
+`main` 以 0.6.2 稳定代码为起点，`develop` 为 0.6.4 开发线。两个分支的依赖恢复与协作流程共同维护，功能版本保持各自边界。原始 `v0.6.2` 标签固定备份，不因维护说明或构建改进而移动。
 
 检查另一分支时使用独立 clone 或 `git worktree`，避免切换正在运行的开发代码。新安装包通过 Releases 分发；发布前核对版本、依赖来源、平台资产和相应验收。SDK Release 是开发依赖，不是 CoNest 插件安装包。
 
@@ -67,4 +67,10 @@ maintenance/         SDK 获取、来源、仓库检查
 
 ## 文件命名
 
-仓库中的文件和目录名称统一使用英文与 ASCII 字符。中文文档使用 `-zh` 后缀，例如 `README-zh.md`、`conest-design-zh.md`；对应的 HTML 文件沿用同一名称。重命名时同步修改链接、渲染与打包脚本。`maintenance/import.json` 保留首次导入的历史路径和散列，不作为当前文件导航。
+仓库中的文件和目录名称统一使用英文与 ASCII 字符。中文文档使用 `-zh` 后缀，例如 `README-zh.md`、`studio-zh.md`。重命名时同步修改链接、渲染与打包脚本。`maintenance/import.json` 保留首次导入的历史路径和散列，不作为当前文件导航。
+
+## 仓库内容边界
+
+只提交开发者所需的源码、配置、依赖锁、组件示例、测试、构建与发布脚本，以及开发文档。`bridge/` 根目录只保留 `README.md` 作为文档入口，技术说明放在 `bridge/docs/`。
+
+客户演示、安装交付教程、讲稿、截图和离线 HTML/PDF 放在仓库外或已忽略的 `maintenance/local/customer-delivery/`。验收结果保存在已忽略的 `bridge/reports/`，文档只保留复现命令和能力边界。不要把本地材料加入发布脚本；新增随包文档必须明确列入 `pack-release.mjs` 的清单。

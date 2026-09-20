@@ -36,6 +36,6 @@ Connector 仅从受信 worker 的实际调用返回接收记录，通过内部�
 
 ## 验证与交付
 
-验证记录见[本次验收](../reports/read-migration/RESULT.md)。使用隔离的测试工作区、真实组件 worker 与官方 Gateway；模型仅由本地确定性 fixture 提供决策。测试中的编辑与写入只作用于测试文件。
+验证记录见本次验收。使用隔离的测试工作区、真实组件 worker 与官方 Gateway；模型仅由本地确定性 fixture 提供决策。测试中的编辑与写入只作用于测试文件。
 
 修改前备份：仓库 `backups/conest-before-read-migration-20260914/code.tar.gz`。本次更新源码与开发构建，没有部署到既有用户 Gateway，也没有替换历史 Linux/Windows 安装包。

@@ -1,6 +1,6 @@
 # Dynamic workspace context — development contract
 
-Included in the private 0.6.1 local candidate, targeting OpenClaw 2026.9.2 only. Existing 0.6.0 archives are unchanged and reject the new manifest field. No OpenClaw core, DSH upstream package, model scheduler or session store is replaced. See [candidate acceptance](./HOST-ENHANCEMENT-ACCEPTANCE.md) for versioned artifact qualification.
+The provider targets OpenClaw 2026.9.2 and is disabled by default. Commands run from `bridge/`.
 
 ## Explicit opt-in
 
@@ -72,12 +72,3 @@ CONEST_REPORT_PROFILE=context-provider-default node scripts/test-openclaw.mjs
 Unit/process tests cover exact data boundaries, identity/tool/workspace gates, output validation, timed-out late work, concurrency, run cancellation, stale generations, real DSH retrieval, dependency disable/recovery, requester denial and in-flight upgrade/policy revocation. Gateway tests use a local deterministic model transport and actual OpenClaw/DSH execution, including context arriving before model tool calls and fresh-session checks after enable/disable, revocation/restoration and uninstall. They do not spend provider credits or measure real-model retrieval quality.
 
 No session/history service, arbitrary multi-provider pipeline, prompt-authoring DSH service adapter or market UI is implemented. A new release still needs versioning and separate artifact qualification.
-
-### Earlier checkout-slice results — 2026-09-07
-
-- `pnpm test`: 73/73 passed, including 12 context-provider tests.
-- [Dynamic context Gateway flow](./reports/context-provider/e2e.json): passed; 14 local model requests, including six context-only fresh-session checks with zero model tool calls.
-- [Default-off Gateway regression](./reports/context-provider-default/e2e.json): passed; 8 local model requests.
-- [OpenClaw runtime inspection](./reports/context-provider-default/openclaw-inspection.json): loaded, four tools, two routes, no diagnostics.
-
-The E2E reports record the entry, host-adapter and context-provider module hashes and verify they do not change during the run. These are development evidence, not acceptance of a newly published archive or paid-model quality qualification.

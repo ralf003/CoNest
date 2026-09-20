@@ -23,6 +23,14 @@ for name in files:
         errors.append(f'Excluded state, dependency or artifact path: {name}')
     if path.as_posix().endswith('.tar.gz'):
         errors.append(f'Archive must be distributed separately: {name}')
+    if name.startswith('bridge/delivery/') or 'customer-delivery' in path.parts:
+        errors.append(f'Customer handoff material must stay outside Git: {name}')
+    if path.parent == Path('bridge') and path.suffix in {'.md', '.html', '.pdf'} and path.name != 'README.md':
+        errors.append(f'Keep developer documentation under bridge/docs/: {name}')
+    if name.startswith('bridge/docs/') and (path.suffix in {'.html', '.pdf'} or
+            any(marker in path.name.lower() for marker in ('installation-demo', 'speaker-notes', 'customer', 'start-here')) or
+            re.match(r'windows-\d', path.name)):
+        errors.append(f'Customer or rendered document must stay outside Git: {name}')
     target = root / path
     if target.is_symlink():
         errors.append(f'Unexpected tracked symlink: {name}')

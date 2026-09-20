@@ -289,11 +289,10 @@ UI 贡献分为原生宿主界面和 Studio 适配视图。前者保留原客户
 
 本文件是 CoNest 后续建设的总体架构。历史文档保留其版本和阶段事实：
 
-- [组件运行时计划](bridge/RUNTIME-PLAN.md)：Loader、版本图与组件管理的基础实现。
-- [0.6.2 交付设计](bridge/docs/conest-design-zh.md)：Studio 固定组合与旧执行路径。
+- [组件运行时](bridge/docs/runtime.md)：版本图、调用保留与清理边界。
 - [双 Loop 组件接入](bridge/docs/dual-loop-component-runtime-zh.md)：宿主工具准入、会话生命周期和受管理能力的衔接。
 - [读取组件](bridge/docs/read-component-zh.md)、[记忆组件](bridge/docs/memory-component-zh.md)：当前状态边界及已验证语义。
-- [DSH 专项兼容矩阵](bridge/DSH-COMPATIBILITY.md)：特定包与特定服务配置的历史证据，不代表全生态结论。
+- [DSH 专项兼容矩阵](bridge/docs/dsh-compatibility.md)：特定包与特定服务配置的历史证据，不代表全生态结论。
 - [依赖来源](maintenance/DEPENDENCIES-zh.md)：现有固定 SDK 和构建来源；完整 DSH 画像需要另行补齐、锁定和分发所需依赖。
 - [历史控制设计](CONTROL-DESIGN-zh.md)：风险与远期治理参考；自动演进不因此进入本轮范围。
 

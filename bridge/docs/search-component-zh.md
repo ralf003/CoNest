@@ -34,6 +34,6 @@ DSH 原生搜索需要工具所属工作区来生成可继续读取的相对路�
 - 两个 DSH 搜索工具现在随核心 Connector 注册，无需开启 Studio；仍需 OpenClaw 工具策略与 Runtime 能力策略准入。现有显式 allowlist 如需使用它们，应加入 `dsh_grep`、`dsh_glob`。
 - 内建搜索版本从 0.2.0 升为 0.2.1，保留既有 `^0.2.0` 依赖兼容。
 
-验收命令与结果见[本次验证记录](../reports/search-migration/RESULT.md)。本次备份位于仓库 `backups/conest-before-search-migration-20260914/code.tar.gz`。使用更新后的开发构建需重启所选开发 Gateway；当前修改没有替换已发行安装包或部署到既有用户实例。
+验收命令与结果见本次验证记录。本次备份位于仓库 `backups/conest-before-search-migration-20260914/code.tar.gz`。使用更新后的开发构建需重启所选开发 Gateway；当前修改没有替换已发行安装包或部署到既有用户实例。
 
 后续[只读文件服务组件化](read-component-zh.md)已迁入 `dsh_read`，并保留读后写保护。本文保留搜索阶段的设计与验收范围。

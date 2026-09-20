@@ -102,10 +102,31 @@ try {
   const rootManifest = await readJson(path.join(source, 'package.json'));
   await collect(source, { name: rootManifest.name, dependencies: rootManifest.dependencies });
   await mkdir(stage);
-  const topFiles = ['dist', 'examples', 'docs', 'STUDIO-zh.md', 'README.md', 'ACCEPTANCE.md', 'AUTHORIZATION.md',
-    'INSTALLATION.md', 'NAMING.md', 'RUNTIME-ACCEPTANCE.md', 'HOST-ADAPTER.md', 'CONTEXT-PROVIDERS.md', 'HOST-ENHANCEMENT-ACCEPTANCE.md',
-    'conest.config.example.json', 'bridge.config.example.json', 'openclaw.plugin.json'];
-  for (const file of topFiles) await cp(path.join(source, file), path.join(stage, file), { recursive: true, dereference: false });
+  const topFiles = [
+    "dist",
+    "examples",
+    "README.md",
+    "docs/authorization.md",
+    "docs/components.md",
+    "docs/context-providers.md",
+    "docs/dsh-compatibility.md",
+    "docs/dual-loop-component-runtime-zh.md",
+    "docs/host-adapter.md",
+    "docs/installation.md",
+    "docs/memory-component-zh.md",
+    "docs/naming.md",
+    "docs/read-component-zh.md",
+    "docs/runtime.md",
+    "docs/search-component-zh.md",
+    "docs/studio-zh.md",
+    "conest.config.example.json",
+    "bridge.config.example.json",
+    "openclaw.plugin.json"
+];
+  for (const file of topFiles) {
+    await mkdir(path.dirname(path.join(stage, file)), { recursive: true });
+    await cp(path.join(source, file), path.join(stage, file), { recursive: true, dereference: false });
+  }
   for (const file of await filesIn(path.join(stage, 'dist'))) {
     if (file.endsWith('.meta.json')) await rm(path.join(stage, 'dist', file));
   }

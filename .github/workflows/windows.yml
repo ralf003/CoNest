@@ -1,8 +1,8 @@
-name: Windows demo acceptance
+name: Windows integration
 on:
   push:
     branches: [develop]
-    paths: ['.github/workflows/windows-demo.yml', 'bridge/**']
+    paths: ['.github/workflows/windows.yml', 'bridge/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -23,7 +23,7 @@ jobs:
       - run: pnpm --dir bridge run build
       - run: node bridge/scripts/prepare-native.mjs --target win32-x64 --out "$RUNNER_TEMP/native-windows"
       - run: node bridge/scripts/pack-release.mjs --target win32-x64 --native-dir "$RUNNER_TEMP/native-windows" --out "$RUNNER_TEMP/package"
-      - run: python3 bridge/scripts/pack-windows-demo.py --archive "$RUNNER_TEMP/package/local-conest-connector-0.6.4.tgz" --out "$RUNNER_TEMP/delivery"
+      - run: python3 bridge/scripts/pack-windows.py --archive "$RUNNER_TEMP/package/local-conest-connector-0.6.4.tgz" --out "$RUNNER_TEMP/delivery"
       - uses: actions/upload-artifact@v4
         with:
           name: conest-0.6.4-windows-x64

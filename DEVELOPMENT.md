@@ -4,7 +4,7 @@ Updated: 2026-09-07
 
 ## Product naming
 
-The current implementation is **CoNest Connector for OpenClaw** (CoNest Connector), with **CoNest Runtime** as its supervised component worker. **CoNest** names the planned unified plugin market and management platform, not the underlying Cordis framework. Version 0.5.1 changes branding and adds new command aliases without migrating the old plugin identity or stored state. See [naming and compatibility](./bridge/NAMING.md).
+The current implementation is **CoNest Connector for OpenClaw** (CoNest Connector), with **CoNest Runtime** as its supervised component worker. **CoNest** names the planned unified plugin market and management platform, not the underlying Cordis framework. Version 0.5.1 changes branding and adds new command aliases without migrating the old plugin identity or stored state. See [naming and compatibility](bridge/docs/naming.md).
 
 The `bridge/` directory and migration archives retain their historical names. The implementation chronology below is historical; the new market and native Cordis Loader integration are separate future work.
 

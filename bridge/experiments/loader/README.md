@@ -25,6 +25,6 @@ The test runner records actual package-entry hashes, TAP output, and results und
 
 Reuse Loader for entry reconciliation, imports, service isolation, and component lifecycle. Do not replace the production runtime with a direct `loader.root.update(newConfig)` call: that would weaken the existing in-flight call and failed-update guarantees.
 
-The isolated-revision tests manually sequence selection of the new consumer and retirement of the old entries. They demonstrate the underlying Loader mechanism, not a complete version router, lease manager, transaction coordinator, or permission system. Those remain production implementation work, described in [RUNTIME-PLAN.md](../../RUNTIME-PLAN.md).
+The isolated-revision tests manually sequence selection of the new consumer and retirement of the old entries. They demonstrate the underlying Loader mechanism, not a complete version router, lease manager, transaction coordinator, or permission system. Those remain production implementation work, described in [RUNTIME-PLAN.md](../../docs/runtime.md).
 
 Only declared, correctly scoped services and Cordis-owned effects participate in the experiment's isolation and cleanup. Shared external state, global event listeners, `ctx.root` access, module singleton state, and irreversible external actions require separate analysis. Namespace isolation is not an OS sandbox or general transaction rollback.

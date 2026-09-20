@@ -1,6 +1,6 @@
 # 共享记忆服务组件化
 
-2026-09-14，CoNest 0.6.3 开发增量。接续[只读文件服务组件化](./read-component-zh.md)。本阶段修改开发源码及构建产物，既有安装包与实际用户 Gateway 未替换。
+2026-09-14，CoNest 0.6.3 开发增量。接续[只读文件服务组件化](read-component-zh.md)。本阶段修改开发源码及构建产物，既有安装包与实际用户 Gateway 未替换。
 
 ## 运行边界
 
@@ -49,4 +49,4 @@ Studio 的自动召回、自动捕获和已认证的记忆页面查询调用 `me
 
 ## 验证
 
-本地模型 fixture 驱动真实 OpenClaw Gateway、DSH/OpenClaw 两种 Loop、worker 和 MCP Server；未调用付费模型。验证旧格式和九个工具、并发与去重、身份归属、权限拆分、隐私入口、取消、worker 故障恢复、组件停用恢复及自动服务降级。完整结果见[阶段验收](../reports/memory-migration/RESULT.md)。
+本地模型 fixture 驱动真实 OpenClaw Gateway、DSH/OpenClaw 两种 Loop、worker 和 MCP Server；未调用付费模型。验证旧格式和九个工具、并发与去重、身份归属、权限拆分、隐私入口、取消、worker 故障恢复、组件停用恢复及自动服务降级。完整结果见阶段验收。
