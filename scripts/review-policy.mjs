@@ -20,7 +20,7 @@ export async function analyzeReview({ files, readFile, patches = new Map() }) {
   if (adapterChange && !files.some(file => /^test\/compatibility(?:-|\.)/.test(file))) {
     add('blocker', 'compatibility-evidence', 'test/compatibility.test.ts', 'Adapter or compatibility changes require focused contract tests.');
   }
-  if (adapterChange) add('info', 'compatibility-matrix', 'compatibility.json', 'The OpenClaw compatibility matrix will exercise the minimum and latest supported host versions.');
+  if (adapterChange) add('info', 'compatibility-matrix', 'compatibility.json', 'The compatibility workflow will exercise OpenClaw range endpoints and every declared DSH release.');
 
   const protocolPatch = patches.get('src/types.ts') ?? '';
   if (/^[+-].*PROTOCOL_VERSION/m.test(protocolPatch) && !files.some(file => /^test\/(?:client|runtime|protocol).*\.test\./.test(file))) {

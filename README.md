@@ -23,7 +23,9 @@
 
 **Available today:** OpenClaw and DeepSeek Harness (DSH) are the first integrations. A Cordis-based runtime supports component composition, tool interoperability and shared memory; Studio shows available capabilities and execution history. More agent integrations and collaboration across runtimes are the next steps.
 
-CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records supported ranges, while CI verifies the oldest and newest supported OpenClaw releases.
+CoNest is intended to become the capability fabric between Agent runtimes, reusable services and OS execution nodes. It matters when one durable task must cross runtimes, machines, trust boundaries and business systems while retaining one identity, policy, operation history and deliverable state—not when a single Agent only needs another tool endpoint.
+
+CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records qualified versions. CI verifies the oldest and newest supported OpenClaw releases plus every declared DSH release from its pinned source.
 
 > [!TIP]
 > **Explore 0.6.4** — Gateway + CoNest Host, composable office services, and an OpenClaw demo without DSH via `--core`.

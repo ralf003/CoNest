@@ -2,8 +2,9 @@ import semver from 'semver';
 
 export const OPENCLAW_TESTED_VERSION = '2026.9.2';
 export const OPENCLAW_COMPATIBILITY_RANGE = '>=2026.9.2 <2027.0.0';
-export const DSH_TESTED_VERSION = '0.1.0-rc.5';
-export const DSH_COMPATIBILITY_RANGE = '0.1.0-rc.5';
+export const DSH_TESTED_VERSIONS = ['0.1.0-rc.5', '0.1.0-rc.7', '0.1.0-rc.8'] as const;
+export const DSH_TESTED_VERSION = DSH_TESTED_VERSIONS[0];
+export const DSH_COMPATIBILITY_RANGE = '0.1.0-rc.5 || 0.1.0-rc.7 || 0.1.0-rc.8';
 export const CORDIS_COMPATIBILITY_RANGE = '4.0.1';
 
 export type Compatibility = {
@@ -30,4 +31,8 @@ export function inspectCompatibility(
 
 export function inspectOpenClaw(installed: unknown): Compatibility {
   return inspectCompatibility('OpenClaw', installed, OPENCLAW_COMPATIBILITY_RANGE, [OPENCLAW_TESTED_VERSION, '2026.9.5']);
+}
+
+export function inspectDsh(installed: unknown): Compatibility {
+  return inspectCompatibility('DSH', installed, DSH_COMPATIBILITY_RANGE, DSH_TESTED_VERSIONS);
 }

@@ -23,7 +23,9 @@
 
 **当前实现：** 从 OpenClaw 与 DeepSeek Harness（DSH）的接入起步，以 Cordis 组件运行时提供能力组合、工具互用和共享记忆，Studio 展示接入能力与执行记录。更多 Agent 的接入和跨运行环境协作，是项目继续建设的方向。
 
-CoNest 的组件清单与运行协议不依赖某个 Agent SDK；OpenClaw 以及可选的 DSH/Cordis 支持包都通过独立适配层接入。[机器可读的兼容策略](compatibility.json)声明支持范围，CI 持续验证最低版本和范围内的最新 OpenClaw 版本。
+CoNest 的目标是成为 Agent 运行时、可复用服务与 OS 执行节点之间的能力织网和控制层。它面向同一个长期任务跨越多种运行时、机器、权限边界与业务系统，同时保持统一身份、策略、操作记录和交付状态的场景；如果任务只是让一个 Agent 多调用一个工具端点，则不需要 CoNest。
+
+CoNest 的组件清单与运行协议不依赖某个 Agent SDK；OpenClaw 以及可选的 DSH/Cordis 支持包都通过独立适配层接入。[机器可读的兼容策略](compatibility.json)声明已验证版本。CI 持续验证 OpenClaw 支持范围的两端，以及每一个声明支持且来源固定的 DSH 版本。
 
 > [!TIP]
 > **探索 0.6.4** — Gateway 与 CoNest Host 双进程、办公组件组合，以及 `--core` 无 DSH 演示。

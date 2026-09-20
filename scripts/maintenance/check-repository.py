@@ -110,6 +110,16 @@ if openclaw_range != pkg.get('peerDependencies', {}).get('openclaw') or openclaw
     errors.append('OpenClaw public compatibility metadata must agree')
 if compatibility.get('contracts', {}).get('runtimeProtocol') != 4:
     errors.append('Published runtime protocol does not match the implemented protocol')
+dsh = compatibility.get('adapters', {}).get('dsh', {})
+dsh_qualifications = dsh.get('qualifications', [])
+if [entry.get('version') for entry in dsh_qualifications] != dsh.get('tested'):
+    errors.append('Every tested DSH version must have one ordered qualification source')
+sdk_lock = json.loads((root / 'scripts/maintenance/sdk.lock.json').read_text())
+frozen_dsh = [entry for entry in dsh_qualifications if entry.get('source') == 'frozen-sdk']
+if len(frozen_dsh) != 1 or frozen_dsh[0].get('version') != sdk_lock.get('upstreamVersion') or frozen_dsh[0].get('sha256') != sdk_lock.get('sha256'):
+    errors.append('Frozen DSH qualification must match the verified SDK lock')
+if any(entry.get('source') == 'upstream-release' and not re.fullmatch(r'[0-9a-f]{40}', entry.get('revision', '')) for entry in dsh_qualifications):
+    errors.append('Public DSH qualifications must pin a full upstream commit SHA')
 for workflow in ('.github/workflows/compatibility.yml', '.github/workflows/review.yml'):
     workflow_text = (root / workflow).read_text()
     if 'node scripts/maintenance/bootstrap.mjs' not in workflow_text or 'run: pnpm bootstrap' in workflow_text:
@@ -117,7 +127,7 @@ for workflow in ('.github/workflows/compatibility.yml', '.github/workflows/revie
 windows_installer = (root / 'scripts/platform/install.ps1').read_text()
 if f'node-v{node_version}-win-x64.zip' not in windows_installer or f'node-v{node_version.replace(".", r"\.")}-win-x64' not in windows_installer:
     errors.append('Windows installer download and checksum match must use .node-version')
-required = ['LICENSE', 'AGENTS.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'compatibility.json', 'src/index.ts', 'src/runtime.ts', 'src/adapters/openclaw-sdk.ts', 'src/adapters/dsh-cordis.ts', 'scripts/build.mjs', 'scripts/review.mjs', 'pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md']
+required = ['LICENSE', 'AGENTS.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'compatibility.json', 'src/index.ts', 'src/runtime.ts', 'src/adapters/openclaw-sdk.ts', 'src/adapters/dsh-cordis.ts', 'scripts/build.mjs', 'scripts/review.mjs', 'scripts/maintenance/select-dsh-version.mjs', 'test/select-dsh-version.test.mjs', 'pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md']
 for name in required:
     if name not in files:
         errors.append(f'Missing tracked project file: {name}')

@@ -64,7 +64,7 @@ Use the pinned toolchain from the README. Run commands from the repository root 
 | Component graph or lifecycle | Runtime tests plus `pnpm run test:runtime`; exercise retained calls, cleanup or revocation as applicable |
 | Host policy, tools or Studio | Relevant host/E2E checks and an isolated Studio run; verify actual tool admission and cancellation where changed |
 | Dependencies or SDK | Clean bootstrap, frozen install, build and tests on affected maintained branches; review licenses and update locks together |
-| Agent adapter or compatibility range | Focused compatibility tests plus the `Agent compatibility` matrix at the minimum and newest supported host versions; keep direct SDK imports in `src/adapters/` |
+| Agent adapter or compatibility range | Focused compatibility tests plus the `Agent compatibility` matrix: OpenClaw range endpoints and every declared DSH release; keep direct SDK imports in `src/adapters/` |
 | Packaging/platform scripts | Build the affected target package, inspect its file list and checksum, and run installation checks on the claimed platform |
 
 An isolated Studio check:
