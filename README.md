@@ -28,9 +28,9 @@
 
 ## Capabilities, connected
 
-- **[Connect agents](bridge/README.md)** — Extend access across frameworks and runtimes, starting with OpenClaw and DSH execution and tool interoperability.
+- **[Connect agents](docs/README.md)** — Extend access across frameworks and runtimes, starting with OpenClaw and DSH execution and tool interoperability.
 
-- **[Compose tools & services](bridge/README.md)** — Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.
+- **[Compose tools & services](docs/README.md)** — Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.
 
 - **[Let knowledge accumulate](#quick-start)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
 
@@ -54,18 +54,18 @@ The office example demonstrates reusable Cordis services and per-call dependency
 ```bash
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
-node maintenance/bootstrap.mjs
-pnpm --dir bridge install --frozen-lockfile
-pnpm --dir bridge run build
-CONEST_DEMO_STATE="$HOME/.local/state/conest-dev" \
-  pnpm --dir bridge exec node scripts/demo-studio.mjs
+pnpm bootstrap
+pnpm install --frozen-lockfile
+pnpm build
+CONEST_DEMO_STATE="$PWD/.local/studio" \
+  pnpm start
 ```
 
-Open the Studio URL printed in the terminal. Enter the Gateway token from the printed `connection.json` location in its connection settings. The default port is 18791; override it with `CONEST_DEMO_PORT`. Stop the local launcher with Ctrl+C. The dedicated directory holds the fixture workspace, configuration and memory; do not point it at customer data or commit its contents.
+Open the Studio URL printed in the terminal. Enter the Gateway token from the printed `connection.json` location in its connection settings. The default port is 18791; override it with `CONEST_DEMO_PORT`. Stop the local launcher with Ctrl+C. The ignored `.local/studio/` directory holds the fixture workspace, configuration and memory; do not point it at customer data or commit its contents.
 
 The default model is a local fixture: no API key is needed, while Gateway, tools and persistence execute normally. Append `--verify` to the last command for an automated check that exits when finished. Live-model use requires an owner-readable file containing `DEEPSEEK_API_KEY`, selected by `CONEST_CREDENTIAL_FILE` and an explicit `--live` flag; it incurs API usage.
 
-If startup fails, check Node/pnpm versions, port availability and the terminal error. See [dependency maintenance](maintenance/DEPENDENCIES.md) for SDK download problems or [host configuration](bridge/docs/host-integration.md#plugin-configuration) for an existing Gateway. For further help, use the [Question form](https://github.com/zyw02/CoNest/issues/new?template=question.yml) with versions, commands and redacted errors.
+If startup fails, check Node/pnpm versions, port availability and the terminal error. See [dependency maintenance](docs/dependencies.md) for SDK download problems or [host configuration](docs/host-integration.md#plugin-configuration) for an existing Gateway. For further help, use the [Question form](https://github.com/zyw02/CoNest/issues/new?template=question.yml) with versions, commands and redacted errors.
 
 <a name="branches"></a>
 
@@ -88,7 +88,9 @@ If startup fails, check Node/pnpm versions, port availability and the terminal e
 
 - **Run CoNest:** [Quick start](#quick-start) on this page, also available in [Chinese](README-zh.md).
 - **Report a problem or submit a PR:** [CONTRIBUTING](CONTRIBUTING.md), the single collaboration policy.
-- **Change implementation details:** [Developer reference index](bridge/README.md), organized by components, host integration and packaging.
+- **Change implementation details:** [Developer reference index](docs/README.md), organized by components, host integration and packaging.
+
+[MIT license](LICENSE) · [Third-party notices](THIRD_PARTY_NOTICES.md) · [Security](SECURITY.md)
 
 <br />
 

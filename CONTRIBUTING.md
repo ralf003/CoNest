@@ -1,6 +1,6 @@
 # Contributing to CoNest
 
-Start with the [README](README.md) to run CoNest. This file defines how changes are proposed, reviewed and maintained. [Developer references](bridge/README.md) are for work on components, host integration or packaging; they are not an onboarding checklist.
+Start with the [README](README.md) to run CoNest. This file defines how changes are proposed, reviewed and maintained. [Developer references](docs/README.md) are for work on components, host integration or packaging; they are not an onboarding checklist.
 
 ## Where work belongs
 
@@ -58,10 +58,10 @@ Use the pinned toolchain from the README. Run commands from the repository root 
 
 | Changed surface | Minimum relevant evidence |
 | --- | --- |
-| Documentation and repository rules | `python3 maintenance/check-repository.py`; verify local links, documented commands and rendered layout when affected |
-| Contribution automation | `python3 maintenance/test-contribution.py`; demonstrate accepted and rejected PR bodies |
-| TypeScript/runtime behavior | `pnpm --dir bridge run build` and `pnpm --dir bridge exec tsx --test 'test/*.test.ts'`; cover the changed behavior and its failure path |
-| Component graph or lifecycle | Runtime tests plus `pnpm --dir bridge run test:runtime`; exercise retained calls, cleanup or revocation as applicable |
+| Documentation and repository rules | `python3 scripts/maintenance/check-repository.py`; verify local links, documented commands and rendered layout when affected |
+| Contribution automation | `python3 scripts/maintenance/test-contribution.py`; demonstrate accepted and rejected PR bodies |
+| TypeScript/runtime behavior | `pnpm run build` and `pnpm exec tsx --test 'test/*.test.ts'`; cover the changed behavior and its failure path |
+| Component graph or lifecycle | Runtime tests plus `pnpm run test:runtime`; exercise retained calls, cleanup or revocation as applicable |
 | Host policy, tools or Studio | Relevant host/E2E checks and an isolated Studio run; verify actual tool admission and cancellation where changed |
 | Dependencies or SDK | Clean bootstrap, frozen install, build and tests on affected maintained branches; review licenses and update locks together |
 | Packaging/platform scripts | Build the affected target package, inspect its file list and checksum, and run installation checks on the claimed platform |
@@ -70,7 +70,7 @@ An isolated Studio check:
 
 ```bash
 CONEST_DEMO_STATE=/absolute/disposable/conest-check \
-  pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
+  pnpm exec node scripts/demo-studio.mjs --verify
 ```
 
 Choose regression assertions that would catch the reported failure. Do not add tests that merely restate implementation details or disable a failing assertion to obtain green CI. Report unrelated baseline failures separately. A Linux build is not Windows execution evidence; a deterministic model fixture is not live-model inference. State those limits in the PR.
@@ -92,21 +92,43 @@ AI-assisted contributions follow the same rules. The submitting person remains r
 The public reading path is intentionally small:
 
 1. **Run the project:** `README.md` and its Chinese startup counterpart `README-zh.md`.
-2. **Contribute:** this English-only file, with GitHub issue and PR templates.
-3. **Modify an implementation:** `bridge/README.md` links the few relevant technical references.
+2. **Contribute:** this English-only file, with GitHub issue and PR templates. [SECURITY.md](SECURITY.md) defines vulnerability reporting; [AGENTS.md](AGENTS.md) gives coding assistants the same repository rules.
+3. **Modify an implementation:** `README.md` links the few relevant technical references.
 
 Update an existing canonical section before adding a document. A new guide needs a distinct reader and task, an entry link, and an explanation of why the existing reference cannot cover it. Developer contracts describe implemented behavior; release evidence belongs in CI or release artifacts, not a growing collection of dated Markdown reports.
 
-Only the root startup README has a maintained Chinese counterpart. Do not create translated contribution rules, implementation notes or internal planning files. Use English/ASCII file names. The public Markdown inventory is checked by `maintenance/check-repository.py`; adding another entry is a review decision, not a way to bypass this policy.
+Only the root startup README has a maintained Chinese counterpart. Do not create translated contribution rules, implementation notes or internal planning files. Use English/ASCII file names. The public Markdown inventory is checked by `scripts/maintenance/check-repository.py`; adding another entry is a review decision, not a way to bypass this policy.
 
-Never commit company/customer proposals, roadmaps, internal architecture plans, speaker notes, slide decks, generated planning images, prompts, meeting/chat records or delivery tutorials. Keep such material outside the checkout or under ignored `maintenance/local/`. Do not include it in issues, PR attachments or release packages either. Public feature discussion should contain only the minimum non-confidential problem and acceptance criteria.
+Never commit company/customer proposals, roadmaps, internal architecture plans, speaker notes, slide decks, generated planning images, prompts, meeting/chat records or delivery tutorials. Keep such material outside the checkout or under ignored `.local/`. Do not include it in issues, PR attachments or release packages either. Public feature discussion should contain only the minimum non-confidential problem and acceptance criteria.
 
 Commit source, required configuration, locks, minimal examples, meaningful tests and maintained developer contracts. Dependencies, build output, credentials, runtime state and reports remain untracked. Package documentation uses an explicit allowlist. Preserve third-party licenses; a new dependency needs its origin, license and runtime impact reviewed. Never silently alter licensing in an unrelated change.
 
 ## Security
 
-Do not publish credentials, private data or an exploitable reproduction in a public issue. Use GitHub's private “Report a vulnerability” entry if it is available. If it is unavailable, open a minimal contact request asking the maintainer for a private reporting route without technical exploit details. CoNest does not currently document a separate security mailbox or response-time commitment.
+Follow [SECURITY.md](SECURITY.md) for private reporting and CoNest's trust boundaries. Keep exploit details and private data out of public issues and PRs.
+
+## Licensing
+
+CoNest original code is MIT licensed. Contributions to original project code are submitted under the same [LICENSE](LICENSE). Preserve existing authorship and third-party notices; identify imported code and its source. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) describes dependency and asset attribution. The package remains marked private to prevent accidental npm publication; this does not change its open-source license.
 
 ## References
 
 These are CoNest rules, informed by [OpenClaw's contribution workflow](https://github.com/openclaw/openclaw/blob/main/CONTRIBUTING.md), the Linux kernel's [patch submission guide](https://docs.kernel.org/process/submitting-patches.html) and [issue reporting guide](https://docs.kernel.org/admin-guide/reporting-issues.html). We use GitHub PRs, CoNest's pinned dependencies and the checks above; upstream project-specific commands and mailing-list procedures do not apply here.
+
+## Checkout and worktree layout
+
+CoNest is one root package. Its Git tree and local source tree use identical paths; there is no staging/export copy of source to publish. `git ls-files` is the public subset of this checkout. Local dependencies and outputs add `.vendor/`, `node_modules/`, `lib/` and `dist/`; private working material belongs under `.local/`.
+
+Use `.worktrees/<branch>` for additional checkouts, managed by Git:
+
+```bash
+git worktree add .worktrees/main main
+cd .worktrees/main
+pnpm bootstrap
+pnpm install --frozen-lockfile
+pnpm build
+```
+
+Use `git worktree move` or `git worktree remove` when changing registered worktrees. Never remove an active/dirty worktree with a filesystem deletion. Each worktree owns its dependencies and generated state; do not link `node_modules` to another checkout. Keep `.local/` contents out of commits and package file lists.
+
+Run `pnpm check` for repository, contributor-policy and type checks. `.node-version` and `packageManager` pin the toolchain; `.editorconfig` and `.gitattributes` define text conventions. `.github/CODEOWNERS` routes reviews to the current maintainer. These files do not themselves configure branch protection or grant a reviewer merge authority.

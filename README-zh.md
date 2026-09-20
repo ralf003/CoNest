@@ -28,9 +28,9 @@
 
 ## 让能力彼此相连
 
-- **[连接 Agent](bridge/README.md)** — 面向不同框架和运行环境扩展接入。当前以 OpenClaw 与 DSH 验证执行接入和工具互用。
+- **[连接 Agent](docs/README.md)** — 面向不同框架和运行环境扩展接入。当前以 OpenClaw 与 DSH 验证执行接入和工具互用。
 
-- **[组合工具与服务](bridge/README.md)** — 将能力组织成可复用组件，由运行时管理依赖、调用与生命周期，让服务彼此协作。
+- **[组合工具与服务](docs/README.md)** — 将能力组织成可复用组件，由运行时管理依赖、调用与生命周期，让服务彼此协作。
 
 - **[让知识持续积累](#快速开始)** — 通过共享知识图谱捕获和召回记忆，让不同任务接续已记录的知识、约定与经验。
 
@@ -54,18 +54,18 @@
 ```bash
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
-node maintenance/bootstrap.mjs
-pnpm --dir bridge install --frozen-lockfile
-pnpm --dir bridge run build
-CONEST_DEMO_STATE="$HOME/.local/state/conest-dev" \
-  pnpm --dir bridge exec node scripts/demo-studio.mjs
+pnpm bootstrap
+pnpm install --frozen-lockfile
+pnpm build
+CONEST_DEMO_STATE="$PWD/.local/studio" \
+  pnpm start
 ```
 
-打开终端输出的 Studio 地址，在连接设置中输入同次输出所指向的 `connection.json` 中的 Gateway token。默认端口为 18791，可用 `CONEST_DEMO_PORT` 覆盖；本地启动用 Ctrl+C 停止。上面的专用目录存放测试工作区、配置与记忆，不要指向客户工作区，也不要上传其中的文件。
+打开终端输出的 Studio 地址，在连接设置中输入同次输出所指向的 `connection.json` 中的 Gateway token。默认端口为 18791，可用 `CONEST_DEMO_PORT` 覆盖；本地启动用 Ctrl+C 停止。被 Git 忽略的 `.local/studio/` 目录存放测试工作区、配置与记忆，不要指向客户工作区，也不要上传其中的文件。
 
 默认使用本地模型 fixture，无需 API Key；Gateway、工具和记忆持久化实际执行。自动验证时在最后一条命令追加 `--verify`，检查结束后进程退出。真实模型需设置 `CONEST_CREDENTIAL_FILE` 指向包含 `DEEPSEEK_API_KEY` 且仅当前用户可读的凭据文件，并追加 `--live`；这会产生 API 费用。
 
-如果启动失败，先核对 Node/pnpm 版本、端口与终端报错。SDK 下载问题见 [依赖维护说明（英文）](maintenance/DEPENDENCIES.md)；已有 Gateway 的插件配置见 [宿主接入（英文）](bridge/docs/host-integration.md#plugin-configuration)。仍无法解决时，用 [Question 表单](https://github.com/zyw02/CoNest/issues/new?template=question.yml) 提供版本、命令和脱敏错误。
+如果启动失败，先核对 Node/pnpm 版本、端口与终端报错。SDK 下载问题见 [依赖维护说明（英文）](docs/dependencies.md)；已有 Gateway 的插件配置见 [宿主接入（英文）](docs/host-integration.md#plugin-configuration)。仍无法解决时，用 [Question 表单](https://github.com/zyw02/CoNest/issues/new?template=question.yml) 提供版本、命令和脱敏错误。
 
 <a name="分支与能力"></a>
 
@@ -88,7 +88,9 @@ CONEST_DEMO_STATE="$HOME/.local/state/conest-dev" \
 
 - **运行项目：** 本页的 [快速开始](#快速开始)，或 [英文 README](README.md)。
 - **报告问题、提交 PR：** [CONTRIBUTING](CONTRIBUTING.md)，统一的英文协作规范。
-- **修改内部实现：** [开发参考索引](bridge/README.md)，按组件、宿主接入或打包任务选择阅读。
+- **修改内部实现：** [开发参考索引](docs/README.md)，按组件、宿主接入或打包任务选择阅读。
+
+[MIT 许可证](LICENSE) · [第三方许可声明](THIRD_PARTY_NOTICES.md) · [安全报告](SECURITY.md)
 
 <br />
 
