@@ -1,11 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
-<title id="title">CoNest — Two loops. One workspace.</title><desc id="desc">CoNest connects OpenClaw and DSH with shared tools, memory and a component runtime.</desc>
-<defs><linearGradient id="bg" x2="1" y2="1"><stop stop-color="#101b32"/><stop offset="1" stop-color="#163e48"/></linearGradient><linearGradient id="accent"><stop stop-color="#5de4c7"/><stop offset="1" stop-color="#99c9ff"/></linearGradient></defs>
-<rect width="1200" height="300" rx="22" fill="url(#bg)"/>
-<g fill="none" stroke="#79cece" stroke-opacity=".12"><circle cx="1110" cy="40" r="120"/><circle cx="1110" cy="40" r="170"/><circle cx="1110" cy="40" r="220"/></g>
-<g transform="translate(73 84)" fill="none" stroke="url(#accent)" stroke-width="10" stroke-linecap="round"><path d="M77 9C25-14-7 29 12 69c15 31 58 35 81 10"/><path d="M27 117c52 23 84-20 65-60C77 26 34 22 11 47"/></g>
-<text x="230" y="139" fill="#f2f7fb" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="72" font-weight="700" letter-spacing="-2">CoNest</text>
-<text x="234" y="190" fill="#9cddd8" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="25" font-weight="500">Two loops. One workspace.</text>
-<text x="235" y="228" fill="#b9c9dc" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="16" letter-spacing="2">OPENCLAW  /  DSH  /  CORDIS</text>
-<g transform="translate(844 195)" font-family="Inter,Segoe UI,Arial,sans-serif" font-size="13" text-anchor="middle"><rect width="112" height="34" rx="17" fill="#173e46" stroke="#477b82"/><text x="56" y="22" fill="#b6efe4">Shared tools</text><rect x="125" width="134" height="34" rx="17" fill="#18364b" stroke="#477084"/><text x="192" y="22" fill="#c3e1fa">Shared memory</text></g>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">CoNest — Two loops. One workspace.</title>
+  <desc id="desc">Two interwoven loops form a shared nest. OpenClaw, DeepSeek Harness and Cordis come together in CoNest.</desc>
+  <defs>
+    <linearGradient id="background" x2="1440" y2="620" gradientUnits="userSpaceOnUse"><stop stop-color="#f6f8ff"/><stop offset=".55" stop-color="#f5f5ff"/><stop offset="1" stop-color="#eefbf9"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#cfccff" stop-opacity=".65"/><stop offset="1" stop-color="#e9e7ff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="loop-a" x1="-130" y1="-120" x2="125" y2="120" gradientUnits="userSpaceOnUse"><stop stop-color="#a18cff"/><stop offset=".5" stop-color="#7662e9"/><stop offset="1" stop-color="#5244bd"/></linearGradient>
+    <linearGradient id="loop-b" x1="140" y1="-100" x2="-100" y2="110" gradientUnits="userSpaceOnUse"><stop stop-color="#93e5de"/><stop offset=".5" stop-color="#50b8d1"/><stop offset="1" stop-color="#697de1"/></linearGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1" fill="#7a80a5" opacity=".13"/></pattern>
+  </defs>
+  <rect x="1" y="1" width="1438" height="618" rx="28" fill="url(#background)" stroke="#e5e7f3"/>
+  <rect x="760" y="24" width="656" height="548" fill="url(#dots)"/>
+  <ellipse cx="1100" cy="285" rx="330" ry="280" fill="url(#halo)"/>
+  <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
+    <rect x="76" y="70" width="268" height="34" rx="17" fill="#eae7ff"/>
+    <circle cx="95" cy="87" r="4" fill="#7862d9"/>
+    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#6355aa">THE SHARED WORKSPACE</text>
+    <text x="70" y="241" font-size="116" font-weight="750" letter-spacing="-7" fill="#25263e">CoNest<tspan fill="#8471e8">.</tspan></text>
+    <text x="77" y="319" font-size="38" font-weight="500" letter-spacing="-1" fill="#45465f">Two loops. One workspace.</text>
+    <text x="79" y="371" font-size="21" fill="#6d7189">Shared tools. Shared memory. Built with components.</text>
+    <path d="M79 427H659" stroke="#d8dbea"/>
+    <g font-size="16" font-weight="600">
+      <rect x="78" y="453" width="146" height="44" rx="22" fill="#fff" stroke="#e2e4ef"/><circle cx="100" cy="475" r="5" fill="#ef897e"/><text x="116" y="481" fill="#53566d">OpenClaw</text>
+      <text x="239" y="481" fill="#a3a7bb" font-weight="400">+</text>
+      <rect x="267" y="453" width="118" height="44" rx="22" fill="#fff" stroke="#e2e4ef"/><circle cx="289" cy="475" r="5" fill="#799bec"/><text x="305" y="481" fill="#53566d">DSH</text>
+      <text x="400" y="481" fill="#a3a7bb" font-weight="400">+</text>
+      <rect x="428" y="453" width="128" height="44" rx="22" fill="#fff" stroke="#e2e4ef"/><circle cx="450" cy="475" r="5" fill="#58b8a6"/><text x="466" y="481" fill="#53566d">Cordis</text>
+    </g>
+    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#8b8ea6">CONNECT. COMPOSE. CONTINUE.</text>
+  </g>
+  <g transform="translate(1080 290)">
+    <circle r="210" stroke="#bdbce3" stroke-opacity=".45"/>
+    <circle r="253" stroke="#bdbce3" stroke-opacity=".32" stroke-dasharray="3 10"/>
+    <ellipse rx="214" ry="69" transform="rotate(-32)" stroke="#bdbce3" stroke-opacity=".4"/>
+    <g stroke-width="31">
+      <rect x="-127" y="-127" width="208" height="254" rx="104" transform="rotate(-35)" stroke="url(#loop-a)"/>
+      <rect x="-81" y="-127" width="208" height="254" rx="104" transform="rotate(35)" stroke="url(#loop-b)"/>
+      <path d="M-127-23v46a104 104 0 0 0 104 104" transform="rotate(-35)" stroke="url(#loop-a)"/>
+    </g>
+    <path d="M0-23C0-9-9 0-23 0C-9 0 0 9 0 23C0 9 9 0 23 0C9 0 0-9 0-23Z" fill="#fff"/>
+    <circle cx="-168" cy="-125" r="9" fill="#ee9d91" stroke="#fff" stroke-width="4"/>
+    <circle cx="201" cy="61" r="8" fill="#75cabb" stroke="#fff" stroke-width="4"/>
+    <circle cx="-72" cy="197" r="5" fill="#9c91db"/>
+    <path d="M174-156v16m-8-8h16M-209 66v12m-6-6h12" stroke="#9d95c5" stroke-width="2" stroke-linecap="round"/>
+  </g>
 </svg>
