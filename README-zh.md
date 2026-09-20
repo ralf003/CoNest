@@ -89,7 +89,6 @@ CONEST_DEMO_STATE="$PWD/.local/studio" \
 | 共享记忆 | 让已记录的知识与决策贯穿任务执行 | `dsh-memory`、知识图谱存储与 Gateway 持久化 |
 | 任务执行 | 在托管环境中准入工具并运行动态组件 | CoNest Host、组件 worker 与会话编排 |
 | 运行观测 | 查看可用能力、执行结果与活动过程 | CoNest Studio 能力目录与执行时间线 |
-| 版本兼容 | 持续验证 Agent SDK 的当前发行版 | 每日 GitHub Actions 监测与版本矩阵 |
 
 <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> 与 <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> 当前共享 0.6.4 实现。`main` 是稳定入口，`develop` 用于集成下一项经过评审的变更。
 

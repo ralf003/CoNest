@@ -89,7 +89,6 @@ If startup fails, check Node/pnpm versions, port availability and the terminal e
 | Shared memory | Carry recorded knowledge and decisions across task execution | `dsh-memory`, knowledge graph storage and Gateway persistence |
 | Task execution | Admit tools and run dynamic components inside a managed host | CoNest Host, component worker and session orchestration |
 | Observability | Inspect available capabilities, results and activity | CoNest Studio catalogs and execution timeline |
-| Release compatibility | Continuously qualify current Agent SDK releases | Daily GitHub Actions watch and version matrix |
 
 <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> and <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> currently share the 0.6.4 implementation. `main` is the stable entry point; `develop` is the integration branch for the next reviewed change.
 
