@@ -1,23 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" fill="none" role="img" aria-labelledby="title desc">
-  <title id="title">CoNest — A shared home. Room to grow.</title>
+  <title id="title">CoNest — Connect the agent world.</title>
   <desc id="desc">A coral bird lifts its wing above an interwoven navy nest. Independent capabilities, a shared foundation, room to grow.</desc>
   <rect x="1" y="1" width="1438" height="618" rx="28" fill="#151E2D" stroke="#2D394B"/>
   <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
     <rect x="76" y="70" width="292" height="34" rx="17" fill="#382D30"/>
     <circle cx="95" cy="87" r="4" fill="#FF967C"/>
-    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#FFB49F">BUILT TO GROW TOGETHER</text>
+    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#FFB49F">THE INTERNET OF AGENTS</text>
     <text x="70" y="241" font-size="116" font-weight="750" letter-spacing="-7" fill="#F5F0E7">CoNest<tspan fill="#FF967C">.</tspan></text>
-    <text x="77" y="319" font-size="34" font-weight="500" letter-spacing="-1" fill="#E4E7EC">A shared home. Room to grow.</text>
-    <text x="79" y="371" font-size="21" fill="#AAB6C9">Independent agents. Shared tools and memory.</text>
+    <text x="77" y="319" font-size="34" font-weight="500" letter-spacing="-1" fill="#E4E7EC">Connect the agent world.</text>
+    <text x="79" y="371" font-size="21" fill="#AAB6C9">Agents, tools, memory and services. Connected.</text>
     <path d="M79 427H659" stroke="#353850"/>
-    <g font-size="16" font-weight="600">
-      <rect x="78" y="453" width="146" height="44" rx="22" fill="#22263b" stroke="#3c405b"/><circle cx="100" cy="475" r="5" fill="#ef897e"/><text x="116" y="481" fill="#d0d5e8">OpenClaw</text>
-      <text x="239" y="481" fill="#a3a7bb" font-weight="400">+</text>
-      <rect x="267" y="453" width="118" height="44" rx="22" fill="#22263b" stroke="#3c405b"/><circle cx="289" cy="475" r="5" fill="#799bec"/><text x="305" y="481" fill="#d0d5e8">DSH</text>
-      <text x="400" y="481" fill="#a3a7bb" font-weight="400">+</text>
-      <rect x="428" y="453" width="128" height="44" rx="22" fill="#22263b" stroke="#3c405b"/><circle cx="450" cy="475" r="5" fill="#58b8a6"/><text x="466" y="481" fill="#d0d5e8">Cordis</text>
+    <g font-size="16" font-weight="600" text-anchor="middle">
+      <rect x="78" y="453" width="136" height="44" rx="22" fill="#22263B" stroke="#3C405B"/><circle cx="101" cy="475" r="4" fill="#EF9586"/><text x="157" y="481" fill="#D0D5E8">Agents</text>
+      <rect x="230" y="453" width="136" height="44" rx="22" fill="#22263B" stroke="#3C405B"/><circle cx="253" cy="475" r="4" fill="#799BEC"/><text x="309" y="481" fill="#D0D5E8">Tools</text>
+      <rect x="382" y="453" width="136" height="44" rx="22" fill="#22263B" stroke="#3C405B"/><circle cx="405" cy="475" r="4" fill="#58B8A6"/><text x="461" y="481" fill="#D0D5E8">Memory</text>
+      <rect x="534" y="453" width="136" height="44" rx="22" fill="#22263B" stroke="#3C405B"/><circle cx="557" cy="475" r="4" fill="#B399C8"/><text x="613" y="481" fill="#D0D5E8">Services</text>
     </g>
-    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#AAB6C9">BUILD TOGETHER. GROW TOGETHER.</text>
+    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#AAB6C9">CONNECT. COLLABORATE. EVOLVE.</text>
   </g>
   <g transform="translate(864 58) scale(.94)">
 <g transform="translate(0 -13.5) scale(0.40829346)">

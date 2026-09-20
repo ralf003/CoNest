@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="18" fill="#e6f5f1"/><g stroke="#348c78" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="22" cy="16" r="5"/><circle cx="44" cy="19" r="5"/><circle cx="22" cy="48" r="5"/><path d="M22 21v22m0-8h9a13 13 0 0 0 13-11"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+<!-- Icon: Lucide git-branch; 951813ce76a859d4d8b145366972cbb237147a4e; see LICENSE-lucide. -->
+<rect x="1" y="1" width="46" height="46" rx="13" fill="#E8F1ED"/>
+<g transform="translate(12 12)" fill="none" stroke="#397363" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M15 6a9 9 0 0 0-9 9V3" />
+  <circle cx="18" cy="6" r="3" />
+  <circle cx="6" cy="18" r="3" />
+</g>
+</svg>

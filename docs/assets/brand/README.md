@@ -1,6 +1,10 @@
 # CoNest logo concept — Nest & Flight
 
-设计方向：**共同构筑，让智能生长。**
+项目方向：**Agent 的万物互联。**
+
+CoNest 面向不同框架、不同运行环境中的 Agent，以及工具、记忆、服务和工作流之间的互联与协作。OpenClaw 与 DSH 是当前接入的起点；项目的定位与视觉语言不限定 Agent 或执行循环的数量。
+
+标志精神：**共同构筑，让智能生长。**
 
 CoNest 为不同 Agent 提供共同工作的基础。工具与组件可以组合，记忆可以接续，协作成果可以积累。标志用「承托的巢」与「准备展翼的小鸟」表达这层关系。
 
@@ -10,7 +14,9 @@ CoNest 为不同 Agent 提供共同工作的基础。工具与组件可以组合
 
 深海蓝用于巢，传达稳定与承托；珊瑚橙用于小鸟，增加生命力与亲近感。
 
-英文品牌句：**A shared home. Room to grow.**
+当前首页品牌句：**Connect the agent world.**
+
+初期概念稿中的 “A shared home. Room to grow.” 保留在历史 PNG 参考图中；首页与分享卡片以当前品牌句为准。
 
 ## Production assets
 
