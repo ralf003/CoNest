@@ -1,25 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" fill="none" role="img" aria-labelledby="title desc">
-  <title id="title">CoNest — Connect the agent world.</title>
-  <desc id="desc">A coral bird lifts its wing above an interwoven navy nest. Independent capabilities, a shared foundation, room to grow.</desc>
-  <rect x="1" y="1" width="1438" height="618" rx="28" fill="#FAF8F4" stroke="#E8E3DC"/>
-  <g font-family="Inter, 'Segoe UI', Arial, sans-serif">
-    <rect x="76" y="70" width="292" height="34" rx="17" fill="#F8E8DF"/>
-    <circle cx="95" cy="87" r="4" fill="#EF7157"/>
-    <text x="109" y="92" font-size="13" font-weight="600" letter-spacing="2" fill="#9D513C">THE INTERNET OF AGENTS</text>
-    <text x="70" y="241" font-size="116" font-weight="750" letter-spacing="-7" fill="#202C40">CoNest<tspan fill="#EF7157">.</tspan></text>
-    <text x="77" y="319" font-size="34" font-weight="500" letter-spacing="-1" fill="#34445B">Connect the agent world.</text>
-    <text x="79" y="371" font-size="21" fill="#677489">Agents, tools, memory and services. Connected.</text>
-    <path d="M79 427H659" stroke="#d8dbea"/>
-    <g font-size="16" font-weight="600" text-anchor="middle">
-      <rect x="78" y="453" width="136" height="44" rx="22" fill="#FFFFFF" stroke="#E2E4EF"/><circle cx="101" cy="475" r="4" fill="#EF9586"/><text x="157" y="481" fill="#53566D">Agents</text>
-      <rect x="230" y="453" width="136" height="44" rx="22" fill="#FFFFFF" stroke="#E2E4EF"/><circle cx="253" cy="475" r="4" fill="#799BEC"/><text x="309" y="481" fill="#53566D">Tools</text>
-      <rect x="382" y="453" width="136" height="44" rx="22" fill="#FFFFFF" stroke="#E2E4EF"/><circle cx="405" cy="475" r="4" fill="#58B8A6"/><text x="461" y="481" fill="#53566D">Memory</text>
-      <rect x="534" y="453" width="136" height="44" rx="22" fill="#FFFFFF" stroke="#E2E4EF"/><circle cx="557" cy="475" r="4" fill="#B399C8"/><text x="613" y="481" fill="#53566D">Services</text>
-    </g>
-    <text x="79" y="560" font-size="12" font-weight="600" letter-spacing="3" fill="#778398">CONNECT. COLLABORATE. EVOLVE.</text>
-  </g>
-  <g transform="translate(864 58) scale(.94)">
-<g transform="translate(0 -13.5) scale(0.40829346)">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" role="img" aria-labelledby="title desc">
+<title id="title">CoNest — Connect the agent world.</title>
+<desc id="desc">An interconnected world for agents, tools, memory and services. A bird and woven nest represent independent capabilities working together.</desc>
+<rect x="1" y="1" width="1278" height="518" rx="24" fill="#FAF8F4" stroke="#E8E3DC"/>
+<g transform="translate(0 0)">
+<g font-family="Inter,Segoe UI,Arial,Noto Sans CJK SC,sans-serif" fill="#202C40">
+<text x="58" y="175" font-size="132" font-weight="750" letter-spacing="-7">CoNest<tspan fill="#EF7157">.</tspan></text>
+<text x="64" y="282" font-size="62" font-weight="600" letter-spacing="-2">Connect the</text><text x="64" y="355" font-size="62" font-weight="600" letter-spacing="-2">agent world.</text>
+<g fill="#485B72"><text x="68" y="451" font-size="32">Agents · Tools · Memory · Services</text></g>
+</g>
+<g transform="translate(822 48) scale(.8)"><g transform="translate(0 -13.5) scale(0.40829346)">
 <path fill="#EF7157" d="M252 124C264 123 289 168 310 190C376 259 472 302 543 365C672 458 737 615 715 724C710 763 700 795 688 817C667 764 639 727 596 691C538 651 475 633 407 605C311 565 240 532 213 472C163 384 202 210 241 140Q247 125 252 124Z"/>
 <path fill="#EF7157" fill-rule="evenodd" d="M699 494C764 424 792 347 885 337C941 326 1008 344 1040 381L1126 403C1064 419 1022 457 1000 485C952 550 952 674 885 749C832 807 763 848 700 870C748 756 752 616 711 516Z M974 411A24 24 0 1 0 926 411A24 24 0 1 0 974 411Z"/>
 <path fill="#202C40" d="M228 559C334 665 520 659 612 754C636 782 653 827 664 875C585 894 477 866 404 833C304 792 258 744 236 679C224 640 214 582 218 567Q222 557 228 559Z"/>
@@ -27,6 +16,6 @@
 <path fill="#202C40" d="M134 653C183 694 204 731 246 764C355 866 559 913 807 980C731 1016 676 1061 619 1113C443 1057 264 1005 186 904C128 829 106 724 119 671Q124 650 134 653Z"/>
 <path fill="#202C40" d="M159 891C253 1004 392 1067 545 1124C474 1157 415 1180 345 1194C258 1163 198 1095 166 1023C148 977 151 921 159 891Z"/>
 <path fill="#202C40" d="M1049 889C1010 1044 874 1160 721 1191C643 1209 541 1204 477 1196C692 1129 885 1015 1049 889Z"/>
+</g></g>
 </g>
-  </g>
 </svg>

@@ -1,16 +1,11 @@
 <div align="center">
 
 <picture>
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-mobile-dark.svg" />
+  <source media="(max-width: 600px)" srcset="docs/assets/conest-banner-mobile.svg" />
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/conest-banner.svg" />
   <img src="docs/assets/conest-banner.svg" alt="CoNest — Connect the agent world. Agents, tools, memory and services." width="100%" />
 </picture>
-
-<br />
-
-**Connect the agent world.**
-
-Agents · Tools · Memory · Services
 
 **English** &nbsp; / &nbsp; [简体中文](README-zh.md)
 
@@ -34,36 +29,13 @@ Agents · Tools · Memory · Services
 
 ## Capabilities, connected
 
-<table>
-<tr>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/connections.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">Connect agents</h3>
-  <p>Extend access across frameworks and runtimes. OpenClaw and DSH are the first integrations for execution and tool interoperability.</p>
-  <p><a href="bridge/README.md">Explore current integrations →</a></p>
-</td>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/components.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">Compose tools & services</h3>
-  <p>Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.</p>
-  <p><a href="bridge/README.md">Meet the component runtime →</a></p>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/memory.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">Let knowledge accumulate</h3>
-  <p>Capture and recall a shared knowledge graph so tasks can build on recorded project knowledge, decisions and experience.</p>
-  <p><a href="bridge/STUDIO-zh.md">Explore shared memory →</a></p>
-</td>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/studio.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">See how capabilities work</h3>
-  <p>Browse tool and component catalogs, task results and the activity timeline in Studio to understand the integrations running today.</p>
-  <p><a href="bridge/STUDIO-zh.md">Open the Studio guide →</a></p>
-</td>
-</tr>
-</table>
+- **[Connect agents](bridge/README.md)** — Extend access across frameworks and runtimes, starting with OpenClaw and DSH execution and tool interoperability.
+
+- **[Compose tools & services](bridge/README.md)** — Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.
+
+- **[Let knowledge accumulate](bridge/STUDIO-zh.md)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
+
+- **[See how capabilities work](bridge/STUDIO-zh.md)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
 
 <details>
 <summary><strong>Architecture & current scope</strong> · Gateway / Host / optional DSH</summary>
@@ -77,7 +49,6 @@ The office example demonstrates reusable Cordis services and per-call dependency
 <a name="quick-start"></a>
 
 ## Quick start
-
 
 Validated development environment: **Linux x64, Node.js 24.15.0 and pnpm 11.7.0**. Install Git and tar; native builds also require Python 3, make and a C++ compiler. Windows and RHEL 8 release packages have separate platform requirements and validation.
 
@@ -115,58 +86,24 @@ The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/o
 
 ## Branches
 
-This matrix records the integrations implemented today. More agents and runtimes will follow as adapters are developed.
+`main` is the stable baseline; `develop` is the development branch. Both include OpenClaw / DSH integration, Studio, and verified clean-clone builds. The table focuses on implementation differences; more agent and runtime adapters remain under development.
 
-| Capability | <img src="docs/assets/readme/stable.svg" width="148" height="30" alt="main · 0.6.2" /><br /><sub>STABLE BASELINE</sub> | <img src="docs/assets/readme/develop.svg" width="172" height="30" alt="develop · 0.6.4" /><br /><sub>CURRENT DEVELOPMENT</sub> |
+| Capability | <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> · 0.6.2 | <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> · 0.6.4 |
 | :--- | :--- | :--- |
-| **OpenClaw / DSH & Studio** | ✓ Available | ✓ Available |
-| **DSH Agent / Session** | In Gateway | **Inside CoNest Host** |
-| **OpenClaw without DSH** | — | Office component demo via `--core` |
-| **Shared memory** | In Gateway | Dedicated `dsh-memory` component |
-| **Workspace search** | `knowledge_search` and verification | Also serves `dsh_grep` and `dsh_glob` |
-| **Text reads** | In Gateway | Dedicated `dsh-read`, with guarded-edit observations |
-| **Dynamic DSH components** | Pending | Host tool admission + component worker |
-| **Clean clone & build** | ✓ Verified | ✓ Verified |
+| DSH execution | Gateway | CoNest Host |
+| Without DSH | — | Office demo via `--core` |
+| Shared memory | Provided by Gateway | `dsh-memory` component |
+| Workspace search | `knowledge_search` and verification | Adds `dsh_grep` / `dsh_glob` |
+| Text reads | Provided by Gateway | `dsh-read`, with guarded-edit observations |
+| Dynamic DSH components | Pending | Host tool admission and component worker |
 
 <sub>You are viewing <strong>develop</strong>. The original <code>v0.6.2</code> tag preserves the initial backup; branch maintenance continues independently of packaged releases.</sub>
 
 ## Explore
 
-<table>
-<thead><tr><th></th><th align="left">Resource</th><th align="left">What you will find</th></tr></thead>
-<tbody>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/contribute.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="CONTRIBUTING.md">Contributing</a></strong></td>
-  <td valign="middle">Code changes, checks and pull requests</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/package.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="maintenance/DEPENDENCIES-zh.md">Dependencies (中文)</a></strong></td>
-  <td valign="middle">SDK verification, patches and licenses</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/components.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/README.md">Plugin README</a></strong></td>
-  <td valign="middle">Integration and component configuration</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/studio.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/STUDIO-zh.md">Studio guide (中文)</a></strong></td>
-  <td valign="middle">Tool catalogs, task execution and memory</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/lock.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/AUTHORIZATION.md">Authorization</a></strong></td>
-  <td valign="middle">Permissions and invocation boundaries</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/archive.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="maintenance/IMPORT-zh.md">Import provenance (中文)</a></strong></td>
-  <td valign="middle">The original source import</td>
-</tr>
-</tbody>
-</table>
+- **Use CoNest** · [Plugin configuration](bridge/README.md) · [Studio guide (中文)](bridge/STUDIO-zh.md)
+- **Build & contribute** · [Contributing](CONTRIBUTING.md) · [Dependencies (中文)](maintenance/DEPENDENCIES-zh.md)
+- **Understand internals** · [Authorization](bridge/AUTHORIZATION.md) · [Import provenance (中文)](maintenance/IMPORT-zh.md)
 
 <details>
 <summary>Repository contents & historical deliveries</summary>

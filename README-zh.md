@@ -1,16 +1,11 @@
 <div align="center">
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-dark.svg" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/conest-banner.svg" />
-  <img src="docs/assets/conest-banner.svg" alt="CoNest — Connect the agent world. Agents, tools, memory and services." width="100%" />
+  <source media="(max-width: 600px) and (prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-zh-mobile-dark.svg" />
+  <source media="(max-width: 600px)" srcset="docs/assets/conest-banner-zh-mobile.svg" />
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/conest-banner-zh-dark.svg" />
+  <img src="docs/assets/conest-banner-zh.svg" alt="CoNest — Agent 的万物互联。连接智能体、工具、记忆与服务。" width="100%" />
 </picture>
-
-<br />
-
-**Agent 的万物互联**
-
-连接 Agent、工具、记忆与服务，让能力跨越框架边界。
 
 [English](README.md) &nbsp; / &nbsp; **简体中文**
 
@@ -34,36 +29,13 @@
 
 ## 让能力彼此相连
 
-<table>
-<tr>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/connections.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">连接 Agent</h3>
-  <p>面向不同框架和运行环境扩展接入。当前以 OpenClaw 与 DSH 验证执行接入和工具互用。</p>
-  <p><a href="bridge/README.md">了解当前接入 →</a></p>
-</td>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/components.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">组合工具与服务</h3>
-  <p>将能力组织成可复用组件，由运行时管理依赖、调用与生命周期，让服务可以彼此协作。</p>
-  <p><a href="bridge/README.md">探索组件运行时 →</a></p>
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/memory.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">让知识持续积累</h3>
-  <p>通过共享知识图谱捕获和召回记忆，让不同任务接续已记录的知识、约定与经验。</p>
-  <p><a href="bridge/STUDIO-zh.md">了解共享记忆 →</a></p>
-</td>
-<td width="50%" valign="top">
-  <p align="center"><img src="docs/assets/readme/studio.svg" width="48" height="48" alt="" /></p>
-  <h3 align="center">观察能力如何运行</h3>
-  <p>在 Studio 查看工具与组件目录、执行结果和活动时间线，了解已经接入的能力如何工作。</p>
-  <p><a href="bridge/STUDIO-zh.md">打开 Studio 手册 →</a></p>
-</td>
-</tr>
-</table>
+- **[连接 Agent](bridge/README.md)** — 面向不同框架和运行环境扩展接入。当前以 OpenClaw 与 DSH 验证执行接入和工具互用。
+
+- **[组合工具与服务](bridge/README.md)** — 将能力组织成可复用组件，由运行时管理依赖、调用与生命周期，让服务彼此协作。
+
+- **[让知识持续积累](bridge/STUDIO-zh.md)** — 通过共享知识图谱捕获和召回记忆，让不同任务接续已记录的知识、约定与经验。
+
+- **[观察能力如何运行](bridge/STUDIO-zh.md)** — 在 Studio 查看工具与组件目录、执行结果和活动时间线。
 
 <details>
 <summary><strong>架构与当前边界</strong> · Gateway / Host / 可选 DSH</summary>
@@ -77,7 +49,6 @@
 <a name="快速开始"></a>
 
 ## 快速开始
-
 
 开发验证环境：**Linux x64、Node.js 24.15.0、pnpm 11.7.0**。系统需要 Git、tar；原生依赖从源码构建时需要 Python 3、make 和 C++ 编译器。Windows / Red Hat 8 的运行包验证范围见开发分支说明，不能将本地开发构建当作跨平台发行包。
 
@@ -115,58 +86,24 @@ CONEST_DEMO_STATE=/absolute/disposable/conest-studio \
 
 ## 分支与能力
 
-下表记录当前接入的实现范围。更多 Agent 与运行环境将随适配能力逐步扩展。
+`main` 为稳定基线，`develop` 为开发线。两条分支均已接入 OpenClaw / DSH 与 Studio，并验证干净克隆后的依赖恢复和构建。下表只列实现差异；更多 Agent 与运行环境将随适配能力逐步扩展。
 
-| 能力 | <img src="docs/assets/readme/stable.svg" width="148" height="30" alt="main · 0.6.2" /><br /><sub>稳定基线</sub> | <img src="docs/assets/readme/develop.svg" width="172" height="30" alt="develop · 0.6.4" /><br /><sub>当前开发线</sub> |
+| 能力 | <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> · 0.6.2 | <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> · 0.6.4 |
 | :--- | :--- | :--- |
-| **OpenClaw / DSH 接入与 Studio** | ✓ 已接入 | ✓ 已接入 |
-| **DSH Agent / Session** | Gateway 内 | **CoNest Host 内** |
-| **OpenClaw 无 DSH 模式** | — | `--core` 办公组件演示 |
-| **共享记忆** | Gateway 内提供 | 独立 `dsh-memory` 组件 |
-| **工作区搜索** | `knowledge_search` / 验证能力 | 进一步接入 `dsh_grep`、`dsh_glob` |
-| **文本读取** | Gateway 内提供 | 独立 `dsh-read`，保留读后写校验 |
-| **DSH 动态组件入口** | 尚未接入 | 宿主最终工具准入 + 组件 worker |
-| **干净克隆与构建** | ✓ 已验证 | ✓ 已验证 |
+| DSH 执行位置 | Gateway | CoNest Host |
+| 无 DSH 模式 | — | `--core` 办公组件演示 |
+| 共享记忆 | Gateway 内提供 | `dsh-memory` 组件 |
+| 工作区搜索 | `knowledge_search` 与验证能力 | 另接入 `dsh_grep` / `dsh_glob` |
+| 文本读取 | Gateway 内提供 | `dsh-read`，保留读后写校验 |
+| DSH 动态组件 | 尚未接入 | Host 工具准入与组件 worker |
 
 <sub>当前浏览的是 <strong>develop</strong>。<code>v0.6.2</code> 保留最初备份；分支维护与安装包发布独立进行。</sub>
 
 ## 从这里继续
 
-<table>
-<thead><tr><th></th><th align="left">入口</th><th align="left">内容</th></tr></thead>
-<tbody>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/contribute.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="CONTRIBUTING-zh.md">贡献指南</a></strong></td>
-  <td valign="middle">修改代码、运行检查、提交 PR</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/package.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="maintenance/DEPENDENCIES-zh.md">依赖来源与复现</a></strong></td>
-  <td valign="middle">核对 SDK、补丁与第三方许可证</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/components.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/README.md">插件 README</a></strong></td>
-  <td valign="middle">配置接入与运行时组件</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/studio.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/STUDIO-zh.md">Studio 手册</a></strong></td>
-  <td valign="middle">查看工具目录、任务执行与共享记忆</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/lock.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="bridge/AUTHORIZATION.md">授权模型</a></strong></td>
-  <td valign="middle">理解权限与调用边界</td>
-</tr>
-<tr>
-  <td width="48" align="center" valign="middle"><img src="docs/assets/readme/archive.svg" width="32" height="32" align="absmiddle" alt="" /></td>
-  <td valign="middle"><strong><a href="maintenance/IMPORT-zh.md">源码来源</a></strong></td>
-  <td valign="middle">查看当前分支的导入依据</td>
-</tr>
-</tbody>
-</table>
+- **使用 CoNest** · [插件配置](bridge/README.md) · [Studio 手册](bridge/STUDIO-zh.md)
+- **参与开发** · [贡献指南](CONTRIBUTING-zh.md) · [依赖来源与复现](maintenance/DEPENDENCIES-zh.md)
+- **理解实现** · [授权模型](bridge/AUTHORIZATION.md) · [源码来源](maintenance/IMPORT-zh.md)
 
 <details>
 <summary>仓库内容与历史交付资料</summary>

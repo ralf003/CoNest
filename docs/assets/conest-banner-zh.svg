@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640" role="img" aria-labelledby="title desc">
-<title id="title">CoNest — Connect the agent world.</title>
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="520" viewBox="0 0 1280 520" role="img" aria-labelledby="title desc">
+<title id="title">CoNest — Agent 的万物互联</title>
 <desc id="desc">An interconnected world for agents, tools, memory and services. A bird and woven nest represent independent capabilities working together.</desc>
-<rect x="1" y="1" width="1278" height="638" rx="24" fill="#FAF8F4" stroke="#E8E3DC"/>
-<g transform="translate(0 60)">
+<rect x="1" y="1" width="1278" height="518" rx="24" fill="#FAF8F4" stroke="#E8E3DC"/>
+<g transform="translate(0 0)">
 <g font-family="Inter,Segoe UI,Arial,Noto Sans CJK SC,sans-serif" fill="#202C40">
 <text x="58" y="175" font-size="132" font-weight="750" letter-spacing="-7">CoNest<tspan fill="#EF7157">.</tspan></text>
-<text x="64" y="282" font-size="62" font-weight="600" letter-spacing="-2">Connect the</text><text x="64" y="355" font-size="62" font-weight="600" letter-spacing="-2">agent world.</text>
-<g fill="#485B72"><text x="68" y="451" font-size="32">Agents · Tools · Memory · Services</text></g>
+<text x="66" y="284" font-size="66" font-weight="600">Agent 的万物互联</text>
+<g fill="#485B72"><text x="68" y="374" font-size="34">连接智能体、工具、记忆与服务</text></g>
 </g>
 <g transform="translate(822 48) scale(.8)"><g transform="translate(0 -13.5) scale(0.40829346)">
 <path fill="#EF7157" d="M252 124C264 123 289 168 310 190C376 259 472 302 543 365C672 458 737 615 715 724C710 763 700 795 688 817C667 764 639 727 596 691C538 651 475 633 407 605C311 565 240 532 213 472C163 384 202 210 241 140Q247 125 252 124Z"/>

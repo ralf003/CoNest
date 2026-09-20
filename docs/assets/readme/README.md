@@ -2,7 +2,7 @@
 
 Icon paths are vendored from [Lucide](https://github.com/lucide-icons/lucide/tree/951813ce76a859d4d8b145366972cbb237147a4e/icons), pinned to commit `951813ce76a859d4d8b145366972cbb237147a4e`. Copyright and licensing terms (ISC, plus MIT for inherited Feather icons) are preserved in [LICENSE-lucide](LICENSE-lucide).
 
-The upstream paths retain their 24 × 24 coordinate grid. CoNest adds a 48 × 48 colored tile, 12 px inset, 1.75 px stroke, round caps and round joins. The two branch badges use the same upstream `git-branch` geometry at a 2 px stroke before scaling.
+The upstream paths retain their 24 × 24 coordinate grid. CoNest adds a 48 × 48 colored tile, 12 px inset, 1.75 px stroke, round caps and round joins.
 
 | Asset | Upstream icon |
 | --- | --- |
@@ -19,4 +19,10 @@ The upstream paths retain their 24 × 24 coordinate grid. CoNest adds a 48 × 48
 | `lock.svg` | `lock-keyhole` |
 | `archive.svg` | `archive` |
 
-Keep heading text native: no inline image before H2 text. Feature icons sit in their own centered paragraph above titles. Documentation icons sit in dedicated table cells with `valign="middle"`; the image also uses `align="absmiddle"` to avoid a text-baseline offset. Test GitHub-sanitized HTML in light/dark themes and at mobile widths after changing markup.
+README layout uses native text headings and lists. Only the branch comparison uses a table. Avoid rasterizing branch names, versions or labels into custom badges.
+
+## GitHub branch icon
+
+`git-branch.svg` and `git-branch-dark.svg` preserve the official [GitHub Octicons `git-branch-16`](https://github.com/primer/octicons/blob/90af1f14984832de34e94b2d530043fbcf85eb7f/icons/git-branch-16.svg) path and 16 × 16 viewBox. Only the fill color is set for light/dark surfaces. The MIT license is included in [LICENSE-octicons](LICENSE-octicons).
+
+Pinned upstream revision: `90af1f14984832de34e94b2d530043fbcf85eb7f`. The README uses this icon beside native linked `<code>` branch names. The previous custom colored branch badges have been removed.
