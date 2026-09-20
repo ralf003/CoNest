@@ -1,6 +1,8 @@
 # Host integration
 
-This reference describes the implemented OpenClaw 2026.9.2 integration. Commands run from `` after building.
+This reference describes the OpenClaw adapter. CoNest supports the range declared in [`compatibility.json`](../compatibility.json), currently `>=2026.9.2 <2027.0.0`; `2026.9.2` remains the reproducible development pin. Commands run from the repository root after building.
+
+All OpenClaw SDK imports are owned by `src/adapters/openclaw-sdk.ts`. Connector code consumes that boundary and the public CoNest capability contract. A host SDK path or shape change is fixed and tested in the adapter instead of spreading version checks through the runtime. Releases outside the declared range receive an explicit compatibility error; silently claiming support for an untested breaking release is not part of the contract.
 
 ## Process and identity
 
@@ -10,7 +12,7 @@ The OpenClaw plugin ID and configuration key remain `dsh-bridge`. The package is
 
 ## Plugin configuration
 
-From ``, create a configuration in an existing directory:
+From the repository root, create a configuration in an existing directory:
 
 ```sh
 node dist/cli.js init --config /absolute/config/bridge.json --workspace /absolute/workspace

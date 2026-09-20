@@ -3,6 +3,7 @@ import { realpathSync } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import type { BridgeConfig, Invocation, JsonObject, Permission, Progress, RuntimeStatus } from './types.js';
 import { BridgeError, HOST_VERSION, PROTOCOL_VERSION } from './types.js';
+import { OPENCLAW_COMPATIBILITY_RANGE } from './compatibility.js';
 import { hasPermissions, type RuntimeGeneration } from './components.js';
 import { ComponentLoader } from './loader-runtime.js';
 import { revision } from './config.js';
@@ -130,6 +131,7 @@ export class BridgeRuntime {
     return {
       protocol: PROTOCOL_VERSION,
       hostVersion: HOST_VERSION,
+      hostCompatibility: OPENCLAW_COMPATIBILITY_RANGE,
       pid: process.pid,
       revision: this.current.revision,
       state: blocked || cleanupErrors.length > 0 ? 'degraded' : 'ready',

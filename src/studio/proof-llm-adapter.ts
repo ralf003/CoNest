@@ -1,10 +1,12 @@
 import {
   CallId,
   LlmAdapter,
+  type ContentBlock,
   type GenerateOptions,
   type LlmResolvedModelInfo,
   type StreamChunk,
-} from "@deepseek-ai/dsh-llm";
+} from "../adapters/dsh-llm.js";
+import type { CordisContext } from "../adapters/dsh-cordis.js";
 
 const PROVIDER = "bridge-proof";
 
@@ -54,7 +56,7 @@ function toolResponse(name: string, args: object): StreamChunk[] {
   ];
 }
 
-function imageResponse(attachment: Extract<import("@deepseek-ai/dsh-llm").ContentBlock, { type: "image" }>["attachment"]): StreamChunk[] {
+function imageResponse(attachment: Extract<ContentBlock, { type: "image" }>["attachment"]): StreamChunk[] {
   return [
     { type: "block-start", index: 0, blockType: "image" },
     { type: "block-end", index: 0, block: { type: "image", attachment } },
@@ -85,7 +87,7 @@ export class BridgeProofAdapter extends LlmAdapter {
     const task = textFromBlocks(prompt ?? []);
     const hasImage = (prompt ?? []).some((block) =>
       Boolean(block) && typeof block === "object" && (block as { type?: unknown }).type === "image");
-    const inputImage = (prompt ?? []).find((block): block is Extract<import("@deepseek-ai/dsh-llm").ContentBlock, { type: "image" }> =>
+    const inputImage = (prompt ?? []).find((block): block is Extract<ContentBlock, { type: "image" }> =>
       Boolean(block) && typeof block === "object" && (block as { type?: unknown }).type === "image");
     const toolResult = [...messages]
       .reverse()
@@ -136,6 +138,6 @@ export class BridgeProofAdapter extends LlmAdapter {
   }
 }
 
-export function registerBridgeProofAdapter(context: import("@deepseek-ai/cordis").Context): void {
+export function registerBridgeProofAdapter(context: CordisContext): void {
   context.llm.registerAdapter([PROVIDER], new BridgeProofAdapter());
 }

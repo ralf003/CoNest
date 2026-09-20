@@ -1,5 +1,5 @@
 import { managedMemoryTools } from '../memory-contract.js';
-import type { AnyAgentTool } from 'openclaw/plugin-sdk/plugin-entry';
+import type { AnyAgentTool } from '../adapters/openclaw-sdk.js';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile, mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';

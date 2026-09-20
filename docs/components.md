@@ -1,10 +1,12 @@
 # Component development
 
-Commands run from `` after building.
+Commands run from the repository root after building.
+
+The public component contract is the JSON manifest, capability schemas, permissions and lifecycle shape documented here. Component authors do not import OpenClaw or DSH types. The built-in DSH/Cordis implementation is an optional support pack behind the narrow `src/adapters/dsh-*.ts` modules; another Agent integration can map the same CoNest contracts without copying DSH sessions or OpenClaw tools.
 
 ## Live component management
 
-The Connector supports one explicitly enabled [dynamic workspace context provider](host-integration.md#context-providers). It passes bounded current-task text to an installed component and appends bounded source data after live permission/generation revalidation. It is disabled by default, does not pass conversation history,. The authenticated status page and `/conest` expose payload-free outcome counters shared across host registries.
+The Connector supports one explicitly enabled [dynamic workspace context provider](host-integration.md#context-providers). It passes bounded current-task text to an installed component and appends bounded source data after live permission/generation revalidation. It is disabled by default and does not pass conversation history. The authenticated status page and `/conest` expose payload-free outcome counters shared across host registries.
 
 `plugins.entries.dsh-bridge.config.capabilityGuidance: true` enables a short static prompt-context contribution through the same authorized prompt hook, without changing the system prompt. Default is false. Both `bridge_capabilities` and `bridge_invoke` must be available in the finalized host tool set. This does not enumerate components, read conversation content, grant execution rights, or create another loop. Catalogs remain live and policy-filtered at tool execution; component text is never promoted into system instructions. See [host adapter](host-integration.md#host-guidance) for scope and verification.
 

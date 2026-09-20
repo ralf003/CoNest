@@ -10,4 +10,5 @@ Read [CONTRIBUTING.md](CONTRIBUTING.md) before changing the repository. The proj
 - Keep internal plans, research, customer materials, prompts, reports and local migration records under ignored `.local/` or outside the repository. Do not add them to Git, PRs or release packages.
 - Inspect current changes before editing. Preserve unrelated work, credentials and user data. Do not rewrite historical archives or start paid model tests as part of routine validation.
 - Update paths in scripts, workflows, docs, lockfiles and package manifests together. A clean checkout must build without `.local/` or another worktree.
+- Keep direct OpenClaw and DSH/Cordis imports inside `src/adapters/`. Keep adapter modules narrow so importing one capability does not activate unrelated SDK packages. Extend the public CoNest component/runtime contracts before adding another Agent-specific path, and update `compatibility.json` only with matrix evidence.
 - Describe the actual checks run and remaining gaps. Do not equate a package build with native Windows execution or a fixture response with live-model inference.

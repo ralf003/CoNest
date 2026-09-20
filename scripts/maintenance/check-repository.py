@@ -81,6 +81,9 @@ for name in files:
         errors.append(f'File exceeds source repository size limit: {name}')
     if any(re.search(pattern, data) for pattern in secret_patterns):
         errors.append(f'Possible credential material; inspect locally: {name}')
+    if name.startswith('src/') and not name.startswith('src/adapters/') and path.suffix.lower() in {'.ts', '.js', '.mts', '.mjs'}:
+        if re.search(rb'''\bfrom\s+["'](?:openclaw/|@deepseek-ai/)|\bimport\s*\(["'](?:openclaw/|@deepseek-ai/)''', data):
+            errors.append(f'Third-party Agent SDK import bypasses src/adapters/: {name}')
     if path.suffix.lower() == '.md':
         text = re.sub(r'<!--.*?-->', '', data.decode(), flags=re.S)
         links = re.findall(r'\]\(([^)\s]+)\)', text)
@@ -94,13 +97,19 @@ for name in files:
                 errors.append(f'Broken tracked documentation link in {name}: {link}')
 pkg = json.loads((root / 'package.json').read_text())
 manifest = json.loads((root / 'openclaw.plugin.json').read_text())
+compatibility = json.loads((root / 'compatibility.json').read_text())
 if pkg.get('license') != 'MIT' or not (root / 'LICENSE').read_text().startswith('MIT License'):
     errors.append('Project SPDX metadata and the approved license must agree')
 if pkg['version'] != manifest['version']:
     errors.append('Package and plugin manifest versions disagree')
 if manifest['id'] != 'dsh-bridge':
     errors.append('The existing plugin identity must be retained')
-required = ['LICENSE', 'AGENTS.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'src/index.ts', 'src/runtime.ts', 'scripts/build.mjs', 'pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md']
+openclaw_range = compatibility.get('adapters', {}).get('openclaw', {}).get('supported')
+if openclaw_range != pkg.get('peerDependencies', {}).get('openclaw') or openclaw_range != pkg.get('openclaw', {}).get('compat', {}).get('pluginApi'):
+    errors.append('OpenClaw public compatibility metadata must agree')
+if compatibility.get('contracts', {}).get('runtimeProtocol') != 4:
+    errors.append('Published runtime protocol does not match the implemented protocol')
+required = ['LICENSE', 'AGENTS.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'compatibility.json', 'src/index.ts', 'src/runtime.ts', 'src/adapters/openclaw-sdk.ts', 'src/adapters/dsh-cordis.ts', 'scripts/build.mjs', 'scripts/review.mjs', 'pnpm-lock.yaml', 'README.md', 'README-zh.md', 'CONTRIBUTING.md']
 for name in required:
     if name not in files:
         errors.append(f'Missing tracked project file: {name}')

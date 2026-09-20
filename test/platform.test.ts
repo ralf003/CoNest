@@ -7,9 +7,9 @@ import {assertRuntime, assertPrivateFile, protectDirectory} from '../src/platfor
 import {executionEnvironment} from '../src/environment.js';
 
 test('platform admission accepts the RHEL 8 baseline and Windows x64 and rejects incompatible runtimes', () => {
-  assert.doesNotThrow(() => assertRuntime('linux','x64','24.15.0','2.28'));
-  assert.doesNotThrow(() => assertRuntime('win32','x64','24.15.0',undefined));
-  for (const args of [['linux','x64','24.15.0','2.27'],['linux','x64','24.15.0',''],['linux','arm64','24.15.0','2.28'],['win32','x64','22.23.1',undefined],['win32','x64','25.0.0',undefined]]) {
+  assert.doesNotThrow(() => assertRuntime('linux','x64','24.16.0','2.28'));
+  assert.doesNotThrow(() => assertRuntime('win32','x64','24.16.0',undefined));
+  for (const args of [['linux','x64','24.16.0','2.27'],['linux','x64','24.16.0',''],['linux','arm64','24.16.0','2.28'],['win32','x64','24.15.0',undefined],['win32','x64','22.23.1',undefined],['win32','x64','25.0.0',undefined]]) {
     assert.throws(() => assertRuntime(...args));
   }
 });

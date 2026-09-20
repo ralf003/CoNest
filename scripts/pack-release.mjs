@@ -107,6 +107,7 @@ try {
     "examples",
     "README.md",
     "LICENSE",
+    "compatibility.json",
     "docs/README.md",
     "docs/dependencies.md",
     "docs/components.md",

@@ -1,4 +1,4 @@
-import { Context, type Fiber } from '@deepseek-ai/cordis';
+import { Context, type CordisContext, type Fiber } from './adapters/dsh-cordis.js';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { Ajv, type ValidateFunction } from 'ajv';
 import semver from 'semver';
@@ -144,7 +144,7 @@ export type RuntimeGeneration = {
   dispose(): Promise<void>;
 };
 
-const resultVerifierComponent: ComponentModule = {
+const resultVerifierComponent: ComponentModule<CordisContext> = {
   name: 'result-verifier',
   inject: ['bridgeCapabilities'],
   apply(ctx) {
@@ -177,7 +177,7 @@ const resultVerifierComponent: ComponentModule = {
   },
 };
 
-const builtins = new Map<string, ComponentModule>([
+const builtins = new Map<string, ComponentModule<CordisContext>>([
   ['builtin:result-verifier', resultVerifierComponent],
 ]);
 
@@ -207,16 +207,16 @@ export async function startFiber(ctx: Context, plugin: object, config: JsonObjec
   } finally { clearTimeout(timer); }
 }
 
-export async function resolveComponent(spec: ComponentSpec, importModule: (specifier: string) => Promise<unknown>): Promise<ComponentModule> {
+export async function resolveComponent(spec: ComponentSpec, importModule: (specifier: string) => Promise<unknown>): Promise<ComponentModule<CordisContext>> {
   if (spec.manifest.entry === 'builtin:dsh-search') return (await import('./dsh-search-component.js')).dshSearchComponent;
   if (spec.manifest.entry === 'builtin:dsh-read') return (await import('./read-component.js')).dshReadComponent;
   if (spec.manifest.entry === 'builtin:dsh-memory') return (await import('./memory-component.js')).dshMemoryComponent;
   const builtin = builtins.get(spec.manifest.entry);
   if (builtin) return builtin;
   const specifier = `${pathToFileURL(spec.manifest.entry).href}?version=${encodeURIComponent(spec.manifest.version)}&integrity=${spec.integrity ?? ''}`;
-  const component = await importModule(specifier) as Partial<ComponentModule>;
+  const component = await importModule(specifier) as Partial<ComponentModule<CordisContext>>;
   if (typeof component.apply !== 'function') throw new BridgeError('INVALID_COMPONENT', `${spec.manifest.id} does not export a Cordis component`);
-  return component as ComponentModule;
+  return component as ComponentModule<CordisContext>;
 }
 
 export function dependencyState(

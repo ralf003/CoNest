@@ -1,8 +1,7 @@
-import { Context, type Fiber } from '@deepseek-ai/cordis';
-import { CallId } from '@deepseek-ai/dsh-llm';
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
-import ToolRuntime from '@deepseek-ai/dsh-tools';
-import * as McpClient from '@deepseek-ai/dsh-mcp-client';
+import { Context, type CordisContext, type Fiber } from './adapters/dsh-cordis.js';
+import { CallId } from './adapters/dsh-llm.js';
+import { McpClient, SystemPrompt } from './adapters/dsh-memory.js';
+import { ToolRuntime } from './adapters/dsh-tools.js';
 import { mkdir, realpath, stat } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
@@ -99,7 +98,7 @@ function entities(value: unknown): Array<{ name: string; observations: string[] 
   if (!Array.isArray(graph?.entities)) throw new BridgeError('INVALID_COMPONENT_RESULT', 'Memory service returned an invalid graph');
   return graph.entities;
 }
-export const dshMemoryComponent: ComponentModule = {
+export const dshMemoryComponent: ComponentModule<CordisContext> = {
   name: 'dsh-memory', inject: ['bridgeCapabilities'],
   async apply(ctx, config) {
     if (typeof config.file !== 'string') throw new BridgeError('MEMORY_NOT_CONFIGURED', 'No memory file was bound by the worker');

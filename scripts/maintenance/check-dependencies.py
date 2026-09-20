@@ -7,7 +7,7 @@ pkg = json.loads((root / 'package.json').read_text())
 missing = []
 for group in ('dependencies', 'devDependencies', 'optionalDependencies'):
     for name, spec in pkg.get(group, {}).items():
-        if spec.startswith('file:') and not (root / 'bridge' / spec[5:] / 'package.json').is_file():
+        if spec.startswith('file:') and not (root / spec[5:] / 'package.json').is_file():
             missing.append((name, spec[5:]))
 if missing:
     print('Missing frozen dependencies:')

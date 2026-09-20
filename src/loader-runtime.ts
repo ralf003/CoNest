@@ -1,5 +1,5 @@
-import { Context, type FiberState } from '@deepseek-ai/cordis';
-import Loader, { type EntryOptions } from '@deepseek-ai/cordis-plugin-loader';
+import { Context, type FiberState } from './adapters/dsh-cordis.js';
+import { Loader, type EntryOptions } from './adapters/dsh-loader.js';
 import { isDeepStrictEqual } from 'node:util';
 import {
   CapabilityRegistry, componentService, dependencyState, resolveComponent, startFiber,

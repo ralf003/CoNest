@@ -1,4 +1,4 @@
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
+import type { OpenClawPluginApi } from './adapters/openclaw-sdk.js';
 import { DIRECT_CAPABILITY_NAMES } from './managed-tools.js';
 import { hostPrincipal } from './host-policy.js';
 import type { RunScopes } from './run-scope.js';

@@ -1,9 +1,9 @@
-import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
-import { CallId, createUserMessage, type ContentBlock } from "@deepseek-ai/dsh-llm";
-import type { Agent, AgentHandle } from "@deepseek-ai/dsh-agent";
-import { Session, SessionId, type SessionEvent } from "@deepseek-ai/dsh-session";
-import type { ToolExecutionResult } from "@deepseek-ai/dsh-tools";
-import type { ApprovalOutcome, ApprovalRequest } from "@deepseek-ai/dsh-user-approval";
+import type { AnyAgentTool } from "../adapters/openclaw-sdk.js";
+import type { Agent, AgentHandle } from "../adapters/dsh-agent.js";
+import type { ApprovalOutcome, ApprovalRequest } from "../adapters/dsh-approval.js";
+import { CallId, createUserMessage, type ContentBlock } from "../adapters/dsh-llm.js";
+import { Session, SessionId, type SessionEvent } from "../adapters/dsh-session.js";
+import type { ToolExecutionResult } from "../adapters/dsh-tools.js";
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";

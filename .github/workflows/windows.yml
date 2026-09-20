@@ -16,7 +16,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:
-          node-version: 24.15.0
+          node-version-file: .node-version
       - run: npm install --global pnpm@11.7.0
       - run: node scripts/maintenance/bootstrap.mjs
       - run: pnpm install --frozen-lockfile

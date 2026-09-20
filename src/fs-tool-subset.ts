@@ -1,6 +1,6 @@
-import type { Context } from '@deepseek-ai/cordis';
-import * as ToolFs from '@deepseek-ai/dsh-tool-fs';
-import type { ToolDefinition } from '@deepseek-ai/dsh-tools';
+import type { CordisContext as Context } from './adapters/dsh-cordis.js';
+import { ToolFs } from './adapters/dsh-filesystem.js';
+import type { ToolDefinition } from './adapters/dsh-tools.js';
 
 /** Select registrations through a child view; never patch the shared tool service or upstream. */
 export function selectFsTools(owner: 'reader' | 'gateway'): Omit<typeof ToolFs, 'name' | 'apply'> & {

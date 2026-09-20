@@ -1,6 +1,7 @@
 import type { Progress, RuntimeStatus } from './types.js';
 import { CONNECTOR_NAME, RUNTIME_NAME } from './branding.js';
 import { CONTEXT_OUTCOMES, type ContextDiagnosticsSnapshot, type ContextOutcome } from './context-diagnostics.js';
+import { OPENCLAW_COMPATIBILITY_RANGE } from './compatibility.js';
 
 export type BridgeUiState = {
   client: { state: string; failure?: string };
@@ -14,7 +15,7 @@ export function formatStatus(state: BridgeUiState): string {
   const runtime = state.runtime;
   const lines = [
     `${CONNECTOR_NAME}：${clientLabel(state.client.state)}`,
-    `OpenClaw 基线：${runtime?.hostVersion ?? '2026.9.2'}`,
+    `OpenClaw 兼容范围：${OPENCLAW_COMPATIBILITY_RANGE}`,
   ];
   if (state.client.failure) lines.push(`最近错误：${state.client.failure}`);
   if (runtime) {
@@ -46,7 +47,7 @@ export function renderStatusPage(state: BridgeUiState): string {
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:14px/1.55 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:28px}
 h1{margin:0 0 6px}.sub{color:var(--muted)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}.card,.table{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}.card b{display:block;font-size:21px;margin-top:4px}.good{color:var(--good)}.warn{color:var(--warn)}
 .table{margin-top:14px;overflow:auto}table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-top:1px solid var(--line)}th{color:var(--muted)}code{color:#9ee7ff}@media(max-width:760px){.metrics{grid-template-columns:1fr 1fr}main{padding:18px}}
-</style></head><body><main><h1>${CONNECTOR_NAME} 运行状态</h1><div class="sub">OpenClaw 2026.9.2 · ${RUNTIME_NAME} · Cordis/DSH</div>
+</style></head><body><main><h1>${CONNECTOR_NAME} 运行状态</h1><div class="sub">OpenClaw ${OPENCLAW_COMPATIBILITY_RANGE} · ${RUNTIME_NAME} · optional Cordis/DSH adapter</div>
 <section class="metrics"><div class="card">进程状态<b class="${state.client.state === 'ready' ? 'good' : 'warn'}">${escapeHtml(clientLabel(state.client.state))}</b></div>
 <div class="card">运行版本<b>${escapeHtml(runtime?.revision ?? '—')}</b></div><div class="card">执行 / 排队<b>${runtime ? `${runtime.active} / ${runtime.queued}` : '—'}</b></div><div class="card">内存 RSS<b>${runtime ? formatBytes(runtime.memoryRssBytes) : '—'}</b></div></section>
 ${state.client.failure ? `<section class="card warn">最近错误：${escapeHtml(state.client.failure)}</section>` : ''}

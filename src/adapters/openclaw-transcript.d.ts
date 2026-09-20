@@ -1,5 +1,5 @@
-// OpenClaw 2026.9.2 ships this public JS export without its declaration file.
-// Keep the narrow consumed contract here; no internal host imports are used.
+// OpenClaw 2026.9.x ships this public JS export without its declaration file.
+// Keep the narrow consumed contract at the adapter boundary.
 declare module 'openclaw/plugin-sdk/session-transcript-runtime' {
   import type { AgentHarnessAttemptResult } from 'openclaw/plugin-sdk/agent-harness-runtime';
   export type TranscriptEntryAnchor = NonNullable<AgentHarnessAttemptResult['terminalAnchor']>;

@@ -4,7 +4,7 @@ import { createInterface } from 'node:readline';
 import type { JsonObject, Permission, Progress, RuntimeStatus, CatalogRequest, CapabilityCatalog, Principal, CapabilityRule } from './types.js';
 import type { CallGrant } from './authorization.js';
 import type { ComponentOperation } from './management.js';
-import { BridgeError, HOST_VERSION, PROTOCOL_VERSION } from './types.js';
+import { BridgeError, PROTOCOL_VERSION } from './types.js';
 import { isWireEvent, isWireResponse } from './protocol.js';
 import { readFrames } from './framing.js';
 import { executionEnvironment } from './environment.js';
@@ -107,7 +107,6 @@ export class BridgeClient {
     try {
       const status = await this.request<RuntimeStatus>('status', undefined, this.options.startupTimeoutMs);
       if (status.protocol !== PROTOCOL_VERSION) throw new BridgeError('PROTOCOL_MISMATCH', `CoNest Runtime protocol ${status.protocol} does not match ${PROTOCOL_VERSION}`);
-      if (status.hostVersion !== HOST_VERSION) throw new BridgeError('HOST_VERSION_MISMATCH', `CoNest Runtime targets OpenClaw ${status.hostVersion}, expected ${HOST_VERSION}`);
       this.state = 'ready';
       return status;
     } catch (error) {

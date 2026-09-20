@@ -64,6 +64,7 @@ Use the pinned toolchain from the README. Run commands from the repository root 
 | Component graph or lifecycle | Runtime tests plus `pnpm run test:runtime`; exercise retained calls, cleanup or revocation as applicable |
 | Host policy, tools or Studio | Relevant host/E2E checks and an isolated Studio run; verify actual tool admission and cancellation where changed |
 | Dependencies or SDK | Clean bootstrap, frozen install, build and tests on affected maintained branches; review licenses and update locks together |
+| Agent adapter or compatibility range | Focused compatibility tests plus the `Agent compatibility` matrix at the minimum and newest supported host versions; keep direct SDK imports in `src/adapters/` |
 | Packaging/platform scripts | Build the affected target package, inspect its file list and checksum, and run installation checks on the claimed platform |
 
 An isolated Studio check:
@@ -82,6 +83,8 @@ CI and default local checks must not require provider keys, customer workspaces 
 The author owns the PR until it is merged or closed: answer review points, keep the body current and rerun affected checks after changes. Explain disagreements with code, a reproducer or measured evidence. Review code and behavior, not the person; harassment, spam and repeated pressure on maintainers are unacceptable.
 
 A maintainer checks scope, contract compatibility, validation and repository contents before merging. Resolve blocking feedback and required CI failures. Substantive changes after approval need another review. Prefer squash merging a single change; a deliberately structured series may retain its commits. An issue is closed only when the delivered change actually meets its acceptance criteria.
+
+`CoNest Review` performs deterministic diff checks, repository/type checks and behavior tests with read-only PR permissions. A separate `workflow_run` job reads only its generated artifact and maintains one `github-actions` review comment. Treat blocker findings as required fixes or explain a false positive in the PR; warnings guide human review. The bot never approves or merges a PR, and its green result does not replace maintainer review.
 
 Release and SDK publication remain maintainer responsibilities. Do not move existing version tags, overwrite published artifacts, change branch protections or claim a platform is supported just because a workflow exists. Branch promotion must preserve that branch's implemented capabilities.
 

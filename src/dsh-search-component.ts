@@ -1,18 +1,20 @@
-import type { Context } from '@deepseek-ai/cordis';
-import type { Agent } from '@deepseek-ai/dsh-agent';
-import { Session, SessionId, SESSION_FORMAT_VERSION } from '@deepseek-ai/dsh-session';
+import {
+  LocalSubprocessRuntime,
+  SystemPrompt,
+  ToolFsSearch,
+} from './adapters/dsh-search.js';
+import type { Agent } from './adapters/dsh-agent.js';
+import type { CordisContext as Context } from './adapters/dsh-cordis.js';
+import { CallId } from './adapters/dsh-llm.js';
+import { Session, SessionId, SESSION_FORMAT_VERSION } from './adapters/dsh-session.js';
+import { ToolRuntime } from './adapters/dsh-tools.js';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { inside } from './config.js';
 import { managedSearchTools } from './search-contract.js';
-import { CallId } from '@deepseek-ai/dsh-llm';
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
-import LocalSubprocessRuntime from '@deepseek-ai/dsh-subprocess-local';
-import ToolRuntime from '@deepseek-ai/dsh-tools';
-import * as ToolFsSearch from '@deepseek-ai/dsh-tool-fs-search';
 import { startFiber } from './components.js';
 import { BridgeError, type ComponentModule, type Invocation, type JsonObject } from './types.js';
-export const dshSearchComponent: ComponentModule = {
+export const dshSearchComponent: ComponentModule<Context> = {
   name: 'dsh-search',
   inject: ['bridgeCapabilities', 'tools', 'systemPrompt', 'subprocess'],
   async apply(ctx) {

@@ -54,6 +54,7 @@ try {
     },
   );
   const inspection = JSON.parse(stdout);
+  const hostManifest = JSON.parse(await readFile(path.join(openClawRoot, 'package.json'), 'utf8'));
   const tools = inspection.tools.flatMap(registration => registration.names).sort();
   assert.equal(inspection.plugin.id, 'dsh-bridge');
   assert.equal(inspection.plugin.name, 'CoNest Connector for OpenClaw');
@@ -74,7 +75,7 @@ try {
     recordedAt: new Date().toISOString(),
     bridgeVersion: packageVersion,
     connectorName: inspection.plugin.name,
-    openClawVersion: '2026.9.2',
+    openClawVersion: hostManifest.version,
     pluginId: inspection.plugin.id,
     status: inspection.plugin.status,
     activated: inspection.plugin.activated,

@@ -12,6 +12,7 @@ import { controlRequest, serveControl } from './control.js';
 import { executionEnvironment } from './environment.js';
 import { assertRuntime, assertPrivateFile, protectDirectory, stopProcessTree } from './platform-support.mjs';
 import { BridgeError, HOST_VERSION, BRIDGE_VERSION, type CapabilityCatalog, type RuntimeStatus } from './types.js';
+import { inspectOpenClaw, OPENCLAW_COMPATIBILITY_RANGE } from './compatibility.js';
 
 const execute = promisify(execFile);
 const packageRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -64,9 +65,10 @@ export async function localInstallation(): Promise<{ host: string; provider: str
       root = await realpath(candidate);
       break;
     }
-    if (!root) throw new BridgeError('INSTALLATION_INCOMPLETE', `Install ${name}@${HOST_VERSION} beside the CoNest Connector package`);
+    if (!root) throw new BridgeError('INSTALLATION_INCOMPLETE', `Install ${name}@${OPENCLAW_COMPATIBILITY_RANGE} beside the CoNest Connector package`);
     const manifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')) as { version?: unknown };
-    if (manifest.version !== HOST_VERSION) throw new BridgeError('HOST_VERSION_MISMATCH', `${name} must be exactly ${HOST_VERSION}`);
+    try { inspectOpenClaw(manifest.version); }
+    catch (error) { throw new BridgeError('HOST_VERSION_MISMATCH', `${name}: ${String(error)}`); }
     roots.push(root);
   }
   return { host: roots[0]!, provider: roots[1]!, cli: path.join(roots[0]!, 'openclaw.mjs') };
@@ -224,7 +226,9 @@ export async function doctorLocal(profile: LocalProfile, probe = false): Promise
       if (!body.data?.some(item => item.id === 'deepseek-v4-flash')) throw new BridgeError('MODEL_UNAVAILABLE', 'The account catalog does not expose deepseek-v4-flash');
       provider = { checked: true, flashAvailable: true };
     }
-    return { ok: true, bridgeVersion: BRIDGE_VERSION, hostVersion: HOST_VERSION, node: process.version,
+    const hostManifest = JSON.parse(await readFile(path.join(installation.host, 'package.json'), 'utf8')) as { version?: string };
+    return { ok: true, bridgeVersion: BRIDGE_VERSION, hostVersion: hostManifest.version ?? HOST_VERSION,
+      hostCompatibility: OPENCLAW_COMPATIBILITY_RANGE, node: process.version,
       credential: 'configured-private-file', provider, config, service: await statusLocal(profile) };
   } catch (error) {
     const detail = error as Error & { stderr?: string };

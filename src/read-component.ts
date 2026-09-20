@@ -1,13 +1,14 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
-import { CallId } from '@deepseek-ai/dsh-llm';
-import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
-import ToolRuntime from '@deepseek-ai/dsh-tools';
-import LocalFileSystem from '@deepseek-ai/dsh-fs-local';
+import { LocalFileSystem } from './adapters/dsh-filesystem.js';
+import type { CordisContext } from './adapters/dsh-cordis.js';
+import { CallId } from './adapters/dsh-llm.js';
+import { SystemPrompt } from './adapters/dsh-search.js';
+import { ToolRuntime } from './adapters/dsh-tools.js';
 import { selectFsTools } from './fs-tool-subset.js';
 import { BridgeError, type ComponentModule } from './types.js';
 import type { ManagedReadResult, ReadObservation } from './read-contract.js';
 
-export const dshReadComponent: ComponentModule = {
+export const dshReadComponent: ComponentModule<CordisContext> = {
   name: 'dsh-read', inject: ['bridgeCapabilities'],
   async apply(ctx) {
     await ctx.plugin(SystemPrompt, {});

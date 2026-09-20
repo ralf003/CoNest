@@ -1,9 +1,13 @@
-import { isIncognitoSessionKey } from 'openclaw/plugin-sdk/routing';
+import {
+  createRuntimeConfigReader,
+  defineToolPlugin,
+  isIncognitoSessionKey,
+  type AnyAgentTool,
+  type OpenClawPluginApi,
+  type OpenClawPluginToolContext,
+} from './adapters/openclaw-sdk.js';
 import { MEMORY_CAPABILITIES } from './memory-contract.js';
 import { createMemoryAccess } from './memory-adapter.js';
-import type { AnyAgentTool, OpenClawPluginApi, OpenClawPluginToolContext } from 'openclaw/plugin-sdk/plugin-entry';
-import { defineToolPlugin } from 'openclaw/plugin-sdk/tool-plugin';
-import { createRuntimeConfigReader } from 'openclaw/plugin-sdk/runtime-config-snapshot';
 import { Type } from 'typebox';
 import { createRequire } from 'node:module';
 import { randomUUID } from 'node:crypto';
@@ -18,17 +22,15 @@ import { isManagedDshTool, managedDshTools } from './managed-tools.js';
 import type { ManagedReadResult } from './read-contract.js';
 import { registerStudio } from './studio/index.js';
 import { ContextProvider, parseContextProvider, type ContextProviderConfig } from './context-provider.js';
-import { BridgeError, HOST_VERSION, type BridgeConfig, type CapabilityDescriptor, type JsonObject, type Permission } from './types.js';
+import { BridgeError, type BridgeConfig, type CapabilityDescriptor, type JsonObject, type Permission } from './types.js';
+import { inspectOpenClaw } from './compatibility.js';
 import { formatStatus, renderProgress, renderStatusPage, renderToolResult } from './ui.js';
 import { COMMAND_NAMES, CONNECTOR_FULL_NAME, CONNECTOR_NAME, PLUGIN_ID, STATUS_PATHS } from './branding.js';
 
 const require = createRequire(import.meta.url);
 const openClawEntry = require.resolve('openclaw/plugin-sdk/plugin-entry');
 const openClawManifest = JSON.parse(readFileSync(path.resolve(path.dirname(openClawEntry), '../../package.json'), 'utf8')) as { version?: unknown };
-const installedHostVersion = openClawManifest.version;
-if (installedHostVersion !== HOST_VERSION) {
-  throw new Error(`${CONNECTOR_NAME} requires OpenClaw ${HOST_VERSION}; loaded ${String(installedHostVersion)}`);
-}
+export const openClawCompatibility = inspectOpenClaw(openClawManifest.version);
 
 const configSchema = Type.Object({
   studio: Type.Optional(Type.Object({ stateDir: Type.String({ minLength: 1 }) }, { additionalProperties: false })),
@@ -111,6 +113,9 @@ entry.register = (api: OpenClawPluginApi): void => {
 };
 
 function createState(api: OpenClawPluginApi): PluginState {
+  if (!openClawCompatibility.tested) {
+    api.logger.warn?.(`${CONNECTOR_NAME} loaded OpenClaw ${openClawCompatibility.installed} within ${openClawCompatibility.supported}; this exact release is not yet in the tested matrix`);
+  }
   const contextProviderConfig = parseContextProvider(api.pluginConfig?.contextProvider);
   const base = path.resolve(api.rootDir ?? process.cwd());
   const configuredFile = optionalString(api.pluginConfig, 'configFile');

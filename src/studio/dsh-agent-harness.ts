@@ -1,30 +1,26 @@
-import type { AgentHarnessV2 } from "openclaw/plugin-sdk/agent-harness";
-import type { AnyAgentTool } from "openclaw/plugin-sdk/plugin-entry";
-import { HOST_TOOL_NAMES } from "../host-adapter.js";
-import { getSessionEntry } from "openclaw/plugin-sdk/session-store-runtime";
-import type {
-  AgentHarnessAttemptResult,
-  AgentMessage,
-  EmbeddedRunAttemptParamsV2,
-} from "openclaw/plugin-sdk/agent-harness-runtime";
-import {
-  awaitAgentHarnessAgentEndHook,
-  applyEmbeddedAttemptToolsAllow,
-  buildEmbeddedAttemptToolRunContext,
-  buildAgentHookContextChannelFields,
-  projectAgentHarnessTranscriptMessageForDisplay,
-  resolveAgentHarnessBeforePromptBuildResult,
-  runAgentHarnessBeforeMessageWriteHook,
-  runAgentHarnessAfterToolCallHook,
-  resolveSandboxContext,
-} from "openclaw/plugin-sdk/agent-harness-runtime";
 import {
   appendSessionTranscriptMessageByIdentityStrict,
+  applyEmbeddedAttemptToolsAllow,
+  awaitAgentHarnessAgentEndHook,
+  buildAgentHookContextChannelFields,
+  buildEmbeddedAttemptToolRunContext,
+  getSessionEntry,
+  projectAgentHarnessTranscriptMessageForDisplay,
   publishSessionTranscriptUpdateByIdentity,
+  resolveAgentHarnessBeforePromptBuildResult,
+  resolveSandboxContext,
+  runAgentHarnessAfterToolCallHook,
+  runAgentHarnessBeforeMessageWriteHook,
+  type AgentHarnessAttemptResult,
+  type AgentHarnessV2,
+  type AgentMessage,
+  type AnyAgentTool,
+  type EmbeddedRunAttemptParamsV2,
   type TranscriptEntryAnchor,
-} from "openclaw/plugin-sdk/session-transcript-runtime";
+} from "../adapters/openclaw-sdk.js";
+import { HOST_TOOL_NAMES } from "../host-adapter.js";
 import type { CordisBridgeHost, AgentRunResult } from "./cordis-bridge-host.js";
-import type { SessionEvent } from "@deepseek-ai/dsh-session";
+import type { SessionEvent } from "../adapters/dsh-session.js";
 import { CordisAgentRunError } from "./agent-error.js";
 
 export type DshAgentHarnessOptions = {

@@ -24,7 +24,7 @@ for name in ['install.ps1', 'start.ps1', 'setup.mjs', 'launch.mjs', 'configure-k
 (bundle / 'README.md').write_text(f'''# CoNest {version} — Windows integration fixture
 
 This bundle supports developer installation and regression checks on Windows x64.
-The installer downloads Node.js 24.15.0 and OpenClaw 2026.9.2.
+The installer downloads Node.js 24.16.0 and the reproducible OpenClaw 2026.9.2 build pin.
 
 Run in PowerShell from this directory:
 
@@ -39,7 +39,7 @@ The default model is a deterministic local fixture. No API key is needed.
 The developer source and build instructions are at https://github.com/zyw02/CoNest.
 ''', encoding='utf-8')
 (bundle / 'delivery.json').write_text(json.dumps({
-    'version': version, 'target': 'win32-x64', 'node': '24.15.0',
+    'version': version, 'target': 'win32-x64', 'node': '24.16.0',
     'openclaw': '2026.9.2', 'defaultModel': 'deterministic-fixture',
     'validation': 'See the release validation report and Windows workflow; packaging is not execution evidence.',
 }, indent=2) + '\n')

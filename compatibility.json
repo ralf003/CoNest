@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "contracts": {
+    "componentManifest": "1",
+    "runtimeProtocol": 4
+  },
+  "adapters": {
+    "openclaw": {
+      "supported": ">=2026.9.2 <2027.0.0",
+      "tested": ["2026.9.2", "2026.9.5"]
+    },
+    "dsh": {
+      "supported": "0.1.0-rc.5",
+      "tested": ["0.1.0-rc.5"],
+      "cordis": "4.0.1"
+    }
+  }
+}

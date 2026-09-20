@@ -9,7 +9,7 @@
 
 **English** &nbsp; / &nbsp; [简体中文](README-zh.md)
 
-[![Build](https://img.shields.io/github/actions/workflow/status/zyw02/CoNest/repository.yml?branch=develop&style=flat-square&logo=github&label=build&labelColor=252638&color=65b9a2)](https://github.com/zyw02/CoNest/actions/workflows/repository.yml) [![Node 24.15](https://img.shields.io/badge/Node-24.15-65b9a2?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=252638)](https://nodejs.org/) [![pnpm 11.7](https://img.shields.io/badge/pnpm-11.7-e8b86d?style=flat-square&logo=pnpm&logoColor=white&labelColor=252638)](https://pnpm.io/) [![PRs welcome](https://img.shields.io/badge/PRs-welcome-a392eb?style=flat-square&labelColor=252638)](CONTRIBUTING.md)
+[![Build](https://img.shields.io/github/actions/workflow/status/zyw02/CoNest/repository.yml?branch=develop&style=flat-square&logo=github&label=build&labelColor=252638&color=65b9a2)](https://github.com/zyw02/CoNest/actions/workflows/repository.yml) [![Node 24.16](https://img.shields.io/badge/Node-24.16-65b9a2?style=flat-square&logo=nodedotjs&logoColor=white&labelColor=252638)](https://nodejs.org/) [![pnpm 11.7](https://img.shields.io/badge/pnpm-11.7-e8b86d?style=flat-square&logo=pnpm&logoColor=white&labelColor=252638)](https://pnpm.io/) [![PRs welcome](https://img.shields.io/badge/PRs-welcome-a392eb?style=flat-square&labelColor=252638)](CONTRIBUTING.md)
 
 <br />
 
@@ -22,6 +22,8 @@
 **CoNest is building an interconnected world for agents.** Our goal is to connect agents across frameworks and runtimes, so tools, memory, services and workflows can be discovered, invoked and composed into capabilities that work together.
 
 **Available today:** OpenClaw and DeepSeek Harness (DSH) are the first integrations. A Cordis-based runtime supports component composition, tool interoperability and shared memory; Studio shows available capabilities and execution history. More agent integrations and collaboration across runtimes are the next steps.
+
+CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records supported ranges, while CI verifies the oldest and newest supported OpenClaw releases.
 
 > [!TIP]
 > **Explore 0.6.4** — Gateway + CoNest Host, composable office services, and an OpenClaw demo without DSH via `--core`.
@@ -49,7 +51,7 @@ The office example demonstrates reusable Cordis services and per-call dependency
 
 ## Quick start
 
-**New here? This section is all you need to start.** The validated source environment is Linux x64, Node.js 24.15.0 and pnpm 11.7.0. Install Git, tar, Python 3, make and a C++ compiler for native dependencies.
+**New here? This section is all you need to start.** The validated source environment is Linux x64, Node.js 24.16.0 and pnpm 11.7.0. Install Git, tar, Python 3, make and a C++ compiler for native dependencies.
 
 ```bash
 git clone --branch develop https://github.com/zyw02/CoNest.git

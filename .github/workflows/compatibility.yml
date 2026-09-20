@@ -1,0 +1,50 @@
+name: Agent compatibility
+
+on:
+  push:
+    branches: [main, develop]
+    paths: [compatibility.json, package.json, pnpm-lock.yaml, 'src/adapters/**', 'src/compatibility.ts', 'test/compatibility.test.ts', '.github/workflows/compatibility.yml']
+  pull_request:
+    branches: [main, develop]
+    paths: [compatibility.json, package.json, pnpm-lock.yaml, 'src/adapters/**', 'src/compatibility.ts', 'test/compatibility.test.ts', '.github/workflows/compatibility.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  versions:
+    runs-on: ubuntu-24.04
+    outputs:
+      matrix: ${{ steps.resolve.outputs.matrix }}
+    steps:
+      - id: resolve
+        name: Resolve minimum and newest supported OpenClaw releases
+        shell: bash
+        run: |
+          versions="$(npm view 'openclaw@>=2026.9.2 <2027.0.0' version --json)"
+          matrix="$(node -e 'const v=JSON.parse(process.argv[1]); const a=Array.isArray(v)?v:[v]; process.stdout.write(JSON.stringify([...new Set(["2026.9.2",a.at(-1)])]))' "$versions")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+  openclaw:
+    needs: versions
+    strategy:
+      fail-fast: false
+      matrix:
+        version: ${{ fromJSON(needs.versions.outputs.matrix) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+      - run: npm install --global pnpm@11.7.0
+      - run: pnpm bootstrap
+      - run: pnpm install --frozen-lockfile
+      - name: Select OpenClaw ${{ matrix.version }} without changing repository locks
+        run: pnpm add --save-dev --ignore-workspace-root-check --lockfile=false "openclaw@${{ matrix.version }}"
+      - run: pnpm build
+      - run: pnpm exec tsx --test test/compatibility.test.ts test/host-adapter.test.ts
+      - run: node scripts/test-openclaw.mjs

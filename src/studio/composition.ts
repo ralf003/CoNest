@@ -1,24 +1,25 @@
-import { Context, type Fiber } from "@deepseek-ai/cordis";
-import AgentRegistry from "@deepseek-ai/dsh-agent";
-import AgentLoop from "@deepseek-ai/dsh-agent-loop";
-import LocalAttachmentStore from "@deepseek-ai/dsh-attachment-local";
-import SandboxBashExecutor from "@deepseek-ai/dsh-bash-sandbox";
-import * as FsObservationPolicy from "@deepseek-ai/dsh-fs-observation-policy";
-import SandboxedFileSystem from "@deepseek-ai/dsh-fs-sandbox";
-import LocalSandboxProvider from "@deepseek-ai/dsh-sandbox-local";
-import SandboxPolicyService from "@deepseek-ai/dsh-sandbox-policy";
-import LlmRuntime from "@deepseek-ai/dsh-llm";
-import * as LlmPiAi from "@deepseek-ai/dsh-llm-pi-ai";
-import SessionStore from "@deepseek-ai/dsh-session";
-import * as SessionCheckpointPolicy from "@deepseek-ai/dsh-session-checkpoint-policy";
-import JsonlSessionPersistence from "@deepseek-ai/dsh-session-persistence-jsonl";
-import * as ShellEnv from "@deepseek-ai/dsh-shell-env";
-import LocalSubprocessRuntime from "@deepseek-ai/dsh-subprocess-local";
-import SystemPrompt from "@deepseek-ai/dsh-system-prompt";
-import * as ToolBash from "@deepseek-ai/dsh-tool-bash";
+import {
+  AgentLoop,
+  FsObservationPolicy,
+  JsonlSessionPersistence,
+  LlmPiAi,
+  LocalAttachmentStore,
+  LocalSandboxProvider,
+  SandboxBashExecutor,
+  SandboxedFileSystem,
+  SandboxPolicyService,
+  SessionCheckpointPolicy,
+  ShellEnv,
+  ToolBash,
+} from "../adapters/dsh-composition.js";
+import { AgentRegistry } from "../adapters/dsh-agent.js";
+import { ApprovalService } from "../adapters/dsh-approval.js";
+import { Context, type Fiber } from "../adapters/dsh-cordis.js";
+import { LlmRuntime } from "../adapters/dsh-llm.js";
+import { LocalSubprocessRuntime, SystemPrompt } from "../adapters/dsh-search.js";
+import { SessionStore } from "../adapters/dsh-session.js";
+import { ToolRuntime } from "../adapters/dsh-tools.js";
 import { selectFsTools } from "../fs-tool-subset.js";
-import ToolRuntime from "@deepseek-ai/dsh-tools";
-import ApprovalService from "@deepseek-ai/dsh-user-approval";
 import path from "node:path";
 import { registerBridgeProofAdapter } from "./proof-llm-adapter.js";
 

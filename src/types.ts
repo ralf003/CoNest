@@ -1,6 +1,7 @@
-import type { Context } from '@deepseek-ai/cordis';
+import { OPENCLAW_TESTED_VERSION } from './compatibility.js';
 
-export const HOST_VERSION = '2026.9.2';
+/** @deprecated Use the compatibility range; retained for wire/report compatibility. */
+export const HOST_VERSION = OPENCLAW_TESTED_VERSION;
 export const BRIDGE_VERSION = '0.6.4';
 export const PROTOCOL_VERSION = 4;
 
@@ -85,10 +86,10 @@ export interface Invocation {
   progress(message: string): void;
 }
 export type CapabilityHandler = (args: JsonObject, invocation: Invocation) => Promise<unknown>;
-export interface ComponentModule {
+export interface ComponentModule<TContext = unknown> {
   name?: string;
   inject?: string[];
-  apply(ctx: Context, config: JsonObject): void | Promise<void>;
+  apply(ctx: TContext, config: JsonObject): void | Promise<void>;
 }
 export interface ComponentStatus {
   id: string;
@@ -102,7 +103,9 @@ export interface ComponentStatus {
 }
 export interface RuntimeStatus {
   protocol: number;
+  /** Reproducible adapter build pin; use hostCompatibility for accepted hosts. */
   hostVersion: string;
+  hostCompatibility: string;
   pid: number;
   revision: string;
   state: 'ready' | 'degraded';

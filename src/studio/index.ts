@@ -1,7 +1,5 @@
 import type { MemoryAccess } from '../memory-adapter.js';
-import { callGatewayFromCli } from 'openclaw/plugin-sdk/gateway-runtime';
-import type { OpenClawPluginApi } from 'openclaw/plugin-sdk/plugin-entry';
-import { isIncognitoSessionKey } from 'openclaw/plugin-sdk/routing';
+import { callGatewayFromCli, isIncognitoSessionKey, type OpenClawPluginApi } from '../adapters/openclaw-sdk.js';
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import type { ReadObservation } from '../read-contract.js';

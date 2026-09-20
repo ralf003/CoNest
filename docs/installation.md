@@ -1,7 +1,7 @@
 # Package installation and verification
 
 This guide is for developers validating a built artifact. For source setup, use the [project startup guide](../README.md).
-Use Node.js 24.15.0, pnpm 11.7.0 and the pinned OpenClaw 2026.9.2 host.
+Use Node.js 24.16.0, pnpm 11.7.0 and an OpenClaw release in the declared compatibility range. Reproducible release packaging retains the 2026.9.2 build pin.
 
 ## Build an artifact
 

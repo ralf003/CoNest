@@ -1,4 +1,4 @@
-import type { FsTarget, FsObservation } from '@deepseek-ai/dsh-fs';
+import type { FsTarget, FsObservation } from './adapters/dsh-filesystem.js';
 
 export const managedReadTools = [
   {

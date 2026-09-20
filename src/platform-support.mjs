@@ -6,7 +6,7 @@ const execute=promisify(execFile);
 export function assertRuntime(platform=process.platform,arch=process.arch,node=process.versions.node,glibc=process.report.getReport().header.glibcVersionRuntime){
  const [major,minor]=node.split('.').map(Number);
  assert(arch==='x64' && ['linux','win32'].includes(platform),'CoNest supports Linux x64 (glibc) and Windows x64');
- assert(major===24&&minor>=15,'CoNest requires Node >=24.15.0 <25');
+ assert(major===24&&minor>=16,'CoNest requires Node >=24.16.0 <25');
  if(platform==='linux'){const [a,b]=(glibc??'0.0').split('.').map(Number);assert(a>2||a===2&&b>=28,'CoNest requires glibc >=2.28 (RHEL 8 or newer)');}
 }
 async function acl(file,protect){
