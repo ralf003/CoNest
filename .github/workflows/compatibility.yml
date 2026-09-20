@@ -89,4 +89,4 @@ jobs:
       - name: Install public DSH dependency graph
         if: matrix.source == 'upstream-release'
         run: pnpm install --lockfile=false
-      - run: pnpm test
+      - run: pnpm test:dsh-matrix
