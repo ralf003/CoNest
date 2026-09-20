@@ -9,7 +9,7 @@ const {build}=require('esbuild');
 const options={bundle:true,platform:'node',format:'esm',target:'node24',sourcemap:false,
  plugins:[{name:'freeze-package-attribution',setup(b){b.onLoad({filter:/\.(ts|js)$/},async args=>{let contents=await readFile(args.path,'utf8');const pattern=/createRequire\(import\.meta\.url\)\(["']\.\.\/package\.json["']\)/g;if(!pattern.test(contents))return;let directory=path.dirname(args.path);let manifest;for(let i=0;i<8;i++){try{manifest=JSON.parse(await readFile(path.join(directory,'package.json'),'utf8'));break;}catch{directory=path.dirname(directory);}}if(!manifest)throw Error('Package identity not found: '+args.path);contents=contents.replaceAll(pattern,JSON.stringify({version:manifest.version}));return {contents,loader:args.path.endsWith('.ts')?'ts':'js'};});}}],
  banner:{js:"import { createRequire as __bundleCreateRequire } from 'node:module'; const require = __bundleCreateRequire(import.meta.url);"},
- external:['openclaw','openclaw/*','sharp','koffi','node-pty','@vscode/ripgrep'],
+ external:['openclaw','openclaw/*','sharp','koffi','node-pty','@vscode/ripgrep','@deepseek-ai/node-addon-system','@deepseek-ai/node-addon-system/*'],
  alias:{'@deepseek-ai/dsh-tools':require.resolve('@deepseek-ai/dsh-tools')},metafile:true};
 for (const [entry,out] of [['src/studio/index.ts','dist/studio/index.js'],['src/studio/host-runtime.ts','dist/studio/host-runtime.js'],['src/mcp-memory-server.mjs','dist/mcp-memory-server.mjs'],['src/studio/runtime-probe.ts','dist/studio/runtime-probe.mjs']]) {
  const result=await build({...options,...(entry==='src/studio/index.ts'?{external:[...options.external,'../host.js']}:{}),entryPoints:[path.join(root,entry)],outfile:path.join(root,out)});

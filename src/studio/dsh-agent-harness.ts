@@ -483,22 +483,29 @@ function createDshEventBridge(params: EmbeddedRunAttemptParamsV2): {
   return {
     assistantTextStreamed: () => assistantText.length > 0,
     async onEvent(event) {
-      if (event.type === "assistant/chunk") {
-        const chunk = event.data.chunk;
+      // DSH <=0.1.1 published live assistant/chunk events. Newer releases keep
+      // the exact stream inside the terminal assistant event, so the caller's
+      // final-result fallback publishes the completed text instead.
+      const legacyStreamEvent = event as unknown as {
+        type: string;
+        data?: { chunk?: { type?: string; text?: string } };
+      };
+      if (legacyStreamEvent.type === "assistant/chunk" && legacyStreamEvent.data?.chunk) {
+        const chunk = legacyStreamEvent.data.chunk;
         if (chunk.type === "text-delta") {
-          assistantText += chunk.text;
+          assistantText += chunk.text ?? "";
           await params.onAgentEvent?.({
             stream: "assistant",
-            data: { text: assistantText, delta: chunk.text },
+            data: { text: assistantText, delta: chunk.text ?? "" },
             sessionKey: params.sessionKey,
           });
-          await params.onPartialReply?.({ text: assistantText, delta: chunk.text });
+          await params.onPartialReply?.({ text: assistantText, delta: chunk.text ?? "" });
         } else if (chunk.type === "reasoning-delta") {
-          reasoningText += chunk.text;
+          reasoningText += chunk.text ?? "";
           await params.onReasoningStream?.({ text: reasoningText, isReasoning: true });
           await params.onAgentEvent?.({
             stream: "reasoning",
-            data: { text: reasoningText, delta: chunk.text },
+            data: { text: reasoningText, delta: chunk.text ?? "" },
             sessionKey: params.sessionKey,
           });
         }

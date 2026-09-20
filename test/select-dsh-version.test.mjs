@@ -44,9 +44,10 @@ patchedDependencies:
 allowBuilds:
   "@deepseek-ai/dsh-subprocess-local@file:.vendor/dsh/packages/subprocess/subprocess-local": true
 `;
-  const selected = selectDshWorkspace(source);
+  const selected = selectDshWorkspace(source, { '@earendil-works/pi-ai': '0.85.1' });
   assert.match(selected, /autoInstallPeers: true/);
-  assert.doesNotMatch(selected, /overrides:|file:\.vendor\/dsh/);
+  assert.doesNotMatch(selected, /file:\.vendor\/dsh/);
+  assert.match(selected, /overrides:\n  "@earendil-works\/pi-ai": "0\.85\.1"/);
   assert.match(selected, /"@deepseek-ai\/dsh-subprocess-local": true/);
   assert.match(selected, /patchedDependencies:/);
 });

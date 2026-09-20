@@ -26,7 +26,8 @@ test('handles prerelease DSH versions with an explicit adapter range', () => {
   assert.equal(inspectCompatibility('DSH', DSH_TESTED_VERSION, DSH_COMPATIBILITY_RANGE, [DSH_TESTED_VERSION]).tested, true);
   assert.equal(inspectDsh('0.1.0-rc.7').tested, true);
   assert.equal(inspectDsh('0.1.0-rc.8').tested, true);
-  assert.throws(() => inspectDsh('0.1.2-rc.1'), /outside/);
+  assert.equal(inspectDsh('0.1.6-alpha.2').tested, true);
+  assert.throws(() => inspectDsh('0.1.5-rc.2'), /outside/);
   assert.throws(() => inspectCompatibility('DSH', '0.2.0', DSH_COMPATIBILITY_RANGE, []), /outside/);
 });
 

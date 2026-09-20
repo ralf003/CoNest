@@ -9,6 +9,7 @@ import {
   SandboxedFileSystem,
   SandboxPolicyService,
   SessionCheckpointPolicy,
+  SessionProjectionRegistry,
   ShellEnv,
   ToolBash,
 } from "../adapters/dsh-composition.js";
@@ -44,6 +45,7 @@ export async function startComposition(options: CompositionOptions): Promise<Run
   try {
     fibers.push(await context.plugin(LlmRuntime));
     fibers.push(await context.plugin(SessionStore));
+    fibers.push(await context.plugin(SessionProjectionRegistry));
     fibers.push(await context.plugin(LocalAttachmentStore, {
       dshHome: path.join(workspaceRoot, ".dsh"),
     }));

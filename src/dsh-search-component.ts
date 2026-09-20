@@ -5,9 +5,8 @@ import {
 } from './adapters/dsh-search.js';
 import type { Agent } from './adapters/dsh-agent.js';
 import type { CordisContext as Context } from './adapters/dsh-cordis.js';
-import { CallId } from './adapters/dsh-llm.js';
-import { Session, SessionId, SESSION_FORMAT_VERSION } from './adapters/dsh-session.js';
-import { ToolRuntime } from './adapters/dsh-tools.js';
+import { createDetachedSession, SessionId } from './adapters/dsh-session.js';
+import { ToolCallId, ToolRuntime } from './adapters/dsh-tools.js';
 import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 import { inside } from './config.js';
@@ -69,10 +68,10 @@ async function executeSearch(ctx: Context, name: 'grep' | 'glob', args: JsonObje
   const id = SessionId(`conest-search:${invocation.taskId}`);
   const agent = nativeView ? {
     id, ctx, options: {}, status: 'idle',
-    session: Session.create(id, [], { version: SESSION_FORMAT_VERSION, id, createdAt: Date.now(), cwd: root }),
+    session: createDetachedSession(id, root),
   } as Agent : undefined;
   const result = await ctx.tools.execute({
-    callId: CallId(invocation.callId), name, arguments: { ...args, path: target },
+    callId: ToolCallId(invocation.callId), name, arguments: { ...args, path: target },
     ...(agent ? { agent } : {}), signal: invocation.signal,
   });
   invocation.signal.throwIfAborted();

@@ -23,9 +23,15 @@
 
 **Available today:** OpenClaw and DeepSeek Harness (DSH) are the first integrations. A Cordis-based runtime supports component composition, tool interoperability and shared memory; Studio shows available capabilities and execution history. More agent integrations and collaboration across runtimes are the next steps.
 
-CoNest is intended to become the capability fabric between Agent runtimes, reusable services and OS execution nodes. It matters when one durable task must cross runtimes, machines, trust boundaries and business systems while retaining one identity, policy, operation history and deliverable state—not when a single Agent only needs another tool endpoint.
+CoNest is intended to become the capability fabric and task control plane between Agent runtimes, reusable services and OS execution nodes. It serves durable work that crosses runtimes, machines, trust boundaries and business systems while retaining one identity, policy, operation history and deliverable state.
 
-CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records qualified versions. CI verifies the oldest and newest supported OpenClaw releases plus every declared DSH release from its pinned source.
+CoNest is being built for:
+
+- **Cross-runtime enterprise delivery** — combine private data, specialist Agents, local applications, approval and business-system submission into one recoverable task.
+- **Long-running operations** — coordinate coding, diagnosis, infrastructure and human decisions across partial failure, cancellation, retry and handoff.
+- **Cross-device and edge execution** — place sensitive work on the right workstation, server or device while cloud Agents continue to plan and collaborate.
+
+CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records qualified versions. A daily compatibility watch resolves and tests the current OpenClaw and DSH releases, while the required matrix retains the baseline and every declared DSH release. An upstream break therefore fails before CoNest broadens its support declaration, and the fix stays inside the affected adapter boundary.
 
 > [!TIP]
 > **Explore 0.6.4** — Gateway + CoNest Host, composable office services, and an OpenClaw demo without DSH via `--core`.

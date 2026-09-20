@@ -1,9 +1,9 @@
 import type { AnyAgentTool } from "../adapters/openclaw-sdk.js";
 import type { Agent, AgentHandle } from "../adapters/dsh-agent.js";
 import type { ApprovalOutcome, ApprovalRequest } from "../adapters/dsh-approval.js";
-import { CallId, createUserMessage, type ContentBlock } from "../adapters/dsh-llm.js";
-import { Session, SessionId, type SessionEvent } from "../adapters/dsh-session.js";
-import type { ToolExecutionResult } from "../adapters/dsh-tools.js";
+import { createUserMessage, type ContentBlock } from "../adapters/dsh-llm.js";
+import { Session, SessionId, sessionEventsSince, type SessionEvent } from "../adapters/dsh-session.js";
+import { ToolCallId, type ToolExecutionResult } from "../adapters/dsh-tools.js";
 import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
@@ -156,7 +156,7 @@ export class CordisBridgeHost {
       throw new Error(`Cordis bridge is ${this.state}; the OpenClaw plugin service is not ready`);
     }
     return this.composition.context.tools.execute({
-      callId: CallId(toolCallId),
+      callId: ToolCallId(toolCallId),
       name,
       arguments: params,
       agent: this.agentFor(sessionKey),
@@ -319,7 +319,7 @@ export class CordisBridgeHost {
   ): Promise<AgentRunResult> {
     if (!this.composition || !this.workspaceRoot) throw new Error("Cordis bridge is not ready");
     const agent = handle.agent;
-    const firstEventIndex = agent.session.events.length;
+    const firstEventIndex = agent.session.seq;
     const coldResumeTurn = this.coldResumedHandles.delete(handle);
     let timedOut = false;
     let eventBridgeError: unknown;
@@ -392,7 +392,7 @@ export class CordisBridgeHost {
           cause: eventBridgeError,
         });
       }
-      const events = agent.session.events.slice(firstEventIndex);
+      const events = sessionEventsSince(agent.session, firstEventIndex);
       const turnEnd = events.findLast((event) => event.type === "turn/end");
       if (timedOut) {
         throw new CordisAgentRunError("timeout", "DSH Agent Loop exceeded the OpenClaw turn timeout");

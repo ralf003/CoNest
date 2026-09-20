@@ -1,5 +1,4 @@
 import {
-  CallId,
   LlmAdapter,
   type ContentBlock,
   type GenerateOptions,
@@ -7,6 +6,7 @@ import {
   type StreamChunk,
 } from "../adapters/dsh-llm.js";
 import type { CordisContext } from "../adapters/dsh-cordis.js";
+import { ToolCallId } from "../adapters/dsh-tools.js";
 
 const PROVIDER = "bridge-proof";
 
@@ -35,7 +35,7 @@ function finalResponse(text: string): StreamChunk[] {
 }
 
 function toolResponse(name: string, args: object): StreamChunk[] {
-  const callId = CallId(`bridge-proof-${crypto.randomUUID()}`);
+  const callId = ToolCallId(`bridge-proof-${crypto.randomUUID()}`);
   const argumentsJson = JSON.stringify(args);
   return [
     { type: "block-start", index: 0, blockType: "tool-call" },

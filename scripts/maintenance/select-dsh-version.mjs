@@ -35,7 +35,7 @@ export async function selectDshPackages(manifest, version, revision, loadManifes
   return { manifest: output, selected };
 }
 
-export function selectDshWorkspace(source) {
+export function selectDshWorkspace(source, publicOverrides = {}) {
   const lines = source.split('\n');
   const output = [];
   let skipOverrides = false;
@@ -52,7 +52,10 @@ export function selectDshWorkspace(source) {
     else if (/^  "@deepseek-ai\/dsh-subprocess-local@file:/.test(line)) output.push('  "@deepseek-ai/dsh-subprocess-local": true');
     else output.push(line);
   }
-  return output.join('\n');
+  const rendered = output.join('\n').trimEnd();
+  const overrides = Object.entries(publicOverrides);
+  if (!overrides.length) return rendered + '\n';
+  return `${rendered}\n\noverrides:\n${overrides.map(([name, value]) => `  ${JSON.stringify(name)}: ${JSON.stringify(value)}`).join('\n')}\n`;
 }
 
 async function discoverDirectPackages(root) {
@@ -77,7 +80,12 @@ async function main() {
   const root = fileURLToPath(new URL('../..', import.meta.url));
   const packageFile = path.join(root, 'package.json');
   const workspaceFile = path.join(root, 'pnpm-workspace.yaml');
+  const compatibilityFile = path.join(root, 'compatibility.json');
   const manifest = JSON.parse(await readFile(packageFile, 'utf8'));
+  const compatibility = JSON.parse(await readFile(compatibilityFile, 'utf8'));
+  const qualification = compatibility.adapters?.dsh?.qualifications?.find(
+    entry => entry.version === version && entry.revision === revision,
+  );
   const loadManifest = async relative => {
     const url = `https://raw.githubusercontent.com/deepseek-ai/deepseek-harness/${revision}/${relative}/package.json`;
     const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
@@ -95,7 +103,10 @@ async function main() {
   const requiredNames = await discoverDirectPackages(root);
   const result = await selectDshPackages(manifest, version, revision, loadManifest, requiredNames);
   await writeFile(packageFile, JSON.stringify(result.manifest, null, 2) + '\n');
-  await writeFile(workspaceFile, selectDshWorkspace(await readFile(workspaceFile, 'utf8')));
+  await writeFile(workspaceFile, selectDshWorkspace(
+    await readFile(workspaceFile, 'utf8'),
+    qualification?.workspaceOverrides ?? {},
+  ));
   console.log(`Selected DSH ${version} from ${revision}: ${result.selected.length} direct packages`);
 }
 

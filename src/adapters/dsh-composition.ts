@@ -9,5 +9,6 @@ export { default as SandboxPolicyService } from '@deepseek-ai/dsh-sandbox-policy
 export * as LlmPiAi from '@deepseek-ai/dsh-llm-pi-ai';
 export * as SessionCheckpointPolicy from '@deepseek-ai/dsh-session-checkpoint-policy';
 export { default as JsonlSessionPersistence } from '@deepseek-ai/dsh-session-persistence-jsonl';
+export { default as SessionProjectionRegistry } from '@deepseek-ai/dsh-session-projection';
 export * as ShellEnv from '@deepseek-ai/dsh-shell-env';
 export * as ToolBash from '@deepseek-ai/dsh-tool-bash';
