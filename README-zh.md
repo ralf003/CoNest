@@ -13,7 +13,7 @@
 
 <br />
 
-<a href="#快速开始"><strong>快速开始</strong></a> &nbsp;·&nbsp; <a href="#快速开始"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#分支与能力"><strong>分支与能力</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>参与共建</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
+<a href="#快速开始"><strong>快速开始</strong></a> &nbsp;·&nbsp; <a href="#快速开始"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#分支与能力"><strong>能力地图</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>参与共建</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
 
 </div>
 
@@ -21,7 +21,7 @@
 
 **CoNest 正在构建面向 Agent 的互联与协作基础设施。** 我们希望连接不同框架、不同运行环境中的 Agent，让工具、记忆、服务与工作流能够被发现、调用和组合，让各自独立的能力共同完成任务。
 
-**当前实现：** 从 OpenClaw 与 DeepSeek Harness（DSH）的接入起步，以 Cordis 组件运行时提供能力组合、工具互用和共享记忆，Studio 展示接入能力与执行记录。更多 Agent 的接入和跨运行环境协作，是项目继续建设的方向。
+**当前实现：** OpenClaw 与 DeepSeek Harness（DSH）已通过统一的组件和运行时模型相连。Cordis 组件运行时负责组合工具、记忆与服务，CoNest Host 协调 Agent 会话和组件执行，Studio 统一呈现能力目录与执行记录。
 
 CoNest 的目标是成为 Agent 运行时、可复用服务与 OS 执行节点之间的能力织网和任务控制平面。它服务于同一个长期任务跨越多种运行时、机器、权限边界与业务系统，同时保持统一身份、策略、操作记录和交付状态的场景。
 
@@ -31,10 +31,10 @@ CoNest 重点服务于：
 - **长时间运行的复杂操作** — 让编码、诊断、基础设施与人工决策在局部失败、取消、重试和转交中保持连续。
 - **跨设备与边缘执行** — 将敏感操作放在合适的工作站、服务器或设备上，同时让云端 Agent 继续规划与协作。
 
-CoNest 的组件清单与运行协议不依赖某个 Agent SDK；OpenClaw 以及可选的 DSH/Cordis 支持包都通过独立适配层接入。[机器可读的兼容策略](compatibility.json)声明已验证版本。每日兼容监测会自动解析并测试 OpenClaw 与 DSH 的当前发行版，必跑矩阵同时保留基线版本和每一个已声明的 DSH 版本。上游破坏性变更会先让监测失败，待相应适配边界修复并通过后，CoNest 才扩大支持声明。
+CoNest 为不同 Agent SDK 定义统一的组件清单与运行协议。OpenClaw 和 DSH/Cordis 通过聚焦各自职责的适配层接入，[机器可读的兼容策略](compatibility.json)记录已验证版本。GitHub Actions 每日自动解析并测试 OpenClaw 与 DSH 的当前发行版，同时覆盖全部维护基线，让适配层持续跟随上游项目演进。
 
 > [!TIP]
-> **探索 0.6.4** — Gateway 与 CoNest Host 双进程、办公组件组合，以及 `--core` 无 DSH 演示。
+> **探索 0.6.4** — Gateway 与 CoNest Host 双进程、办公组件组合、共享记忆，以及通过 `--core` 启动的 OpenClaw + Core 专注体验。
 
 ## 让能力彼此相连
 
@@ -47,11 +47,11 @@ CoNest 的组件清单与运行协议不依赖某个 Agent SDK；OpenClaw 以及
 - **[观察能力如何运行](#快速开始)** — 在 Studio 查看工具与组件目录、执行结果和活动时间线。
 
 <details>
-<summary><strong>架构与当前边界</strong> · Gateway / Host / 可选 DSH</summary>
+<summary><strong>运行架构</strong> · Gateway / Host / 组件组合</summary>
 
-0.6.4 已采用 **Gateway 与 CoNest Host 两个常驻应用进程**，DSH Agent / Session 已迁入 Host；Management、Runtime 与可选 DSH 组合共享 Host。
+0.6.4 采用 **Gateway 与 CoNest Host 两个常驻应用进程**。DSH Agent / Session 与 Management、Runtime 及所选组件组合共同运行在 Host 中。
 
-办公服务示例演示可复用 Cordis 服务及单次调用的依赖图版本一致性。`--core` 可关闭 DSH；独立 Core / DSH 发行包、完整插件贡献模型仍为后续工作。
+标准启动组合 DSH 执行、共享记忆、受控文件读取和工作区搜索；`--core` 启动则组合 OpenClaw 连接与可复用的 Cordis 办公服务。两种方式都展示组件生命周期管理和每次调用所使用的一致依赖图。
 
 </details>
 
@@ -79,20 +79,19 @@ CONEST_DEMO_STATE="$PWD/.local/studio" \
 
 <a name="分支与能力"></a>
 
-## 分支与能力
+## 能力地图
 
-`main` 为稳定基线，`develop` 为开发线。两条分支均已接入 OpenClaw / DSH 与 Studio，并验证干净克隆后的依赖恢复和构建。下表只列实现差异；更多 Agent 与运行环境将随适配能力逐步扩展。
-
-| 能力 | <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> · 0.6.2 | <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> · 0.6.4 |
+| 层级 | CoNest 提供的能力 | 当前实现 |
 | :--- | :--- | :--- |
-| DSH 执行位置 | Gateway | CoNest Host |
-| 无 DSH 模式 | — | `--core` 办公组件演示 |
-| 共享记忆 | Gateway 内提供 | `dsh-memory` 组件 |
-| 工作区搜索 | `knowledge_search` 与验证能力 | 另接入 `dsh_grep` / `dsh_glob` |
-| 文本读取 | Gateway 内提供 | `dsh-read`，保留读后写校验 |
-| DSH 动态组件 | 尚未接入 | Host 工具准入与组件 worker |
+| Agent 连接 | 在不同 Agent 运行时之间路由任务与能力调用 | OpenClaw Gateway 与 DSH Agent / Session 适配器 |
+| 组件组合 | 发现服务并管理其依赖关系和生命周期 | Cordis 组件运行时与 CoNest 组件清单 |
+| 工具互用 | 共享工作区、搜索、读取与办公能力 | `knowledge_search`、`dsh_grep`、`dsh_glob`、`dsh-read` 与办公组件 |
+| 共享记忆 | 让已记录的知识与决策贯穿任务执行 | `dsh-memory`、知识图谱存储与 Gateway 持久化 |
+| 任务执行 | 在托管环境中准入工具并运行动态组件 | CoNest Host、组件 worker 与会话编排 |
+| 运行观测 | 查看可用能力、执行结果与活动过程 | CoNest Studio 能力目录与执行时间线 |
+| 版本兼容 | 持续验证 Agent SDK 的当前发行版 | 每日 GitHub Actions 监测与版本矩阵 |
 
-<sub>当前浏览的是 <strong>develop</strong>。<code>v0.6.2</code> 保留最初备份；分支维护与安装包发布独立进行。</sub>
+<a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> 与 <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> 当前共享 0.6.4 实现。`main` 是稳定入口，`develop` 用于集成下一项经过评审的变更。
 
 ## 该看哪份文档？
 

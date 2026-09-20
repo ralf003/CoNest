@@ -13,7 +13,7 @@
 
 <br />
 
-<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="#quick-start"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Branches</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
+<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="#quick-start"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Capabilities</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
 
 </div>
 
@@ -21,7 +21,7 @@
 
 **CoNest is building an interconnected world for agents.** Our goal is to connect agents across frameworks and runtimes, so tools, memory, services and workflows can be discovered, invoked and composed into capabilities that work together.
 
-**Available today:** OpenClaw and DeepSeek Harness (DSH) are the first integrations. A Cordis-based runtime supports component composition, tool interoperability and shared memory; Studio shows available capabilities and execution history. More agent integrations and collaboration across runtimes are the next steps.
+**Available today:** OpenClaw and DeepSeek Harness (DSH) connect through a shared component and runtime model. A Cordis-based runtime composes tools, memory and services; CoNest Host coordinates Agent sessions and component execution; Studio presents the resulting capability catalog and execution history.
 
 CoNest is intended to become the capability fabric and task control plane between Agent runtimes, reusable services and OS execution nodes. It serves durable work that crosses runtimes, machines, trust boundaries and business systems while retaining one identity, policy, operation history and deliverable state.
 
@@ -31,10 +31,10 @@ CoNest is being built for:
 - **Long-running operations** — coordinate coding, diagnosis, infrastructure and human decisions across partial failure, cancellation, retry and handoff.
 - **Cross-device and edge execution** — place sensitive work on the right workstation, server or device while cloud Agents continue to plan and collaborate.
 
-CoNest keeps its component manifest and runtime protocol independent from either Agent SDK. OpenClaw and the optional DSH/Cordis support pack enter through narrow adapters; the machine-readable [compatibility policy](compatibility.json) records qualified versions. A daily compatibility watch resolves and tests the current OpenClaw and DSH releases, while the required matrix retains the baseline and every declared DSH release. An upstream break therefore fails before CoNest broadens its support declaration, and the fix stays inside the affected adapter boundary.
+CoNest defines a common component manifest and runtime protocol across Agent SDKs. OpenClaw and DSH/Cordis connect through focused adapters, while the machine-readable [compatibility policy](compatibility.json) records qualified versions. A daily GitHub Actions watch resolves and tests the current OpenClaw and DSH releases alongside every maintained baseline, keeping the adapters current as upstream projects evolve.
 
 > [!TIP]
-> **Explore 0.6.4** — Gateway + CoNest Host, composable office services, and an OpenClaw demo without DSH via `--core`.
+> **Explore 0.6.4** — Gateway + CoNest Host, composable office services, shared memory, and a focused OpenClaw + Core experience via `--core`.
 
 ## Capabilities, connected
 
@@ -47,11 +47,11 @@ CoNest keeps its component manifest and runtime protocol independent from either
 - **[See how capabilities work](#quick-start)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
 
 <details>
-<summary><strong>Architecture & current scope</strong> · Gateway / Host / optional DSH</summary>
+<summary><strong>Runtime architecture</strong> · Gateway / Host / component compositions</summary>
 
-Version 0.6.4 uses **two persistent application processes: Gateway and CoNest Host**. DSH Agent / Session runs inside Host, alongside Management, Runtime and the optional DSH composition.
+Version 0.6.4 uses **two persistent application processes: Gateway and CoNest Host**. DSH Agent / Session runs inside Host alongside Management, Runtime and the selected component composition.
 
-The office example demonstrates reusable Cordis services and per-call dependency graph consistency. `--core` disables DSH; separate Core / DSH distribution packages and the full plugin contribution model remain future work.
+The standard launch composes DSH execution, shared memory, guarded file access and workspace search. The `--core` launch composes the OpenClaw connection with reusable Cordis office services. Both demonstrate lifecycle management and a consistent dependency graph for every call.
 
 </details>
 
@@ -79,20 +79,19 @@ If startup fails, check Node/pnpm versions, port availability and the terminal e
 
 <a name="branches"></a>
 
-## Branches
+## Capability map
 
-`main` is the stable baseline; `develop` is the development branch. Both include OpenClaw / DSH integration, Studio, and verified clean-clone builds. The table focuses on implementation differences; more agent and runtime adapters remain under development.
-
-| Capability | <a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> · 0.6.2 | <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> · 0.6.4 |
+| Layer | What CoNest enables | Current implementation |
 | :--- | :--- | :--- |
-| DSH execution | Gateway | CoNest Host |
-| Without DSH | — | Office demo via `--core` |
-| Shared memory | Provided by Gateway | `dsh-memory` component |
-| Workspace search | `knowledge_search` and verification | Adds `dsh_grep` / `dsh_glob` |
-| Text reads | Provided by Gateway | `dsh-read`, with guarded-edit observations |
-| Dynamic DSH components | Pending | Host tool admission and component worker |
+| Agent connectivity | Route tasks and capability calls across Agent runtimes | OpenClaw Gateway and DSH Agent / Session adapters |
+| Component composition | Discover services and manage their dependencies and lifecycle | Cordis-based runtime and CoNest component manifests |
+| Tool interoperability | Share workspace, search, reading and office capabilities | `knowledge_search`, `dsh_grep`, `dsh_glob`, `dsh-read` and office components |
+| Shared memory | Carry recorded knowledge and decisions across task execution | `dsh-memory`, knowledge graph storage and Gateway persistence |
+| Task execution | Admit tools and run dynamic components inside a managed host | CoNest Host, component worker and session orchestration |
+| Observability | Inspect available capabilities, results and activity | CoNest Studio catalogs and execution timeline |
+| Release compatibility | Continuously qualify current Agent SDK releases | Daily GitHub Actions watch and version matrix |
 
-<sub>You are viewing <strong>develop</strong>. The original <code>v0.6.2</code> tag preserves the initial backup; branch maintenance continues independently of packaged releases.</sub>
+<a href="https://github.com/zyw02/CoNest/tree/main"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>main</code></a> and <a href="https://github.com/zyw02/CoNest/tree/develop"><picture><source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/git-branch-dark.svg" /><img src="docs/assets/readme/git-branch.svg" width="16" height="16" align="absmiddle" alt="" /></picture> <code>develop</code></a> currently share the 0.6.4 implementation. `main` is the stable entry point; `develop` is the integration branch for the next reviewed change.
 
 ## What should I read?
 
