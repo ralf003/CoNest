@@ -1,42 +1,112 @@
 # Contributing to CoNest
 
-**English** · [简体中文](CONTRIBUTING-zh.md)
+Start with the [README](README.md) to run CoNest. This file defines how changes are proposed, reviewed and maintained. [Developer references](bridge/README.md) are for work on components, host integration or packaging; they are not an onboarding checklist.
 
-Discuss bugs and designs in Issues, and submit changes through pull requests. Start a `feature/short-name` or `fix/short-name` branch from `develop`; validated changes can then move to `main`.
+## Where work belongs
 
-## Set up and validate
+| Work | Start here | Required context |
+| --- | --- | --- |
+| Reproducible defect or regression | Bug report | Affected commit/version, environment, reproduction, expected and actual results |
+| Incorrect or missing instructions | Bug report, Documentation area | Exact page/section, command or statement, and observed failure |
+| New capability or public contract change | Feature request before a substantial implementation | User problem, acceptance criteria, affected interface and alternatives |
+| Small, clearly scoped fix | PR; an existing issue is enough | Standalone explanation and relevant checks |
+| Setup question | Question form | Goal, exact commands, environment and what you tried |
+| Potential vulnerability | [Security contact procedure](#security) | Arrange a private route before sharing exploit details |
 
-Use Linux x64, Node.js 24.15.0, pnpm 11.7.0, Git and tar. Native builds require Python 3, make and a C++ compiler. From the repository root:
+Search existing issues and PRs first. Add evidence to the existing report instead of creating duplicates. A feature discussion is not a commitment to implement it. Maintainers may ask that an integration remain an optional component rather than expanding the core.
 
-```bash
-node maintenance/bootstrap.mjs
-pnpm --dir bridge install --frozen-lockfile
-pnpm --dir bridge run build
-pnpm --dir bridge exec tsx --test 'test/*.test.ts'
-python3 maintenance/check-repository.py
-```
+Issues and review discussions may use English or Chinese. Maintained developer documentation, templates and identifiers use English.
 
-Run relevant integration checks for behavior changes. Studio's four acceptance scenarios use real loops and tools with a local model fixture:
+## Issue requirements
+
+Use the issue forms and keep one independently actionable problem per report.
+
+- Give the CoNest branch, version and commit; OS/architecture; Node and pnpm versions; and the pinned OpenClaw version. Identify fixture versus live model execution when relevant.
+- Provide the smallest reproducible configuration and numbered commands. Use synthetic workspace files instead of customer data. State expected behavior separately from the actual result and explain who is affected.
+- For regressions, give the last working and first failing version if known. Retest on the current affected branch when practical; explain if you cannot. Do not silently upgrade pinned dependencies to reproduce.
+- Paste short, redacted error text rather than screenshots of terminal output. UI defects may include a screenshot with the viewport and reproduction steps. Performance claims need workload, environment and before/after measurements.
+- For feature requests, describe the task that is blocked, an observable acceptance criterion, alternatives considered and compatibility or permission implications. Do not attach internal proposals, customer presentations or private roadmaps.
+
+Reports without enough information may be marked as needing information and closed with an explanation. Supply the missing reproduction in the original report to request reconsideration. There is no guaranteed response time or automatic acceptance based on votes.
+
+## Branches and scope
+
+Create `fix/<short-name>`, `feat/<short-name>` or `docs/<short-name>` from `develop`, and normally target `develop`. `main` receives reviewed stable fixes or promotions with matching validation. A maintainer can request a direct stable fix; identify the equivalent development change or explain why it does not apply.
+
+Keep one coherent problem per PR. Separate unrelated formatting, refactoring, dependency upgrades and feature work. Related changes across many files belong together when they form one reviewable unit. Keep intermediate commits buildable; identify dependencies between PRs. Do not change unrelated files to satisfy a failing test.
+
+Use a title such as `fix(runtime): revoke grants when permissions change` or `docs: clarify the first startup`. Allowed types: `feat`, `fix`, `docs`, `test`, `refactor`, `perf`, `build`, `ci`, `chore`, `revert`. Use the same convention for commits. Explain the reason and relevant compatibility effect in the commit body when the title cannot carry them. Retain authorship and never invent another person's review, testing or sign-off trailer.
+
+## Required PR body
+
+Use the [PR template](.github/pull_request_template.md). The description must remain understandable without reading the chat, issue history or earlier versions of the PR.
+
+| Section | What to write |
+| --- | --- |
+| Problem | Concrete trigger, current failure or missing behavior, and affected users or maintainers. Internal cleanup can state its maintenance benefit directly. |
+| Changes | Resulting behavior and the reason for the implementation choice. Include a before/after example when useful; do not substitute a file list. |
+| Validation | Exact commands and outcomes on the submitted revision. Identify fixtures, platforms and omitted checks with reasons. For UI work include a focused comparison; for packaging list the inspected artifact contents. |
+| Compatibility and risks | Changes to plugin IDs, tool names/schemas, protocol, persisted state, permissions, dependency versions or platform support. State required restart/migration/recovery actions. Write an explicit explanation when there is no compatibility change. |
+| Related issues | `Closes #123` only for a completed fix, otherwise `Related: #123`. A small standalone change may say `None —` followed by its justification. Substantial features must link the earlier discussion. |
+| Checklist | Confirm review of the diff, accurate validation and compliance with the repository content boundary. |
+
+Edit the body when scope, validation or risks change. Put important qualifications in the body, not only a review reply. Draft PRs may be incomplete; ready-for-review PRs must complete every section and checkbox. The contribution check verifies format and completeness; a reviewer decides whether the evidence is sufficient. Passing that check is not approval.
+
+## Validation
+
+Use the pinned toolchain from the README. Run commands from the repository root unless shown otherwise.
+
+| Changed surface | Minimum relevant evidence |
+| --- | --- |
+| Documentation and repository rules | `python3 maintenance/check-repository.py`; verify local links, documented commands and rendered layout when affected |
+| Contribution automation | `python3 maintenance/test-contribution.py`; demonstrate accepted and rejected PR bodies |
+| TypeScript/runtime behavior | `pnpm --dir bridge run build` and `pnpm --dir bridge exec tsx --test 'test/*.test.ts'`; cover the changed behavior and its failure path |
+| Component graph or lifecycle | Runtime tests plus `pnpm --dir bridge run test:runtime`; exercise retained calls, cleanup or revocation as applicable |
+| Host policy, tools or Studio | Relevant host/E2E checks and an isolated Studio run; verify actual tool admission and cancellation where changed |
+| Dependencies or SDK | Clean bootstrap, frozen install, build and tests on affected maintained branches; review licenses and update locks together |
+| Packaging/platform scripts | Build the affected target package, inspect its file list and checksum, and run installation checks on the claimed platform |
+
+An isolated Studio check:
 
 ```bash
 CONEST_DEMO_STATE=/absolute/disposable/conest-check \
   pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
 ```
 
-For dependency changes, validate both branches from clean clones. See the [Chinese contribution guide](CONTRIBUTING-zh.md) for the validation matrix and development-only memory checks, and [dependency provenance](maintenance/DEPENDENCIES-zh.md) for SDK verification and licensing.
+Choose regression assertions that would catch the reported failure. Do not add tests that merely restate implementation details or disable a failing assertion to obtain green CI. Report unrelated baseline failures separately. A Linux build is not Windows execution evidence; a deterministic model fixture is not live-model inference. State those limits in the PR.
 
-## File naming
+CI and default local checks must not require provider keys, customer workspaces or paid inference. Live-model tests are explicit, separately configured runs. Keep results and credentials outside Git. Changes to permissions, state formats or cancellation need corresponding denial, compatibility or recovery checks.
 
-Use English names and ASCII characters for all tracked files and directories. Chinese documents use a `-zh` suffix before the extension, for example `README-zh.md` or `studio-zh.md`. Keep links, renderers and packaging scripts consistent when renaming files. The historical paths and hashes in `maintenance/import.json` record the initial import and remain unchanged.
+## Review and merge
 
-## Submit and release
+The author owns the PR until it is merged or closed: answer review points, keep the body current and rerun affected checks after changes. Explain disagreements with code, a reproducer or measured evidence. Review code and behavior, not the person; harassment, spam and repeated pressure on maintainers are unacceptable.
 
-Describe the concrete problem, resulting behavior and checks performed in your PR. Keep downloaded `.vendor` content, `node_modules`, credentials, logs and runtime state out of Git. CI uses local fixtures and does not invoke paid models.
+A maintainer checks scope, contract compatibility, validation and repository contents before merging. Resolve blocking feedback and required CI failures. Substantive changes after approval need another review. Prefer squash merging a single change; a deliberately structured series may retain its commits. An issue is closed only when the delivered change actually meets its acceptance criteria.
 
-`main` starts from 0.6.2; `develop` contains 0.6.4 development changes. Maintain shared build and documentation changes in both branches without moving the original `v0.6.2` tag. Use separate clones or worktrees when checking the other branch. SDK releases are development dependencies; plugin installers require their own platform validation.
+Release and SDK publication remain maintainer responsibilities. Do not move existing version tags, overwrite published artifacts, change branch protections or claim a platform is supported just because a workflow exists. Branch promotion must preserve that branch's implemented capabilities.
 
-## Repository content boundary
+AI-assisted contributions follow the same rules. The submitting person remains responsible for understanding every change, reviewing generated code, preserving third-party notices and accurately reporting tests. Generated assertions or fabricated logs are not evidence. Do not include prompts, chat transcripts or internal planning documents as development records.
 
-Commit developer source, configuration, dependency locks, component examples, tests, build/release scripts and developer documentation. Keep only `README.md` as documentation at the `bridge/` root; put technical guides in `bridge/docs/`.
+## Documentation and repository content
 
-Keep customer presentations, delivery tutorials, speaker notes, screenshots and rendered HTML/PDF outside Git, or in ignored `maintenance/local/customer-delivery/`. Run evidence belongs in ignored `bridge/reports/`; document reproduction commands and scope. Packaged documentation must be explicitly listed in `pack-release.mjs`; never copy the entire docs directory.
+The public reading path is intentionally small:
+
+1. **Run the project:** `README.md` and its Chinese startup counterpart `README-zh.md`.
+2. **Contribute:** this English-only file, with GitHub issue and PR templates.
+3. **Modify an implementation:** `bridge/README.md` links the few relevant technical references.
+
+Update an existing canonical section before adding a document. A new guide needs a distinct reader and task, an entry link, and an explanation of why the existing reference cannot cover it. Developer contracts describe implemented behavior; release evidence belongs in CI or release artifacts, not a growing collection of dated Markdown reports.
+
+Only the root startup README has a maintained Chinese counterpart. Do not create translated contribution rules, implementation notes or internal planning files. Use English/ASCII file names. The public Markdown inventory is checked by `maintenance/check-repository.py`; adding another entry is a review decision, not a way to bypass this policy.
+
+Never commit company/customer proposals, roadmaps, internal architecture plans, speaker notes, slide decks, generated planning images, prompts, meeting/chat records or delivery tutorials. Keep such material outside the checkout or under ignored `maintenance/local/`. Do not include it in issues, PR attachments or release packages either. Public feature discussion should contain only the minimum non-confidential problem and acceptance criteria.
+
+Commit source, required configuration, locks, minimal examples, meaningful tests and maintained developer contracts. Dependencies, build output, credentials, runtime state and reports remain untracked. Package documentation uses an explicit allowlist. Preserve third-party licenses; a new dependency needs its origin, license and runtime impact reviewed. Never silently alter licensing in an unrelated change.
+
+## Security
+
+Do not publish credentials, private data or an exploitable reproduction in a public issue. Use GitHub's private “Report a vulnerability” entry if it is available. If it is unavailable, open a minimal contact request asking the maintainer for a private reporting route without technical exploit details. CoNest does not currently document a separate security mailbox or response-time commitment.
+
+## References
+
+These are CoNest rules, informed by [OpenClaw's contribution workflow](https://github.com/openclaw/openclaw/blob/main/CONTRIBUTING.md), the Linux kernel's [patch submission guide](https://docs.kernel.org/process/submitting-patches.html) and [issue reporting guide](https://docs.kernel.org/admin-guide/reporting-issues.html). We use GitHub PRs, CoNest's pinned dependencies and the checks above; upstream project-specific commands and mailing-list procedures do not apply here.

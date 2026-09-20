@@ -53,3 +53,24 @@ __pycache__/
 /bridge/scripts/pack-multiplatform.py
 /bridge/scripts/render-platform-docs.py
 /bridge/scripts/pack-dsh-demo.mjs
+
+# Internal proposals, roadmaps, research and document-generation work stay local.
+/DESIGN*.md
+/CONTROL-DESIGN*.md
+/DEVELOPMENT.md
+/CONEST-*-SPEC*.md
+/CONTRIBUTING-zh.md
+/docs/archive/
+/docs/research/
+/docs/scripts/
+/docs/*.md
+/docs/*.html
+/docs/*.pdf
+/docs/assets/*architecture*
+/docs/assets/*.prompt.*
+/docs/assets/*.review.*
+/docs/assets/brand/*concept*
+/docs/assets/brand/conest-nest-flight-mark.png
+/maintenance/import.json
+/maintenance/*-zh.md
+/bridge/docs/*-zh.md

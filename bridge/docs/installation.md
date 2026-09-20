@@ -1,6 +1,6 @@
 # Package installation and verification
 
-This guide is for developers validating a built artifact. For source setup, use the [developer guide](../README.md).
+This guide is for developers validating a built artifact. For source setup, use the [project startup guide](../../README.md).
 Use Node.js 24.15.0, pnpm 11.7.0 and the pinned OpenClaw 2026.9.2 host.
 
 ## Build an artifact
@@ -36,7 +36,7 @@ openclaw plugins install --force --accept-capabilities /absolute/packages/local-
 ```
 
 These flags explicitly trust the local artifact and its declared capabilities. Verify its checksum first.
-Retain the plugin ID `dsh-bridge`; configure it using the [developer guide](../README.md).
+Retain the plugin ID `dsh-bridge`; configure it using [host integration](host-integration.md#plugin-configuration).
 Component upgrades do not replace Connector code; restart the Gateway when updating the package.
 
 ## Windows integration

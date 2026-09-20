@@ -13,7 +13,7 @@
 
 <br />
 
-<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="bridge/docs/studio-zh.md"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Branches</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
+<a href="#quick-start"><strong>Quick start</strong></a> &nbsp;·&nbsp; <a href="#quick-start"><strong>Studio</strong></a> &nbsp;·&nbsp; <a href="#branches"><strong>Branches</strong></a> &nbsp;·&nbsp; <a href="CONTRIBUTING.md"><strong>Contribute</strong></a> &nbsp;·&nbsp; <a href="https://github.com/zyw02/CoNest/issues"><strong>Issues</strong></a>
 
 </div>
 
@@ -32,14 +32,14 @@
 
 - **[Compose tools & services](bridge/README.md)** — Build reusable components. The runtime manages dependencies, invocation and lifecycle so services can work together.
 
-- **[Let knowledge accumulate](bridge/docs/studio-zh.md)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
+- **[Let knowledge accumulate](#quick-start)** — Capture and recall a shared knowledge graph so tasks can build on recorded knowledge, decisions and experience.
 
-- **[See how capabilities work](bridge/docs/studio-zh.md)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
+- **[See how capabilities work](#quick-start)** — Browse tool and component catalogs, task results and the activity timeline in Studio.
 
 <details>
 <summary><strong>Architecture & current scope</strong> · Gateway / Host / optional DSH</summary>
 
-The [target architecture (中文)](DESIGN-zh.md) extends Cordis-based OpenClaw enhancement to work without DSH. Version 0.6.4 uses **two persistent application processes: Gateway and CoNest Host**. DSH Agent / Session runs inside Host, alongside Management, Runtime and the optional DSH composition.
+Version 0.6.4 uses **two persistent application processes: Gateway and CoNest Host**. DSH Agent / Session runs inside Host, alongside Management, Runtime and the optional DSH composition.
 
 The office example demonstrates reusable Cordis services and per-call dependency graph consistency. `--core` disables DSH; separate Core / DSH distribution packages and the full plugin contribution model remain future work.
 
@@ -49,37 +49,23 @@ The office example demonstrates reusable Cordis services and per-call dependency
 
 ## Quick start
 
-Validated development environment: **Linux x64, Node.js 24.15.0 and pnpm 11.7.0**. Install Git and tar; native builds also require Python 3, make and a C++ compiler. Windows and RHEL 8 release packages have separate platform requirements and validation.
+**New here? This section is all you need to start.** The validated source environment is Linux x64, Node.js 24.15.0 and pnpm 11.7.0. Install Git, tar, Python 3, make and a C++ compiler for native dependencies.
 
 ```bash
-# Use develop to contribute; use main for the stable baseline.
 git clone --branch develop https://github.com/zyw02/CoNest.git
 cd CoNest
-
-# Download and verify the pinned DSH SDK.
 node maintenance/bootstrap.mjs
-
-# Install locked dependencies, build and test.
 pnpm --dir bridge install --frozen-lockfile
 pnpm --dir bridge run build
-pnpm --dir bridge exec tsx --test 'test/*.test.ts'
+CONEST_DEMO_STATE="$HOME/.local/state/conest-dev" \
+  pnpm --dir bridge exec node scripts/demo-studio.mjs
 ```
 
-<details>
-<summary>Dependencies & SDK download</summary>
+Open the Studio URL printed in the terminal. Enter the Gateway token from the printed `connection.json` location in its connection settings. The default port is 18791; override it with `CONEST_DEMO_PORT`. Stop the local launcher with Ctrl+C. The dedicated directory holds the fixture workspace, configuration and memory; do not point it at customer data or commit its contents.
 
-The SDK contains the required DSH source, JavaScript runtime, types and licenses, approximately 2.3 MB compressed. Ordinary dependencies come from npm. Both the SDK and package lockfile are pinned. See [dependency provenance (中文)](maintenance/DEPENDENCIES-zh.md).
+The default model is a local fixture: no API key is needed, while Gateway, tools and persistence execute normally. Append `--verify` to the last command for an automated check that exits when finished. Live-model use requires an owner-readable file containing `DEEPSEEK_API_KEY`, selected by `CONEST_CREDENTIAL_FILE` and an explicit `--live` flag; it incurs API usage.
 
-</details>
-
-After building, run the four Studio acceptance scenarios with a disposable state directory:
-
-```bash
-CONEST_DEMO_STATE=/absolute/disposable/conest-studio \
-  pnpm --dir bridge exec node scripts/demo-studio.mjs --verify
-```
-
-The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/openclaw/v/2026.9.2). The default uses a **local model fixture**: Gateway, loops, tools and persistence execute normally without paid model calls. See the [Studio guide (中文)](bridge/docs/studio-zh.md) and [plugin README](bridge/README.md) for installation and model configuration.
+If startup fails, check Node/pnpm versions, port availability and the terminal error. See [dependency maintenance](maintenance/DEPENDENCIES.md) for SDK download problems or [host configuration](bridge/docs/host-integration.md#plugin-configuration) for an existing Gateway. For further help, use the [Question form](https://github.com/zyw02/CoNest/issues/new?template=question.yml) with versions, commands and redacted errors.
 
 <a name="branches"></a>
 
@@ -98,18 +84,11 @@ The current integration pins [OpenClaw 2026.9.2](https://www.npmjs.com/package/o
 
 <sub>You are viewing <strong>develop</strong>. The original <code>v0.6.2</code> tag preserves the initial backup; branch maintenance continues independently of packaged releases.</sub>
 
-## Explore
+## What should I read?
 
-- **Use CoNest** · [Plugin configuration](bridge/README.md) · [Studio guide (中文)](bridge/docs/studio-zh.md)
-- **Build & contribute** · [Contributing](CONTRIBUTING.md) · [Dependencies (中文)](maintenance/DEPENDENCIES-zh.md)
-- **Understand internals** · [Authorization](bridge/docs/authorization.md) · [Import provenance (中文)](maintenance/IMPORT-zh.md)
-
-<details>
-<summary>Repository contents</summary>
-
-Git contains developer source, tests, examples, build scripts and technical documentation. Customer materials and run reports stay outside Git.
-
-</details>
+- **Run CoNest:** [Quick start](#quick-start) on this page, also available in [Chinese](README-zh.md).
+- **Report a problem or submit a PR:** [CONTRIBUTING](CONTRIBUTING.md), the single collaboration policy.
+- **Change implementation details:** [Developer reference index](bridge/README.md), organized by components, host integration and packaging.
 
 <br />
 
