@@ -2,13 +2,28 @@
 // Fetch a URL and extract clean readable text.
 const MAX_RESPONSE_BYTES = 2_000_000;
 
-async function fetchUrl(targetUrl, signal) {
+function configuredOrigins(config) {
+  const values = config?.allowedOrigins ?? [];
+  if (!Array.isArray(values) || values.length > 32) throw new Error('allowedOrigins must be an array of at most 32 trusted origins');
+  return new Set(values.map(value => {
+    if (typeof value !== 'string') throw new Error('allowedOrigins entries must be strings');
+    const url = new URL(value);
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hostname.includes('*') || url.pathname !== '/' || url.search || url.hash) {
+      throw new Error('allowedOrigins entries must be exact HTTP or HTTPS origins without paths or credentials');
+    }
+    return url.origin;
+  }));
+}
+
+async function fetchUrl(targetUrl, signal, allowedOrigins) {
   const deadline = AbortSignal.timeout(15000);
   const requestSignal = AbortSignal.any([signal, deadline]);
   let current = targetUrl;
   for (let redirects = 0; redirects <= 3; redirects++) {
     const url = new URL(current);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error('Only HTTP and HTTPS URLs are supported');
+    if (url.username || url.password) throw new Error('URL credentials are not supported');
+    if (!allowedOrigins.has(url.origin)) throw new Error('URL origin is not configured by the operator');
     const response = await fetch(url, {
       redirect: 'manual',
       signal: requestSignal,
@@ -94,13 +109,14 @@ export default {
   name: 'web-fetch',
   inject: ['bridgeCapabilities'],
   apply(ctx, config) {
+    const allowedOrigins = configuredOrigins(config);
     ctx.bridgeCapabilities.register(ctx, 'fetch_url', async (args, invocation) => {
       const { url } = args;
       const maxChars = args.maxChars || 20000;
       invocation.progress(`Fetching ${url}`);
 
       try {
-        const { statusCode, body } = await fetchUrl(url, invocation.signal);
+        const { statusCode, body } = await fetchUrl(url, invocation.signal, allowedOrigins);
         invocation.progress(`Received ${body.length} bytes, extracting content...`);
 
         if (statusCode !== 200) {

@@ -96,6 +96,33 @@ test('git diff does not run configured clean or process filters', async t => {
   }
 });
 
+test('web fetch requires operator-approved origins and checks every redirect', async t => {
+  let hits = 0;
+  const server = createServer((req, res) => {
+    hits++;
+    if (req.url === '/redirect') {
+      res.writeHead(302, { location: `http://localhost:${server.address().port}/secret` });
+      res.end();
+    } else res.end('<title>Approved page</title><p>content</p>');
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => server.close(resolve)));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const denied = await handler(webFetch, 'fetch_url')({ url: origin + '/secret' }, invocation(process.cwd()));
+  assert.equal(denied.statusCode, 0);
+  assert.equal(hits, 0, 'default configuration must make no network request');
+  const permitted = handler(webFetch, 'fetch_url', { allowedOrigins: [origin] });
+  const page = await permitted({ url: origin + '/page' }, invocation(process.cwd()));
+  assert.equal(page.statusCode, 200);
+  assert.equal(page.title, 'Approved page');
+  const redirected = await permitted({ url: origin + '/redirect' }, invocation(process.cwd()));
+  assert.equal(redirected.statusCode, 0);
+  assert.equal(hits, 2, 'redirect must not contact an origin absent from operator configuration');
+  const credentials = await permitted({ url: origin.replace('://', '://user:pass@') }, invocation(process.cwd()));
+  assert.equal(credentials.statusCode, 0);
+  assert.equal(hits, 2);
+});
+
 test('web fetch stops after cancellation and bounds redirects', async t => {
   const server = createServer((req, res) => {
     if (req.url === '/slow') {
@@ -108,7 +135,7 @@ test('web fetch stops after cancellation and bounds redirects', async t => {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => new Promise(resolve => server.close(resolve)));
   const base = `http://127.0.0.1:${server.address().port}`;
-  const fetchUrl = handler(webFetch, 'fetch_url');
+  const fetchUrl = handler(webFetch, 'fetch_url', { allowedOrigins: [base] });
   const loop = await fetchUrl({ url: base + '/loop' }, invocation(process.cwd()));
   assert.match(loop.error, /Too many redirects/);
   const abort = new AbortController();
