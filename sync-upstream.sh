@@ -13,10 +13,14 @@
 #   3. Push to our fork (origin)
 #   4. Create PR link to upstream
 
-set -e
+set -euo pipefail
 
 BRANCH="${1:-develop}"
-REPO_DIR="/root/CoNest"
+if [[ "$BRANCH" != develop && "$BRANCH" != main ]]; then
+  echo 'Branch must be develop or main' >&2
+  exit 2
+fi
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
 echo "=== CoNest Fork Sync: $BRANCH ==="
@@ -34,6 +38,14 @@ if [ "$CURRENT" != "$BRANCH" ]; then
   git checkout "$BRANCH"
 else
   echo "[2/5] Already on $BRANCH"
+fi
+
+# Refuse to overwrite fork commits absent from the local branch.
+if git show-ref --verify --quiet "refs/remotes/origin/$BRANCH"; then
+  if ! git merge-base --is-ancestor "origin/$BRANCH" "$BRANCH"; then
+    echo "origin/$BRANCH contains commits missing from the local branch; integrate them first" >&2
+    exit 1
+  fi
 fi
 
 # 3. Show divergence
@@ -67,9 +79,22 @@ fi
 # 5. Push
 echo ""
 echo "[5/5] Pushing to origin/$BRANCH..."
-git push origin "$BRANCH"
+git push --force-with-lease origin "$BRANCH"
 
 echo ""
 echo "=== Sync complete ==="
 echo ""
-echo "PR link: https://github.com/zyw02/CoNest/compare/$BRANCH...ralf003:CoNest:$BRANCH"
+ORIGIN_URL=$(git remote get-url origin)
+case "$ORIGIN_URL" in
+  git@github.com:*) ORIGIN_REPO="${ORIGIN_URL#git@github.com:}" ;;
+  https://github.com/*) ORIGIN_REPO="${ORIGIN_URL#https://github.com/}" ;;
+  *) ORIGIN_REPO="" ;;
+esac
+if [ -n "$ORIGIN_REPO" ]; then
+  ORIGIN_REPO="${ORIGIN_REPO%.git}"
+  FORK_OWNER="${ORIGIN_REPO%%/*}"
+  FORK_NAME="${ORIGIN_REPO#*/}"
+  if [ "$FORK_OWNER" != "$FORK_NAME" ]; then
+    echo "PR link: https://github.com/zyw02/CoNest/compare/$BRANCH...${FORK_OWNER}:${FORK_NAME}:$BRANCH"
+  fi
+fi
