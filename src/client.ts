@@ -147,7 +147,7 @@ export class BridgeClient {
       });
     } finally {
       this.progress.delete(input.callId);
-      if (this.child) void this.request('release', { authorization: grant.token }, 1_000).catch(() => {});
+      if (this.child) await this.request('release', { authorization: grant.token }, 1_000).catch(() => {});
     }
   }
 
