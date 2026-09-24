@@ -6,11 +6,15 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 
 const execGit = promisify(execFile);
+function isWithin(root, target) {
+  const relative = path.relative(root, target);
+  return relative !== '..' && !relative.startsWith('..' + path.sep) && !path.isAbsolute(relative);
+}
+
 function repoPathFor(args, invocation) {
   const root = realpathSync(invocation.workspaceRoot);
   const target = realpathSync(path.resolve(root, args.path || '.'));
-  const relative = path.relative(root, target);
-  if (relative === '..' || relative.startsWith('..' + path.sep) || path.isAbsolute(relative)) {
+  if (!isWithin(root, target)) {
     throw new Error('Repository path is outside the admitted workspace');
   }
   return target;
@@ -18,7 +22,7 @@ function repoPathFor(args, invocation) {
 
 async function git(repoPath, args, signal, timeoutMs = 10000) {
   try {
-    const result = await execGit('git', args, {
+    const result = await execGit('git', ['-c', 'core.fsmonitor=false', ...args], {
       cwd: repoPath,
       timeout: timeoutMs,
       encoding: 'utf8',
@@ -33,8 +37,11 @@ async function git(repoPath, args, signal, timeoutMs = 10000) {
   }
 }
 
-async function isGitRepo(repoPath, signal) {
-  return (await git(repoPath, ['rev-parse', '--is-inside-work-tree'], signal)) !== null;
+async function isGitRepo(repoPath, workspaceRoot, signal) {
+  const topLevel = await git(repoPath, ['rev-parse', '--show-toplevel'], signal);
+  if (topLevel === null) return false;
+  const discoveredRoot = realpathSync(topLevel.replace(/\r?\n$/, ''));
+  return isWithin(realpathSync(workspaceRoot), discoveredRoot);
 }
 
 export default {
@@ -46,7 +53,7 @@ export default {
       invocation.signal.throwIfAborted();
       invocation.progress(`Inspecting git status at ${repoPath}`);
 
-      if (!await isGitRepo(repoPath, invocation.signal)) {
+      if (!await isGitRepo(repoPath, invocation.workspaceRoot, invocation.signal)) {
         return { isRepository: false };
       }
 
@@ -95,7 +102,7 @@ export default {
       const count = Math.min(args.count || 10, 50);
       invocation.progress(`Reading recent ${count} commits`);
 
-      if (!await isGitRepo(repoPath, invocation.signal)) {
+      if (!await isGitRepo(repoPath, invocation.workspaceRoot, invocation.signal)) {
         return { commits: [] };
       }
 
@@ -115,7 +122,7 @@ export default {
       if (ref.startsWith('-')) throw new Error('Invalid Git ref');
       invocation.progress(`Computing diff against ${ref}`);
 
-      if (!await isGitRepo(repoPath, invocation.signal)) {
+      if (!await isGitRepo(repoPath, invocation.workspaceRoot, invocation.signal)) {
         return { filesChanged: 0, insertions: 0, deletions: 0, diff: '' };
       }
 
