@@ -11,8 +11,8 @@
 #              rewrite history and create phantom conflicts. Merge is safe.
 #   - main:    stable baseline, tracks upstream/main.
 #              Upstream may force-push/rewrite main; sync = reset local to
-#              upstream/main. Only safe when local main's extra commits have
-#              already entered upstream via PRs (check before reset).
+#              upstream/main only when local and fork tips are ancestors of
+#              upstream/main or have identical content.
 #
 # Workflow:
 #   1. Fetch upstream and origin
@@ -41,8 +41,8 @@ fi
 
 # 1. Fetch
 echo "[1/6] Fetching upstream and origin..."
-git fetch upstream
-git fetch origin
+git fetch --prune upstream
+git fetch --prune origin
 
 # 2. Switch to target branch
 CURRENT=$(git branch --show-current)
@@ -54,20 +54,24 @@ else
 fi
 
 # 3. Show divergence
+if ! git show-ref --verify --quiet "refs/remotes/upstream/$BRANCH"; then
+  echo "upstream/$BRANCH is missing after fetch; cannot sync" >&2
+  exit 1
+fi
 echo ""
 echo "[3/6] Divergence from upstream/$BRANCH:"
-OURS=$(git rev-list --count "upstream/$BRANCH..$BRANCH" 2>/dev/null || echo 0)
-THEIRS=$(git rev-list --count "$BRANCH..upstream/$BRANCH" 2>/dev/null || echo 0)
+OURS=$(git rev-list --count "upstream/$BRANCH..$BRANCH")
+THEIRS=$(git rev-list --count "$BRANCH..upstream/$BRANCH")
 echo "  Our commits ahead: $OURS"
 echo "  Upstream commits behind: $THEIRS"
 if [ "$OURS" -gt 0 ]; then
   echo "Our commits:"
-  git log --oneline "upstream/$BRANCH..$BRANCH" | head -20
+  git log --max-count=20 --oneline "upstream/$BRANCH..$BRANCH"
 fi
 if [ "$THEIRS" -gt 0 ]; then
   echo ""
   echo "Upstream commits:"
-  git log --oneline "$BRANCH..upstream/$BRANCH" | head -20
+  git log --max-count=20 --oneline "$BRANCH..upstream/$BRANCH"
 fi
 
 # 4. Sync
@@ -85,11 +89,18 @@ case "$BRANCH" in
   main)
     echo ""
     echo "[4/6] main follows upstream/main (upstream may rewrite history)..."
-    if [ "$OURS" -gt 0 ]; then
-      echo "  WARNING: local main is ahead of upstream/main by $OURS commit(s)."
-      echo "  Verify those commits' content already entered upstream via PRs"
-      echo "  before proceeding. Resetting to upstream/main now."
-    fi
+    # A rewritten upstream commit can have a different hash but the same tree.
+    # Refuse to replace a local or fork tip that differs from upstream/main.
+    for ref in main origin/main; do
+      if [ "$ref" = origin/main ] && ! git show-ref --verify --quiet refs/remotes/origin/main; then
+        continue
+      fi
+      if ! git merge-base --is-ancestor "$ref" upstream/main &&
+         ! git diff --quiet "$ref" upstream/main; then
+        echo "$ref differs from upstream/main and is not its ancestor; reconcile it before resetting main" >&2
+        exit 1
+      fi
+    done
     git reset --hard upstream/main
     ;;
 esac
@@ -111,7 +122,7 @@ esac
 echo ""
 echo "[6/6] Done."
 if [ "$BRANCH" = develop ]; then
-  OURS_AFTER=$(git rev-list --count upstream/develop..develop 2>/dev/null || echo 0)
+  OURS_AFTER=$(git rev-list --count upstream/develop..develop)
   if [ "$OURS_AFTER" -gt 0 ]; then
     ORIGIN_URL=$(git remote get-url origin)
     case "$ORIGIN_URL" in
