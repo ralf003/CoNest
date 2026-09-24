@@ -106,18 +106,19 @@ export default {
 
       let processes = [];
       try {
-        const r = await run('ps', ['aux', '--sort=-%cpu', '--no-headers'], { encoding: 'utf8', maxBuffer: 1024 * 1024, timeout: 3000, signal: invocation.signal });
+        // comm contains the executable name; args would expose unrelated process secrets.
+        const r = await run('ps', ['-eo', 'pid=,pcpu=,pmem=,rss=,comm=', '--sort=-%cpu'], { encoding: 'utf8', maxBuffer: 1024 * 1024, timeout: 3000, signal: invocation.signal });
         if (r.stdout) {
           const lines = r.stdout.split('\n').filter(Boolean).slice(0, count);
           for (const line of lines) {
-            const parts = line.trim().split(/\s+/);
-            if (parts.length < 11) continue;
+            const match = line.trim().match(/^(\d+)\s+([\d.]+)\s+([\d.]+)\s+(\d+)\s+(.+)$/);
+            if (!match) continue;
             processes.push({
-              pid: parseInt(parts[1]),
-              cpuPercent: parseFloat(parts[2]),
-              memPercent: parseFloat(parts[3]),
-              rssMB: Math.round(parseInt(parts[5]) / 1024),
-              name: parts.slice(10).join(' ').substring(0, 80),
+              pid: parseInt(match[1]),
+              cpuPercent: parseFloat(match[2]),
+              memPercent: parseFloat(match[3]),
+              rssMB: Math.round(parseInt(match[4]) / 1024),
+              name: match[5].substring(0, 80),
             });
           }
         }

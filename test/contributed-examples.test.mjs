@@ -9,6 +9,7 @@ import { promisify } from 'node:util';
 import gitInspector from '../examples/git-inspector/component.mjs';
 import webFetch from '../examples/web-fetch/component.mjs';
 import aiDebate from '../examples/ai-debate/component.mjs';
+import systemInfo from '../examples/system-info/component.mjs';
 
 const runGit = promisify(execFile);
 
@@ -69,6 +70,32 @@ test('git status does not run a repository configured fsmonitor', async t => {
   await access(`${monitor}.marker`);
 });
 
+test('git diff does not run configured clean or process filters', async t => {
+  if (process.platform === 'win32') return t.skip('filter fixture uses a POSIX executable');
+  for (const kind of ['clean', 'process']) {
+    const workspace = await mkdtemp(path.join(os.tmpdir(), `conest-git-${kind}-`));
+    t.after(() => rm(workspace, { recursive: true, force: true }));
+    await runGit('git', ['init', '-q', workspace]);
+    await writeFile(path.join(workspace, '.gitattributes'), '*.txt filter=probe\n');
+    await writeFile(path.join(workspace, 'tracked.txt'), 'before\n');
+    await runGit('git', ['-C', workspace, 'add', '.gitattributes', 'tracked.txt']);
+    await runGit('git', ['-C', workspace, '-c', 'user.name=Tester', '-c', 'user.email=test@example.com', 'commit', '-qm', 'initial']);
+    const marker = path.join(workspace, `${kind}.marker`);
+    const helper = path.join(workspace, `${kind}.sh`);
+    await writeFile(helper, `#!/bin/sh\nprintf invoked > "${marker}"\ncat\n`);
+    await chmod(helper, 0o755);
+    await runGit('git', ['-C', workspace, 'config', `filter.probe.${kind}`, helper]);
+    await runGit('git', ['-C', workspace, 'config', 'filter.probe.required', 'true']);
+    await writeFile(path.join(workspace, 'tracked.txt'), 'after\n');
+
+    const status = await handler(gitInspector, 'git_status')({}, invocation(workspace));
+    assert.ok(status.modified.includes('tracked.txt'), 'status should include the modified file');
+    const result = await handler(gitInspector, 'git_diff')({}, invocation(workspace));
+    assert.ok(result.diff.includes('+after'), 'diff should include the modified line');
+    await assert.rejects(access(marker), { code: 'ENOENT' });
+  }
+});
+
 test('web fetch stops after cancellation and bounds redirects', async t => {
   const server = createServer((req, res) => {
     if (req.url === '/slow') {
@@ -88,6 +115,25 @@ test('web fetch stops after cancellation and bounds redirects', async t => {
   const pending = fetchUrl({ url: base + '/slow' }, invocation(process.cwd(), abort.signal));
   abort.abort(new Error('task cancelled'));
   await assert.rejects(pending, /task cancelled/);
+});
+
+test('top processes returns executable names without command arguments', async t => {
+  if (process.platform === 'win32') return t.skip('process listing fixture uses a POSIX executable');
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'conest-process-list-'));
+  const oldPath = process.env.PATH;
+  t.after(async () => {
+    if (oldPath === undefined) delete process.env.PATH;
+    else process.env.PATH = oldPath;
+    await rm(dir, { recursive: true, force: true });
+  });
+  const ps = path.join(dir, 'ps');
+  await writeFile(ps, '#!/bin/sh\nif [ "$1" = "-eo" ]; then\n  printf "%s\\n" "4242 12.5 3.0 2048 node"\nelse\n  printf "%s\\n" "root 4242 12.5 3.0 10000 2048 ? R 00:00 0:01 node server.js --token=private-value"\nfi\n');
+  await chmod(ps, 0o755);
+  process.env.PATH = `${dir}${path.delimiter}${oldPath || ''}`;
+
+  const result = await handler(systemInfo, 'top_processes')({ count: 1 }, invocation(process.cwd()));
+  assert.deepEqual(result, { processes: [{ pid: 4242, cpuPercent: 12.5, memPercent: 3, rssMB: 2, name: 'node' }] });
+  assert.doesNotMatch(JSON.stringify(result), /private-value/);
 });
 
 test('AI debate reports missing credentials as a component error', async () => {

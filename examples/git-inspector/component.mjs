@@ -20,9 +20,35 @@ function repoPathFor(args, invocation) {
   return target;
 }
 
-async function git(repoPath, args, signal, timeoutMs = 10000) {
+async function disabledFilters(repoPath, signal, timeoutMs) {
+  let names;
   try {
-    const result = await execGit('git', ['-c', 'core.fsmonitor=false', ...args], {
+    const result = await execGit('git', ['config', '--null', '--name-only', '--get-regexp',
+      '^filter\\..*\\.(clean|smudge|process|required)$'], {
+      cwd: repoPath,
+      timeout: timeoutMs,
+      encoding: 'utf8',
+      maxBuffer: 1024 * 1024,
+      signal,
+    });
+    names = result.stdout;
+  } catch (error) {
+    if (signal.aborted) throw signal.reason ?? error;
+    if (error.code === 1) return [];
+    throw error;
+  }
+  return names.split('\0').filter(Boolean).flatMap(name => {
+    if (!/^filter\..*\.(clean|smudge|process|required)$/i.test(name)) {
+      throw new Error('Unexpected Git filter configuration key');
+    }
+    return ['-c', `${name}=${/\.required$/i.test(name) ? 'false' : ''}`];
+  });
+}
+
+async function git(repoPath, args, signal, timeoutMs = 10000) {
+  const filterOverrides = await disabledFilters(repoPath, signal, timeoutMs);
+  try {
+    const result = await execGit('git', ['-c', 'core.fsmonitor=false', ...filterOverrides, ...args], {
       cwd: repoPath,
       timeout: timeoutMs,
       encoding: 'utf8',
