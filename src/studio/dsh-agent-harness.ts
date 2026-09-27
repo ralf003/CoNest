@@ -1,9 +1,10 @@
 import {
   appendSessionTranscriptMessageByIdentityStrict,
+  createHarnessToolSurface,
+  normalizeHarnessResult,
   applyEmbeddedAttemptToolsAllow,
   awaitAgentHarnessAgentEndHook,
   buildAgentHookContextChannelFields,
-  buildEmbeddedAttemptToolRunContext,
   getSessionEntry,
   projectAgentHarnessTranscriptMessageForDisplay,
   publishSessionTranscriptUpdateByIdentity,
@@ -20,7 +21,7 @@ import {
 } from "../adapters/openclaw-sdk.js";
 import { HOST_TOOL_NAMES } from "../host-adapter.js";
 import type { CordisBridgeHost, AgentRunResult } from "./cordis-bridge-host.js";
-import type { SessionEvent } from "../adapters/dsh-session.js";
+import { sessionToolResults, type SessionEvent } from "../adapters/dsh-session.js";
 import { CordisAgentRunError } from "./agent-error.js";
 
 export type DshAgentHarnessOptions = {
@@ -78,7 +79,7 @@ export function createDshAgentHarness(options: DshAgentHarnessOptions): AgentHar
       return { supported: true, priority: 100 };
     },
     async runAttempt(params) {
-      return await runDshAttempt(params, options);
+      return normalizeHarnessResult(await runDshAttempt(params, options));
     },
   };
 }
@@ -113,7 +114,7 @@ async function runDshAttempt(
   const assertActive = () => {
     lifetime.signal.throwIfAborted();
     params.abortSignal?.throwIfAborted();
-    params.hostCapabilities.assertActive();
+    params.hostCapabilities?.assertActive();
   };
   try {
     const sandbox = await resolveSandboxContext({ config: params.config, agentId: params.agentId,
@@ -135,16 +136,7 @@ async function runDshAttempt(
     const hostLifecycleRevision = sessionEntry?.lifecycleRevision ?? `attempt:${params.runId}`;
     assertActive();
     const eventBridge = createDshEventBridge(params);
-    if (!params.hostCapabilities.createToolSurface) throw new Error("OpenClaw did not provide a bound tool surface");
-    const surface = params.hostCapabilities.createToolSurface({
-      ...buildEmbeddedAttemptToolRunContext(params),
-      config: params.config, agentId: params.agentId, sessionKey: params.sessionKey,
-      runSessionKey: params.sessionKey, sessionId: params.sessionId, runId: params.runId,
-      workspaceDir: params.workspaceDir, cwd: params.workspaceDir, agentDir: params.agentDir,
-      modelProvider: params.provider, modelId: params.modelId,
-      abortSignal: params.abortSignal, includeCoreTools: true,
-      senderIsOwner: params.senderIsOwner,
-    }, { cwd: params.workspaceDir });
+    const surface = createHarnessToolSurface(params);
     let hostTools: AnyAgentTool[] = [];
     const promptBuild = await resolveAgentHarnessBeforePromptBuildResult({
       prompt: params.prompt,
@@ -205,6 +197,7 @@ async function runDshAttempt(
         deny: params.pluginHarnessToolPolicySafeDeniedTools,
       },
       approvalRequester: async (request) => {
+        if (!params.hostCapabilities?.requestApproval || !params.hostCapabilities?.waitForApproval) return "unavailable";
         const timeoutMs = Math.min(params.timeoutMs, options.timeoutMs);
         const submitted = await params.hostCapabilities.requestApproval({
           title: `DSH ${request.toolName} requires approval`,
@@ -527,7 +520,7 @@ function createDshEventBridge(params: EmbeddedRunAttemptParamsV2): {
         return;
       }
       if (event.type === "tool/result") {
-        for (const block of event.data.message.content) {
+        for (const block of sessionToolResults(event)) {
           const call = toolCalls.get(block.toolCallId);
           if (!call) continue;
           const replaySafe = isReadOnlyDshTool(call.name);
