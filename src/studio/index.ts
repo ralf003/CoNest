@@ -1,5 +1,6 @@
+import { gatewayRequestScopes, selectGatewayAgentRuntime } from '../adapters/openclaw-gateway.js';
 import type { MemoryAccess } from '../memory-adapter.js';
-import { callGatewayFromCli, isIncognitoSessionKey, type OpenClawPluginApi } from '../adapters/openclaw-sdk.js';
+import { callGatewayFromCli, isIncognitoSessionKey, resolveControlUiSurface, type OpenClawPluginApi } from '../adapters/openclaw-sdk.js';
 import { mkdirSync, readFileSync, realpathSync } from 'node:fs';
 import path from 'node:path';
 import type { ReadObservation } from '../read-contract.js';
@@ -165,8 +166,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
         const gatewayRequest = async <T = Record<string, unknown>>(method: string, params: Record<string, unknown>) =>
           await callGatewayFromCli(method, { url: `ws://127.0.0.1:${api.config.gateway?.port ?? 18789}`,
             token: presentedToken, timeout: '15000', json: true }, params,
-            { progress: false, scopes: method === 'plugins.list' || method === 'tools.catalog'
-              ? ['operator.read'] : ['operator.read', 'operator.write'] }) as T;
+            { progress: false, scopes: gatewayRequestScopes(method) }) as T;
         // Validate the caller before reading any private state, including opaque sandbox frames.
         try {await gatewayRequest('health',{});}catch{res.statusCode=401;res.end(JSON.stringify({error:'Gateway token invalid'}));return true;}
         if (req.method === 'GET' && url.pathname === `${PREFIX}/api/activity`) {
@@ -174,7 +174,10 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           res.end(JSON.stringify({ activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory }));
         } else if (req.method === 'GET' && url.pathname === `${PREFIX}/api/state`) {
           const results = await Promise.allSettled([
-            gatewayRequest<Record<string, unknown>>('plugins.list', {}),
+            gatewayRequest<Record<string, unknown>>('plugins.list', {}).catch(error => {
+              if (String(error).includes('unknown method: plugins.list')) return undefined;
+              throw error;
+            }),
             gatewayRequest<{ groups: Array<{ tools: Array<{ id: string; label: string; description: string }> }> }>('tools.catalog', { agentId: 'main', includePlugins: true }),
             dshEnabled ? market.get(url.searchParams.get('refresh') === '1') : Promise.resolve(undefined),
           ]);
@@ -191,7 +194,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           ];
           const memory = dshEnabled ? await operatorMemory() : { observations: [] };
           const components = await componentHost.refresh();
-          res.end(JSON.stringify({ components, dshEnabled, demoMode: config.demoMode, version: '0.6.4', process: { gatewayPid: process.pid, hostPid: components.pid, deployment: 'gateway+host', dshInHost: dshEnabled }, status: components.state === 'ready' ? 'ready' : components.state, items,
+          res.end(JSON.stringify({ components, dshEnabled, pluginInventoryAvailable: plugins !== undefined, demoMode: config.demoMode, version: '0.6.4', process: { gatewayPid: process.pid, hostPid: components.pid, deployment: 'gateway+host', dshInHost: dshEnabled }, status: components.state === 'ready' ? 'ready' : components.state, items,
             market: remote ? { ...remote, items: undefined } : undefined, activity: activity.read(), memory: memory.observations, memoryUnavailable: 'unavailable' in memory,
             errors: results.flatMap(r => r.status === 'rejected' ? [String(r.reason)] : []) }));
         } else if (req.method === 'POST' && url.pathname === `${PREFIX}/api/run`) {
@@ -201,10 +204,9 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
           const body = JSON.parse(raw);
           if (!(dshEnabled ? ['openclaw', 'dsh'] : ['openclaw']).includes(body.loop) || typeof body.message !== 'string' || !body.message.trim()) throw new Error('请选择 Loop 并输入任务');
           const sessionKey = `agent:main:conest-${crypto.randomUUID()}`;
-          const selection = await gatewayRequest<{ runId?: string }>('chat.send', {
-            sessionKey, message: `/model deepseek/deepseek-v4-flash --runtime ${body.loop === 'dsh' ? 'auto' : 'openclaw'}`, idempotencyKey: crypto.randomUUID(),
+          await selectGatewayAgentRuntime(gatewayRequest, {
+            sessionKey, model: 'deepseek/deepseek-v4-flash', runtime: body.loop,
           });
-          if (selection.runId) await gatewayRequest('agent.wait', { runId: selection.runId, timeoutMs: 10_000 });
           const run = await gatewayRequest('agent', { sessionKey, message: body.message, idempotencyKey: crypto.randomUUID() });
           activity.record({ kind: 'run.start', loop: body.loop, sessionKey, state: 'running', text: body.message });
           res.end(JSON.stringify({ sessionKey, run }));
@@ -213,7 +215,7 @@ export function registerStudio(api: OpenClawPluginApi, workspaceRoot: string, ru
       return true;
     },
   });
-  api.session.controls.registerControlUiDescriptor({ surface: 'tab', id: 'conest-studio', label: 'CoNest Studio',
+  api.session.controls.registerControlUiDescriptor({ surface: resolveControlUiSurface(), id: 'conest-studio', label: 'CoNest Studio',
     description: '统一生态 · 双 Loop · 共享记忆', path: PREFIX, icon: 'sparkles', group: 'agent', order: 5, requiredScopes: ['operator.read'] });
   return { observeRead: (receipt, sessionKey, signal) => host.observeRead(receipt, sessionKey, signal) };
 }

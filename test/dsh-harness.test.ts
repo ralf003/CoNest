@@ -1,3 +1,5 @@
+import { sessionToolResults, type SessionEvent } from '../src/adapters/dsh-session.js';
+import { openClawContract } from '../src/adapters/openclaw-version.js';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AnyAgentTool } from 'openclaw/plugin-sdk/plugin-entry';
@@ -77,4 +79,33 @@ test('DSH forwards host cancellation to actual tool work and rejects results aft
   })], async tools => { await tools[0]!.execute('active', {}); });
   assert.equal(terminal(await expired.run()), 'failed');
   assert.deepEqual(expired.ended, ['run']);
+});
+
+
+test('an explicit empty tool allowlist remains empty on every SDK generation', async () => {
+  const f = fixture([tool('knowledge_search'), tool('bridge_invoke')], async tools => {
+    assert.deepEqual(tools, []);
+  }, { toolsAllow: [] });
+  assert.equal(terminal(await f.run()), 'ok');
+});
+
+test('failed attempts remain failures for legacy hosts consuming promptError', async () => {
+  const f = fixture([], async () => { throw new Error('fixture failure'); });
+  const outcome = await f.run();
+  assert.equal(terminal(outcome), 'failed');
+  if (openClawContract === 'legacy-v1') {
+    assert.match(String(Reflect.get(outcome, 'promptError')), /fixture failure/);
+    assert.equal(Reflect.get(outcome, 'aborted'), false);
+  }
+});
+
+test('both session result contracts preserve failures and ignore surrounding commentary', () => {
+  const outcome = { toolCallId: 'call', content: [{ type: 'text', text: 'denied' }], isError: true };
+  for (const message of [
+    { role: 'user', content: [{ type: 'text', text: 'commentary' }, { type: 'tool-result', ...outcome }] },
+    { role: 'tool', ...outcome },
+  ]) {
+    const event = { type: 'tool/result', data: { message } };
+    assert.deepEqual(sessionToolResults(event as unknown as Extract<SessionEvent, { type: 'tool/result' }>), [outcome]);
+  }
 });
