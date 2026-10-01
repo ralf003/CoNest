@@ -9,6 +9,14 @@ export const projectAgentHarnessTranscriptMessageForDisplay: typeof runtime.proj
   return params.hidden ? Object.assign({}, params.message, { display: false }) : params.message;
 };
 
+/**
+ * Mirrors the host developer-instruction builder semantics: an undefined
+ * allowlist or one containing a bare '*' means no tool restrictions.
+ */
+export function hasToolRestrictionsForAllow(toolsAllow: string[] | undefined): boolean {
+  return toolsAllow !== undefined && !toolsAllow.some(name => name.trim() === '*');
+}
+
 export const resolveAgentHarnessBeforePromptBuildResult: typeof runtime.resolveAgentHarnessBeforePromptBuildResult = async params => {
   if (openClawContract === 'scoped-v2') return runtime.resolveAgentHarnessBeforePromptBuildResult(params);
   const { developerInstructions, toolAuthority: _authority, ...rest } = params;
@@ -21,7 +29,7 @@ export const resolveAgentHarnessBeforePromptBuildResult: typeof runtime.resolveA
     const toolsAllow = result.toolsAllow;
     const raw = {
       toolsAllow,
-      hasToolRestrictions: toolsAllow !== undefined && !toolsAllow.some((name) => name.trim() === '*'),
+      hasToolRestrictions: hasToolRestrictionsForAllow(toolsAllow),
     };
     const buildParams: Parameters<typeof developerInstructions.build>[0] = raw;
     developerInstructions.build(buildParams);
