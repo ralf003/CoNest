@@ -83,3 +83,15 @@ test('keeps third-party Agent SDK imports inside adapter modules', async () => {
   }
   assert.deepEqual(violations, []);
 });
+
+import { hasToolRestrictionsForAllow } from '../src/adapters/openclaw-harness.js';
+
+test('legacy developer-instruction builder reports restrictions only for concrete allowlists', () => {
+  assert.equal(hasToolRestrictionsForAllow(undefined), false);
+  assert.equal(hasToolRestrictionsForAllow(['*']), false);
+  assert.equal(hasToolRestrictionsForAllow(['  *  ']), false);
+  assert.equal(hasToolRestrictionsForAllow(['*', 'read']), false);
+  assert.equal(hasToolRestrictionsForAllow(['read']), true);
+  assert.equal(hasToolRestrictionsForAllow(['read', 'bash']), true);
+  assert.equal(hasToolRestrictionsForAllow([' bash ']), true);
+});
