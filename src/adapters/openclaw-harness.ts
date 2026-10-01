@@ -18,7 +18,13 @@ export const resolveAgentHarnessBeforePromptBuildResult: typeof runtime.resolveA
     ...rest, developerInstructions: typeof developerInstructions === 'string' ? developerInstructions : '',
   });
   if (developerInstructions && typeof developerInstructions === 'object') {
-    developerInstructions.build({ toolsAllow: result.toolsAllow });
+    const toolsAllow = result.toolsAllow;
+    const raw = {
+      toolsAllow,
+      hasToolRestrictions: toolsAllow !== undefined && !toolsAllow.some((name) => name.trim() === '*'),
+    };
+    const buildParams: Parameters<typeof developerInstructions.build>[0] = raw;
+    developerInstructions.build(buildParams);
   }
   return result;
 };
