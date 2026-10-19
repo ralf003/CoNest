@@ -14,6 +14,7 @@ import {
   inspectDsh,
   inspectOpenClaw,
 } from '../src/compatibility.js';
+import { JsonlSessionPersistence } from '../src/adapters/dsh-composition.js';
 
 test('accepts supported OpenClaw releases without requiring the build pin', () => {
   assert.deepEqual(inspectOpenClaw(OPENCLAW_TESTED_VERSION), {
@@ -94,4 +95,18 @@ test('legacy developer-instruction builder reports restrictions only for concret
   assert.equal(hasToolRestrictionsForAllow(['read']), true);
   assert.equal(hasToolRestrictionsForAllow(['read', 'bash']), true);
   assert.equal(hasToolRestrictionsForAllow([' bash ']), true);
+});
+
+
+test('DSH session persistence adapter accepts both class and function plugin shapes', () => {
+  // cordis Plugin union: Constructor (class) | Function | Object-with-apply.
+  // DSH 0.1.x ships a class default export; DSH 0.2.x ships a function-plugin
+  // module (apply + Config). The composition adapter must expose a valid plugin
+  // in either dependency graph.
+  const plugin = JsonlSessionPersistence;
+  const shape = typeof plugin;
+  const isConstructor = shape === 'function' && /^class\s/.test(Function.prototype.toString.call(plugin));
+  const apply = (plugin as { apply?: unknown }).apply;
+  const isApplyShape = shape === 'function' || (shape === 'object' && typeof apply === 'function');
+  assert.ok(isConstructor || isApplyShape, `unexpected DSH session persistence plugin shape: ${shape}`);
 });
