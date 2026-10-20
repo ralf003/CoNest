@@ -1,4 +1,3 @@
-import { assertPluginHostCompatibility, createHostAgentsConfig } from './adapters/openclaw-version.js';
 import { Ajv } from 'ajv';
 import { spawn, execFile, type ChildProcess } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -76,7 +75,10 @@ export async function localInstallation(): Promise<{ host: string; provider: str
     const manifest = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8')) as { version?: unknown; openclaw?: { compat?: { pluginApi?: unknown } }; peerDependencies?: { openclaw?: unknown } };
     try {
       if (name === 'openclaw') inspectOpenClaw(manifest.version);
-      else assertPluginHostCompatibility(manifest.openclaw?.compat?.pluginApi ?? manifest.peerDependencies?.openclaw);
+      else {
+        const { assertPluginHostCompatibility } = await import('./adapters/openclaw-version.js');
+        assertPluginHostCompatibility(manifest.openclaw?.compat?.pluginApi ?? manifest.peerDependencies?.openclaw);
+      }
     }
     catch (error) { throw new BridgeError('HOST_VERSION_MISMATCH', `${name}: ${String(error)}`); }
     roots.push(root);
@@ -92,6 +94,7 @@ function assertPlatform(): void {
 export async function setupLocal(directory: string, options: { workspace: string; credentials: string; port?: number }): Promise<LocalProfile> {
   assertPlatform();
   const installation = await localInstallation();
+  const { createHostAgentsConfig } = await import('./adapters/openclaw-version.js');
   const workspaceRoot = await realpath(options.workspace);
   if (!(await lstat(workspaceRoot)).isDirectory()) throw new BridgeError('WORKSPACE_INVALID', 'The workspace must be an existing directory');
   const credentialFile = path.resolve(options.credentials);
@@ -282,12 +285,21 @@ export async function startLocal(profile: LocalProfile): Promise<LocalStatus> {
 }
 
 export async function stopLocal(profile: LocalProfile): Promise<LocalStatus> {
-  const before = await statusLocal(profile);
-  if (before.state === 'stopped') return before;
-  await controlRequest(profile.file, 'manage', { action: 'stop' });
+  let stopRequested = false;
   for (let i = 0; i < 150; i++) {
-    const status = await statusLocal(profile);
-    if (status.state === 'stopped') return status;
+    try {
+      const status = await statusLocal(profile);
+      if (status.state === 'stopped') return status;
+      if (!stopRequested) {
+        stopRequested = true;
+        await controlRequest(profile.file, 'manage', { action: 'stop' });
+      }
+    } catch (error) {
+      // Closing the supervisor can cut off its stop reply or a concurrent
+      // status request. Confirm that the listener is gone before succeeding;
+      // never replay the management request after losing its response.
+      if (!(error instanceof BridgeError) || error.code !== 'CONTROL_DISCONNECTED') throw error;
+    }
     await pause(100);
   }
   throw new BridgeError('LOCAL_STOP_TIMEOUT', 'The owned supervisor has not confirmed shutdown; no unrelated process was signalled');
