@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFile, readdir, realpath } from 'node:fs/promises';
+import { cp, mkdir, readFile, readdir, realpath, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { createRequire } from 'node:module';
+import { promisify } from 'node:util';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -53,6 +56,46 @@ test('numeric OpenClaw repacks use their base release at each host API boundary'
   assert.equal(usesLegacyAgentList('2026.8.1-1'), false);
   assert.equal(openClawContractForVersion('2026.9.2-1'), 'scoped-v2');
   assert.equal(supportsGatewayRuntimePatch('2026.9.5-1'), true);
+});
+
+
+test('runtime host selection scopes filesystem overrides and restores authored pins after installer failure', async t => {
+  const f = await fixture(t);
+  const script = path.join(f.root, 'scripts/maintenance/select-openclaw-version.mjs');
+  await mkdir(path.dirname(script), { recursive: true });
+  await cp(new URL('../scripts/maintenance/select-openclaw-version.mjs', import.meta.url), script);
+  const require = createRequire(import.meta.url);
+  await cp(path.dirname(require.resolve('semver/package.json')), path.join(f.root, 'node_modules/semver'), { recursive: true });
+  await cp(new URL('../compatibility.json', import.meta.url), path.join(f.root, 'compatibility.json'));
+  const originals = new Map([
+    ['package.json', '{"name":"isolated-runtime-fixture","private":true}\n'],
+    ['pnpm-lock.yaml', 'lockfileVersion: 9.0\n'],
+    ['pnpm-workspace.yaml', 'packages: []\n\noverrides:\n  "existing-package": "1.0.0"\n'],
+  ]);
+  for (const [name, content] of originals) await writeFile(path.join(f.root, name), content);
+  const installer = path.join(f.root, 'fake-installer.cjs');
+  await writeFile(installer, `const fs = require('node:fs');
+fs.writeFileSync('installer-observation.json', JSON.stringify({
+  args: process.argv.slice(2), workspace: fs.readFileSync('pnpm-workspace.yaml', 'utf8')
+}));
+fs.writeFileSync('package.json', '{"changedByInstaller":true}');
+process.exit(23);
+`);
+  const bin = path.join(f.root, 'bin');
+  await mkdir(bin);
+  const windows = process.platform === 'win32';
+  await writeFile(path.join(bin, windows ? 'pnpm.cmd' : 'pnpm'), windows
+    ? '@echo off\r\nnode "%CONEST_TEST_INSTALLER%" %*\r\n'
+    : '#!/bin/sh\nexec node "$CONEST_TEST_INSTALLER" "$@"\n', { mode: 0o700 });
+  await assert.rejects(promisify(execFile)(process.execPath, [script, '2026.10.5'], {
+    cwd: f.root,
+    env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, CONEST_TEST_INSTALLER: installer },
+  }), /Command failed/);
+  const observed = JSON.parse(await readFile(path.join(f.root, 'installer-observation.json'), 'utf8'));
+  assert.ok(observed.args.includes('openclaw@2026.10.5'));
+  assert.match(observed.workspace, /"openclaw@2026\.10\.5>@openclaw\/fs-safe": "0\.26\.10"/);
+  assert.match(observed.workspace, /"existing-package": "1\.0\.0"/);
+  for (const [name, content] of originals) assert.equal(await readFile(path.join(f.root, name), 'utf8'), content, name);
 });
 
 test('handles prerelease DSH versions with an explicit adapter range', () => {
