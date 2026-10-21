@@ -38,6 +38,7 @@ try {
     },
   }, null, 2)}\n`, 'utf8');
 
+  const inspectionStartedAt = performance.now();
   const { stdout, stderr } = await execute(
     process.execPath,
     [openClawCli, 'plugins', 'inspect', 'dsh-bridge', '--runtime', '--json'],
@@ -50,7 +51,9 @@ try {
         OPENCLAW_STATE_DIR: stateRoot,
       },
       maxBuffer: 4 * 1024 * 1024,
-      timeout: 120_000,
+      // Windows security-helper work and host cleanup can exceed two minutes;
+      // keep the CLI bounded within the matrix's five-minute stage deadline.
+      timeout: process.platform === 'win32' ? 240_000 : 120_000,
     },
   );
   const inspection = JSON.parse(stdout);
@@ -73,6 +76,7 @@ try {
 
   const report = {
     recordedAt: new Date().toISOString(),
+    inspectionDurationMs: Math.round(performance.now() - inspectionStartedAt),
     bridgeVersion: packageVersion,
     connectorName: inspection.plugin.name,
     openClawVersion: hostManifest.version,
