@@ -20,7 +20,13 @@ const stages = [
 ];
 const providerVersion = JSON.parse(await readFile(new URL('../node_modules/@openclaw/deepseek-provider/package.json', import.meta.url), 'utf8')).version;
 assert.equal(providerVersion, expected.replace(/-\d+$/, ''), 'Use the provider release matching the runtime host');
-const report = { version, providerVersion, platform: process.platform, node: process.version, stages: [], passed: true };
+const hostPackage = path.resolve(path.dirname(require.resolve('openclaw/plugin-sdk/plugin-entry')), '../../package.json');
+const fromHost = createRequire(hostPackage);
+let fileSystemVersion = null;
+try {
+  fileSystemVersion = JSON.parse(await readFile(path.join(path.dirname(fromHost.resolve('@openclaw/fs-safe')), '../package.json'), 'utf8')).version;
+} catch (error) { if (error.code !== 'MODULE_NOT_FOUND') throw error; }
+const report = { version, providerVersion, fileSystemVersion, platform: process.platform, node: process.version, stages: [], passed: true };
 await mkdir(reportDirectory, { recursive: true });
 // Canonicalize Windows 8.3 temp aliases before the host checks plugin containment.
 const state = await realpath(await mkdtemp(path.join(tmpdir(), 'conest-matrix-studio-')));
