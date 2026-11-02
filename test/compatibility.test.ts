@@ -14,6 +14,7 @@ import type { AgentRunResult } from '../src/studio/cordis-bridge-host.js';
 import { Context, settleFiber } from '../src/adapters/dsh-cordis.js';
 import { ToolFs } from '../src/adapters/dsh-filesystem.js';
 import { SystemPrompt } from '../src/adapters/dsh-search.js';
+import { executeTool, ToolCallId, ToolRuntime } from '../src/adapters/dsh-tools.js';
 import { mountWorkingDirectory } from '../src/adapters/dsh-working-directory.js';
 import { fixture } from './helpers.js';
 import {
@@ -87,15 +88,33 @@ process.exit(23);
   await writeFile(path.join(bin, windows ? 'pnpm.cmd' : 'pnpm'), windows
     ? '@echo off\r\nnode "%CONEST_TEST_INSTALLER%" %*\r\n'
     : '#!/bin/sh\nexec node "$CONEST_TEST_INSTALLER" "$@"\n', { mode: 0o700 });
-  await assert.rejects(promisify(execFile)(process.execPath, [script, '2026.10.5'], {
-    cwd: f.root,
-    env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, CONEST_TEST_INSTALLER: installer },
-  }), /Command failed/);
-  const observed = JSON.parse(await readFile(path.join(f.root, 'installer-observation.json'), 'utf8'));
-  assert.ok(observed.args.includes('openclaw@2026.10.5'));
-  assert.match(observed.workspace, /"openclaw@2026\.10\.5>@openclaw\/fs-safe": "0\.26\.10"/);
-  assert.match(observed.workspace, /"existing-package": "1\.0\.0"/);
-  for (const [name, content] of originals) assert.equal(await readFile(path.join(f.root, name), 'utf8'), content, name);
+  const cases = [
+    ['2026.9.36', false],
+    ['2026.10.1', true],
+    ['2026.10.5', true],
+    ['2026.10.5-1', true],
+    ['2026.10.6', true],
+    ['2026.10.7', true],
+    ['2026.10.8', true],
+    ['2026.10.9', true],
+    ['2026.10.9-1', true],
+    ['2026.10.10', false],
+    ['2026.10.10-1', false],
+  ] as const;
+  for (const [version, overridden] of cases) await t.test(version, async () => {
+    await assert.rejects(promisify(execFile)(process.execPath, [script, version], {
+      cwd: f.root,
+      env: { ...process.env, PATH: `${bin}${path.delimiter}${process.env.PATH ?? ''}`, CONEST_TEST_INSTALLER: installer },
+    }), /Command failed/);
+    const observed = JSON.parse(await readFile(path.join(f.root, 'installer-observation.json'), 'utf8'));
+    assert.ok(observed.args.includes(`openclaw@${version}`));
+    assert.ok(observed.args.includes(`@openclaw/deepseek-provider@${version.replace(/-\d+$/, '')}`));
+    const pin = `"openclaw@${version}>@openclaw/fs-safe": "0.26.10"`;
+    assert.equal(observed.workspace.includes(pin), overridden, version);
+    assert.equal([...observed.workspace.matchAll(/openclaw@[^"\n]+>@openclaw\/fs-safe/g)].length, overridden ? 1 : 0);
+    assert.match(observed.workspace, /"existing-package": "1\.0\.0"/);
+    for (const [name, content] of originals) assert.equal(await readFile(path.join(f.root, name), 'utf8'), content, `${version}: ${name}`);
+  });
 });
 
 test('handles prerelease DSH versions with an explicit adapter range', () => {
@@ -199,4 +218,62 @@ test('legacy developer-instruction builder reports restrictions only for concret
   assert.equal(hasToolRestrictionsForAllow(['read']), true);
   assert.equal(hasToolRestrictionsForAllow(['read', 'bash']), true);
   assert.equal(hasToolRestrictionsForAllow([' bash ']), true);
+});
+
+test('native tools preserve call identity, errors, policy denial and drained cancellation', async t => {
+  const ctx = new Context();
+  const prompt = await settleFiber(ctx.plugin(SystemPrompt));
+  const tools = await settleFiber(ctx.plugin(ToolRuntime, { mode: 'native' }));
+  t.after(async () => { await tools.dispose(); await prompt.dispose(); });
+  let calls = 0;
+  ctx.tools.register({
+    name: 'echo', description: 'Adapter regression fixture', parameters: { type: 'object' },
+    output: { schema: {}, render: (_args, value) => [{ type: 'text', text: JSON.stringify(value) }] },
+    async execute(args, execution) {
+      calls++;
+      assert.equal(String(execution.callId), 'adapter-call');
+      return args;
+    },
+  });
+  const input = { callId: ToolCallId('adapter-call'), name: 'echo',
+    arguments: { text: 'quoted "text"\n中文', nested: [true, null, 42] }, signal: new AbortController().signal };
+  const result = await executeTool(ctx.tools, input);
+  assert.equal(result.isError, false);
+  assert.deepEqual(result.value, input.arguments);
+  assert.equal(result.content[0]?.type, 'text');
+  const missing = await executeTool(ctx.tools, { ...input, name: 'missing' });
+  assert.equal(missing.isError, true);
+  const release = ctx.tools.guard(() => 'denied by fixture policy');
+  const denied = await executeTool(ctx.tools, input);
+  assert.equal(denied.isError, true);
+  assert.equal(calls, 1, 'Denied calls must not reach the tool body');
+  release();
+
+  let ready!: () => void;
+  const started = new Promise<void>(resolve => { ready = resolve; });
+  let settled = false;
+  ctx.tools.register({ name: 'wait', description: 'Cancellation fixture', parameters: { type: 'object' },
+    output: { schema: {}, render: () => [] },
+    async execute(_args, execution) {
+      ready();
+      try {
+        await new Promise<void>(resolve => execution.signal.addEventListener('abort', () => resolve(), { once: true }));
+        execution.signal.throwIfAborted();
+        return null;
+      } finally { settled = true; }
+    },
+  });
+  const controller = new AbortController();
+  const pending = executeTool(ctx.tools, { ...input, name: 'wait', signal: controller.signal });
+  await started;
+  controller.abort(new Error('cancel adapter fixture'));
+  await pending.then(value => assert.equal(value.isError, true), error => assert.match(String(error), /cancel|abort/i));
+  assert.equal(settled, true, 'Cancellation must drain the submitted tool body');
+
+  if (typeof Reflect.get(ctx.tools, 'setExecutor') === 'function') {
+    for (const results of [[], [{ callId: 'another-call', result }]]) {
+      Reflect.set(ctx.tools, 'execute', async () => ({ results }));
+      await assert.rejects(executeTool(ctx.tools, input), /did not return the requested call/);
+    }
+  }
 });
